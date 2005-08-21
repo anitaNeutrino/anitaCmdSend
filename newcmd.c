@@ -67,7 +67,7 @@ char *menuformat[] = {
 #define LINK_TDRSS	1
 #define LINK_HF		2
 #define LINK_LOS	0
-#define PORT		"/dev/ttyUSB0"
+#define PORT		"/dev/ttyS0"
 //#define PORT		"/dev/ttyS2"
 #define PROMPT		": "
 #define ROUTE_COMM1	0x09
