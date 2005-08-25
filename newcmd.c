@@ -930,7 +930,7 @@ KILL_PROGS(int idx)
 
 
 static void
-RESPAWN(int idx)
+RESPAWN_PROGS(int idx)
 {
     short det;
     int i;
