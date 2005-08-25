@@ -95,6 +95,17 @@ static short Config_det =0;
 static short Priorit_det =0;
 static short CalAdd =0;
 static short SSGain =0;
+static long ADU5PatPer =0;
+static long ADU5SatPer =0;
+static long G12PPSPer =0;
+static long G12Offset =0;
+static long HskPer =0;
+static long HskCalPer =0;
+static long SoftTrigPer =0;
+static short TrigADU5 =0;
+static short TrigG12 =0;
+static short TrigRF =0;
+static short TrigSoft =0;
 
 static short Amp_led = 0;
 static short Amplitude = 0;
@@ -850,21 +861,58 @@ KILL_PROGS(int idx)
     int i;
     char resp[32];
     
-    screen_printf("0. Acqd      3. GPSd\n");
-    screen_printf("1. Calibd    4. Hkd\n");
-    screen_printf("2. Eventd    5. Prioritizerd\n");
-    screen_printf("6. All of the above\n");
+    screen_printf("1. Acqd       6. GPSd\n");
+    screen_printf("2. Archived   7. Hkd\n");
+    screen_printf("3. Calibdd    8. LOSd\n");
+    screen_printf("4. Cmdd       9. Prioritizerd\n");
+    screen_printf("5. Eventd     10. SIPd\n"); 
+    screen_printf("11. All of the above\n");
     screen_dialog(resp, 31, "Kill which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (0 <= det && det <= 6) {
-	    Prog_det = det;
+	if (1 <= det && det <= 11) {
+	  switch(det){
+	  case 1:
+            Prog_det = 1;
+	    break;
+          case 2:
+            Prog_det = 2;
+	    break;
+          case 3:
+            Prog_det = 4;
+	    break;
+          case 4:
+            Prog_det = 8;
+	    break;
+          case 5:
+            Prog_det = 16;
+	    break;
+          case 6:
+            Prog_det = 32;
+	    break; 
+          case 7:
+            Prog_det = 64;
+	    break; 
+          case 8:
+            Prog_det = 128;
+	    break;
+          case 9:
+            Prog_det = 256;
+            break;
+          case 10:
+            Prog_det = 512; 
+            break;
+          case 11:
+            Prog_det = 4095;
+	    break;
+          default: break;
+	  }
 	} else if (det == -1) {
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 0-6, not %d.\n", det);
+	    screen_printf("Value must be 1-11, not %d.\n", det);
 	    return;
 	}
     }
@@ -872,8 +920,10 @@ KILL_PROGS(int idx)
     Curcmd[0] = 0;
     Curcmd[1] = idx;
     Curcmd[2] = 1;
-    Curcmd[3] = Prog_det;
-    Curcmdlen = 4;
+    Curcmd[3] = (Prog_det&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((Prog_det&0xf00)>>8); 
+    Curcmdlen = 6;
     set_cmd_log("%d; Program  %d killed.", idx, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
@@ -886,21 +936,58 @@ RESPAWN(int idx)
     int i;
     char resp[32];
     
-    screen_printf("0. Acqd      3. GPSd\n");
-    screen_printf("1. Calibd    4. Hkd\n");
-    screen_printf("2. Eventd    5. Prioritizerd\n");
-    screen_printf("6. All of the above\n");
+    screen_printf("1. Acqd       6. GPSd\n");
+    screen_printf("2. Archived   7. Hkd\n");
+    screen_printf("3. Calibdd    8. LOSd\n");
+    screen_printf("4. Cmdd       9. Prioritizerd\n");
+    screen_printf("5. Eventd     10. SIPd\n"); 
+    screen_printf("11. All of the above\n");
     screen_dialog(resp, 31, "Respawn which daemon? (-1 to cancel) [%d] ",
-	Coin_det);
+	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (0 <= det && det <= 6) {
-	    Prog_det = det;
+	if (1 <= det && det <= 11) {
+	  switch(det){
+	  case 1:
+            Prog_det = 1;
+	    break;
+          case 2:
+            Prog_det = 2;
+	    break;
+          case 3:
+            Prog_det = 4;
+	    break;
+          case 4:
+            Prog_det = 8;
+	    break;
+          case 5:
+            Prog_det = 16;
+	    break;
+          case 6:
+            Prog_det = 32;
+	    break; 
+          case 7:
+            Prog_det = 64;
+	    break; 
+          case 8:
+            Prog_det = 128;
+	    break;
+          case 9:
+            Prog_det = 256;
+            break;
+          case 10:
+            Prog_det = 512; 
+            break;
+          case 11:
+            Prog_det = 4095;
+	    break;
+          default: break;
+	  }
 	} else if (det == -1) {
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 0-6, not %d.\n", det);
+	    screen_printf("Value must be 1-11, not %d.\n", det);
 	    return;
 	}
     }
@@ -908,10 +995,102 @@ RESPAWN(int idx)
     Curcmd[0] = 0;
     Curcmd[1] = idx;
     Curcmd[2] = 1;
-    Curcmd[3] = Prog_det;
-    Curcmdlen = 4;
+    Curcmd[3] = (Prog_det&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((Prog_det&0xf00)>>8); 
+    Curcmdlen = 6;
     set_cmd_log("%d; Program  %d respawned.", idx, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+static void
+START_PROGS(int idx)
+{
+    short det;
+    int i;
+    char resp[32];
+    
+    screen_printf("1. Acqd       6. GPSd\n");
+    screen_printf("2. Archived   7. Hkd\n");
+    screen_printf("3. Calibdd    8. LOSd\n");
+    screen_printf("4. Cmdd       9. Prioritizerd\n");
+    screen_printf("5. Eventd     10. SIPd\n"); 
+    screen_printf("11. All of the above\n");
+    screen_dialog(resp, 31, "Start which daemon? (-1 to cancel) [%d] ",
+	Prog_det);
+    if (resp[0] != '\0') {
+	det = atoi(resp);
+	if (1 <= det && det <= 11) {
+	  switch(det){
+	  case 1:
+            Prog_det = 1;
+	    break;
+          case 2:
+            Prog_det = 2;
+	    break;
+          case 3:
+            Prog_det = 4;
+	    break;
+          case 4:
+            Prog_det = 8;
+	    break;
+          case 5:
+            Prog_det = 16;
+	    break;
+          case 6:
+            Prog_det = 32;
+	    break; 
+          case 7:
+            Prog_det = 64;
+	    break; 
+          case 8:
+            Prog_det = 128;
+	    break;
+          case 9:
+            Prog_det = 256;
+            break;
+          case 10:
+            Prog_det = 512; 
+            break;
+          case 11:
+            Prog_det = 4095;
+	    break;
+          default: break;
+	  }
+	} else if (det == -1) {
+	    screen_printf("Cancelled\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 1-11, not %d.\n", det);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (Prog_det&0xff);
+    Curcmd[4] = 2;
+    Curcmd[4] = ((Prog_det&0xf00)>>8); 
+    Curcmdlen = 6;
+    set_cmd_log("%d; Program  %d started.", idx, Prog_det);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
+}
+
+static void
+MOUNT(int idx)
+{
+   if (screen_confirm("Really mount -a?")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = idx;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; mount -a.", idx);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
 }
 
 static void
@@ -1074,21 +1253,6 @@ TURN_ALL_OFF(int idx)
 
 
 static void
-TRIG_CALPULSER(int idx)
-{
-    if (screen_confirm("Really trigger the CalPulser")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Trigger the CalPulser.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
-    }
-}
-
-static void
 SET_CALPULSER(int idx)
 {
     char resp[32];
@@ -1155,84 +1319,229 @@ SET_SS_GAIN(int idx)
 }
 
 static void
-GPS(int idx)
+SET_ADU5_PAT_PERIOD(int idx)
 {
-    if (screen_confirm("Really do something to the GPS")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Do something to the GPS.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set ADU5 Position and attitude readout period (in seconds) to  (0-65535, -1 to cancel) [%d] ",
+	ADU5PatPer);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    ADU5PatPer = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in seconds must be 0-65535, not %d.\n", t);
+	    return;
+	}
     }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (ADU5PatPer&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((ADU5PatPer&0xf00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set ADU5 position readout period to %d.", idx, ADU5PatPer);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+static void
+SET_ADU5_SAT_PERIOD(int idx)
+{
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set ADU5 Satellite lock readout period (in seconds) to  (0-65535, -1 to cancel) [%d] ",
+	ADU5SatPer);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    ADU5SatPer = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in seconds must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (ADU5SatPer&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((ADU5SatPer&0xf00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set ADU5 satellite lock readout period to %d.", idx, ADU5SatPer);
+    sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SIP_GPS(int idx)
+SET_G12_PPS_PERIOD(int idx)
 {
-    if (screen_confirm("Really talk to SIP GPS")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Talk to SIP GPS.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set G12 PPS period (in ms) to  (0-65535, -1 to cancel) [%d] ",
+	G12PPSPer);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    G12PPSPer = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in ms must be 0-65535, not %d.\n", t);
+	    return;
+	}
     }
-}
 
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (G12PPSPer&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((G12PPSPer&0xf00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set G12 PPS period period to %d.", idx, G12PPSPer);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
 
 static void
-SUN_SENSORS(int idx)
+SET_G12_OFFSET(int idx)
 {
-    if (screen_confirm("Really do something with the Sun Sensors")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Do something with the Sun Sensors.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set G12 offset (in ms) to  (0-65535, -1 to cancel) [%d] ",
+	G12Offset);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    G12Offset = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in ms must be 0-65535, not %d.\n", t);
+	    return;
+	}
     }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (G12Offset&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((G12Offset&0xf00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set G12 PPS offset to %d.", idx, G12Offset);
+    sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
+
+static void 
+SET_ADU5_CAL_12(int idx)
+{
+  screen_printf("Not implemented.\n");
+  return;
+}
+
+static void 
+SET_ADU5_CAL_13(int idx)
+{
+  screen_printf("Not implemented.\n");
+  return;
+}
+
+static void 
+SET_ADU5_CAL_14(int idx)
+{
+  screen_printf("Not implemented.\n");
+  return;
+}
 
 static void
-MAGNETOMETER(int idx)
+SET_HSK_PERIOD(int idx)
 {
-    if (screen_confirm("Really do something for Magnetometer")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Do something for Magnetometer.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set Housekeeping readout period (in seconds) to  (0-255, -1 to cancel) [%d] ",
+	HskPer);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 255) {
+	    HskPer = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period must be 0-255, not %d.\n", t);
+	    return;
+	}
     }
-}
 
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = HskPer;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set Housekeeping readout period to %d.", idx, HskPer);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
 
 static void
-ACCEL(int idx)
+SET_HSK_CAL_PERIOD(int idx)
 {
-    if (screen_confirm("Really do something for accelerometer")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Do something for accelerometer.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set Housekeeping calibration readout period (in seconds) to  (0-65535, -1 to cancel) [%d] ",
+	HskCalPer);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    HskCalPer = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period must be 0-65535, not %d.\n", t);
+	    return;
+	}
     }
-}
 
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (HskCalPer&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((HskCalPer&0xf00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set Housekeeping calibration readout period to %d.", idx, HskCalPer);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+} 
 
 static void
 CLEAN_DIRS(int idx)
@@ -1320,24 +1629,23 @@ DEFAULT_CONFIG(int idx)
 
 
 static void
-CHNG_PRIORIT(int idx)
+SURF_ADU5_TRIG(int idx)
 {
-    short det;
-    int i;
     char resp[32];
-    
-    screen_printf("0. priority 0    1.priority 1\n");
-    screen_dialog(resp, 31, "Set what priority? (-1 to cancel) [%d] ",
-	Priorit_det);
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set SURF Trigger on ADU5 Flag, 0 disable, 1 enable, -1 to cancel) [%d] ", TrigADU5);
     if (resp[0] != '\0') {
-	det = atoi(resp);
-	if (0 <= det && det <= 1) {
-	    Priorit_det = det;
-	} else if (det == -1) {
-	    screen_printf("Cancelled\n");
+	t = atoi(resp);
+	if (0 == t || t == 1) {
+	    TrigADU5 = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 0-1, not %d.\n", det);
+	    screen_printf("Period must be 0 or 1, not %d.\n", t);
 	    return;
 	}
     }
@@ -1345,60 +1653,140 @@ CHNG_PRIORIT(int idx)
     Curcmd[0] = 0;
     Curcmd[1] = idx;
     Curcmd[2] = 1;
-    Curcmd[3] = Priorit_det;
+    Curcmd[3] = TrigADU5;
     Curcmdlen = 4;
-    set_cmd_log("%d; Priority set to  %d .", idx, Priorit_det);
+    set_cmd_log("%d; Set SURF ADU5 Trigger Flag to %d.", idx,TrigADU5);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SURF(int idx)
+SURF_G12_TRIG(int idx)
 {
-    if (screen_confirm("Really do something for SURF")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Do something for SURF.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set SURF Trigger on G12 Flag, 0 disable, 1 enable, -1 to cancel) [%d] ", TrigG12);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 == t || t == 1) {
+	    TrigG12 = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period must be 0 or 1, not %d.\n", t);
+	    return;
+	}
     }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = TrigG12;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set SURF G12 Trigger Flag to %d.", idx,TrigG12);
+    sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-TURF(int idx)
+SURF_RF_TRIG(int idx)
 {
-    if (screen_confirm("Really do something for TURF")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Do something for TURF.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set SURF Trigger on RF Flag, 0 disable, 1 enable, -1 to cancel) [%d] ", TrigRF);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 == t || t == 1) {
+	    TrigRF = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period must be 0 or 1, not %d.\n", t);
+	    return;
+	}
     }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = TrigRF;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set SURF RF Trigger Flag to %d.", idx,TrigRF);
+    sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-RFCM(int idx)
+SURF_SOFT_TRIG(int idx)
 {
-    if (screen_confirm("Really do something for RFCM")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Do something for RFCM.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set SURF Trigger on Software Flag, 0 disable, 1 enable, -1 to cancel) [%d] ", TrigSoft);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 == t || t == 1) {
+	    TrigSoft = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period must be 0 or 1, not %d.\n", t);
+	    return;
+	}
     }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = TrigSoft;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set SURF Software Trigger Flag to %d.", idx,TrigSoft);
+    sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
+
+static void
+SURF_SOFT_TRIG_PERIOD(int idx)
+{
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set SURFsoftware trigger period (in seconds) to  (0-255, -1 to cancel) [%d] ",
+	SoftTrigPer);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 255) {
+	    SoftTrigPer = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period must be 0-255, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = SoftTrigPer;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set Software trigger period to %d.", idx, SoftTrigPer);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
 
 /*static void
 DISABLE_DATA_COLL(int idx)
