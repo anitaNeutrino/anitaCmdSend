@@ -393,12 +393,19 @@ new_cmd(void)
     }
 
     set_cmd_log("new_cmd: %s", msg);
-
     for (i=0; i < n; i++) {
 	Curcmd[i*2] = i;
 	Curcmd[(i*2)+1] = cmd[i];
     }
     Curcmdlen = n*2;
+
+
+    //    char cmdString[180];
+    //    sprintf(cmdString,"%d",Curcmd[0]);
+    //    for(i=1;i<Curcmdlen;i++)
+    //      sprintf(cmdString,"%s %d",Curcmd[i]);
+    //    screen_printf("%s",cmdString);
+
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -991,7 +998,7 @@ RESPAWN_PROGS(int idx)
 	    return;
 	}
     }
-
+    
     Curcmd[0] = 0;
     Curcmd[1] = idx;
     Curcmd[2] = 1;
@@ -999,6 +1006,7 @@ RESPAWN_PROGS(int idx)
     Curcmd[4] = 2;
     Curcmd[5] = ((Prog_det&0xf00)>>8); 
     Curcmdlen = 6;
+    screen_printf("Sent %d %d %d\n",idx,(Prog_det&0xff),((Prog_det&0xf00)>>8));
     set_cmd_log("%d; Program  %d respawned.", idx, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
