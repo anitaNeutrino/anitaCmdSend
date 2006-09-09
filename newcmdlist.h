@@ -4,48 +4,66 @@
 #define _CMDLIST_H
 
 #define KEYBD_CMD_MAX	128	/* maximum ascii key */
-#define SHUTDOWN_HALT	129	/* shuts computer down, must be powered down and then up to restart*/
-#define REBOOT          130	/* reboots flight computer */
-#define KILL_PROGS	131	/* kills daemons */
-#define RESPAWN_PROGS  	132	/* respawns daemons*/
-#define START_PROGS     133     /* starts daemons*/
-#define MOUNT           134     /* mounts devices? */
 
-#define TURN_GPS_ON	150	/* turns on GPS and magnetometer via relay*/
-#define TURN_GPS_OFF	151	/* turns off GPS and magnetometer via relay*/
-#define TURN_RFCM_ON	152	/*turns on RFCM and magnetometer via relay*/
-#define TURN_RFCM_OFF	153	/* turns off RFCM and magnetometer via relay */
-#define TURN_CALPULSER_ON	154	/*turns on CalPulser and magnetometer via relay */
-#define TURN_CALPULSER_OFF	155	/*turns off CalPulser and magnetometer via relay */
-#define TURN_ND_ON	156	/*turns the Noise Diode on via relay*/
-#define TURN_ND_OFF     157     /*turns the Noise Diode off via relay*/	
-#define TURN_ALL_ON	158	/*turns on ND, CalPulser, GPS and RFCM via relays*/
-#define TURN_ALL_OFF	159	/*turns oFF ND, CalPulser, GPS and RFCM via relays*/
-
-#define SET_CALPULSER   171	/* sets the CalPulser Address (?) */
-#define SET_SS_GAIN     172	/* sets the Sun Sensor gain */
-
-#define SET_ADU5_PAT_PERIOD     180	/* sets the ADU5 pat period*/
-#define SET_ADU5_SAT_PERIOD   	181	/* sets the ADU5 pat period*/
-#define SET_G12_PPS_PERIOD	182	/* sets the G12 PPS period */
-#define SET_G12_OFFSET  183	/* sets the G12 PPS offset*/
-#define SET_ADU5_CAL_12 184     /* sets the ADU5 Calibration to 12*/
-#define SET_ADU5_CAL_13 185     /* sets the ADU5 Calibration to 13*/
-#define SET_ADU5_CAL_14 186     /* sets the ADU5 Calibration to 14*/
-
-#define SET_HSK_PERIOD  190     /* sets the period for Housekeeping */
-#define SET_HSK_CAL_PERIOD      191     /* sets the Housekeeping Cal period */
-
-#define CLEAN_DIRS	200	/* cleans all? directories */
-
-#define SEND_CONFIG	210	/* sends down current all? config files  */
-#define DEFAULT_CONFIG	211	/* returns to default configuration*/
-
-#define SURF_ADU5_TRIG  230	/* sets the SURF to ADU5 triger */
-#define SURF_G12_TRIG   231     /* sets the SURF to G12 trigger */
-#define SURF_RF_TRIG    232     /* sets the SURF to trigger on signal? */
-#define SURF_SOFT_TRIG  233     /* sets the SURF to software trigger? */
-#define SURF_SOFT_TRIG_PERIOD   234     /* sets the period for software drected trigger */
+#define TAIL_MESSAGES  1
+#define TAIL_ANITA  2
+#define CMD_START_NEW_RUN  3
+#define CMD_SHUTDOWN_HALT  129
+#define CMD_REBOOT  130
+#define CMD_KILL_PROGS  131
+#define CMD_RESPAWN_PROGS 132
+#define CMD_START_PROGS  133
+#define CMD_MOUNT  134
+#define CMD_WHITEHEAT 135
+#define CMD_MOUNT_NEXT_USB  136
+#define CMD_MOUNT_NEXT_BLADE  137
+#define CMD_DISABLE_BLADES  138
+#define CMD_DISABLE_USBINTS  139
+#define CMD_DISABLE_USBEXTS  140
+#define CMD_TURN_GPS_ON  150
+#define CMD_TURN_GPS_OFF  151
+#define CMD_TURN_RFCM_ON  152
+#define CMD_TURN_RFCM_OFF  153
+#define CMD_TURN_CALPULSER_ON  154
+#define CMD_TURN_CALPULSER_OFF  155
+#define CMD_TURN_VETO_ON  156
+#define CMD_TURN_VETO_OFF  157
+#define CMD_TURN_ALL_ON  158
+#define CMD_TURN_ALL_OFF  159
+#define SET_CALPULSER_SWITCH  171
+#define SET_CALPULSER_ATTEN  172
+#define SET_ADU5_PAT_PERIOD  180
+#define SET_ADU5_SAT_PERIOD  181
+#define SET_G12_PPS_PERIOD  182
+#define SET_G12_PPS_OFFSET  183
+#define ADU5_CAL_12  184
+#define ADU5_CAL_13  185
+#define ADU5_CAL_14  186
+#define SET_HK_PERIOD  190
+#define SET_HK_CAL_PERIOD  191
+#define CLEAN_DIRS  200
+#define SEND_CONFIG  210
+#define DEFAULT_CONFIG 211
+#define SWITCH_CONFIG 212
+#define LAST_CONFIG213
+#define ACQD_ADU5_TRIG_FLAG  230
+#define ACQD_G12_TRIG_FLAG  231
+#define ACQD_SOFT_TRIG_FLAG  232
+#define ACQD_SOFT_TRIG_PERIOD  233
+#define ACQD_ENABLE_CHAN_SERVO  234
+#define SET_PID_GOAL  235
+#define ACQD_PEDESTAL_RUN  236
+#define THRESHOLD_SCAN 237
+#define SET_ANT_TRIG_MASK  238
+#define SET_SURF_TRIG_MASK  239
+#define SET_GLOBAL_THRESHOLD  240
+#define ACQD_REPROGRAM_TURF  241
+#define SURFHK_PERIOD  242
+#define SURFHK_TELEM_EVERY  243
+#define TURFHK_TELEM_EVERY 244
+#define NUM_PED_EVENTS  245
+#define THRESH_SCAN_STEP_SIZE  246
+#define THRESH_SCAN_REPEAT  247
 
 #endif /* _CMDLIST_H */
 
