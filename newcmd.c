@@ -82,7 +82,8 @@ char *menuformat[] = {
 #define LINK_TDRSS	1
 #define LINK_HF		2
 #define LINK_LOS	0
-#define PORT		"/dev/ttyS0"
+#define PORT		"/dev/ttyUSB0"
+//#define PORT		"/dev/ttyS0"
 //#define PORT		"/dev/ttyS2"
 #define PROMPT		": "
 #define ROUTE_COMM1	0x09
@@ -120,9 +121,9 @@ static short calPulserAtten =0;
 static long ADU5PatPer =0;
 static long ADU5SatPer =0;
 static long G12PPSPer =0;
-static long G12Offset =0;
-static long HskPer =0;
-static long HskCalPer =0;
+static float G12Offset =0;
+static unsigned short HskPer =0;
+static unsigned short HskCalPer =0;
 static long SoftTrigPer =0;
 static short TrigADU5 =0;
 static short TrigG12 =0;
@@ -867,7 +868,7 @@ TAIL_MESSAGES(int idx)
     Curcmd[2] = 1;
     Curcmd[3] = (numLines&0xff);
     Curcmd[4] = 2; 
-    Curcmd[5] = ((numLines&0xf00)>>8);
+    Curcmd[5] = ((numLines&0xff00)>>8);
     Curcmdlen = 6;
     set_cmd_log("%d; Tail last %d lines of /var/log/messages.", idx, ADU5SatPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
@@ -902,7 +903,7 @@ TAIL_ANITA(int idx)
     Curcmd[2] = 1;
     Curcmd[3] = (numLines&0xff);
     Curcmd[4] = 2; 
-    Curcmd[5] = ((numLines&0xf00)>>8);
+    Curcmd[5] = ((numLines&0xff00)>>8);
     Curcmdlen = 6;
     set_cmd_log("%d; Tail last %d lines of /var/log/anita.log.", idx, ADU5SatPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
@@ -1595,7 +1596,7 @@ SET_CALPULSER_ATTEN(int idx)
     short v;
      
     screen_dialog(resp, 31,
-	"Set Sun Sensor gain to  (0-7, 8 for loop, -1 to cancel) [%d] ",
+	"Set Cal Pulser Atten to  (0-7, 8 for loop, -1 to cancel) [%d] ",
 	calPulserAtten);
     if (resp[0] != '\0') {
 	v = atoi(resp);
@@ -1627,7 +1628,7 @@ SET_ADU5_PAT_PERIOD(int idx)
     int t;
      
     screen_dialog(resp, 31,
-	"Set ADU5 Position and attitude readout period (in seconds) to  (0-65535, -1 to cancel) [%d] ",
+	"Set ADU5 Position and attitude readout period (in units of 100ms) to  (0-65535, -1 to cancel) [%d] ",
 	ADU5PatPer);
     if (resp[0] != '\0') {
 	t = atoi(resp);
@@ -1647,7 +1648,7 @@ SET_ADU5_PAT_PERIOD(int idx)
     Curcmd[2] = 1;
     Curcmd[3] = (ADU5PatPer&0xff);
     Curcmd[4] = 2; 
-    Curcmd[5] = ((ADU5PatPer&0xf00)>>8);
+    Curcmd[5] = ((ADU5PatPer&0xff00)>>8);
     Curcmdlen = 6;
     set_cmd_log("%d; Set ADU5 position readout period to %d.", idx, ADU5PatPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
@@ -1681,12 +1682,69 @@ SET_ADU5_SAT_PERIOD(int idx)
     Curcmd[2] = 1;
     Curcmd[3] = (ADU5SatPer&0xff);
     Curcmd[4] = 2; 
-    Curcmd[5] = ((ADU5SatPer&0xf00)>>8);
+    Curcmd[5] = ((ADU5SatPer&0xff00)>>8);
     Curcmdlen = 6;
     set_cmd_log("%d; Set ADU5 satellite lock readout period to %d.", idx, ADU5SatPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
+
+static void
+SET_G12_PPS_OFFSET(int idx)
+{
+    char resp[32];
+    short det;
+    unsigned short ms;
+    unsigned short subms;
+    unsigned short sign;
+    float t,temp;
+     
+    screen_dialog(resp, 31,
+	"Set G12 PPS period (in ms) to  (-999.9999, +999.9999) [%f] ",
+	G12Offset);
+    if (resp[0] != '\0') {
+	t = atof(resp);
+	if (-999.9999 <= t && t <= 999.9999) {
+	    G12Offset = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in ms must -999.9999 to + 999.9999, not %d.\n", t);
+	    return;
+	}
+    }
+    temp=G12Offset;
+    sign=0;
+    if(G12Offset<0) {
+      temp=-1*G12Offset;
+      sign=1;
+    }
+    ms=(unsigned short) temp;
+    temp-=ms;
+    temp*=10000;
+    subms=(unsigned short) temp;
+
+    //    temp=ms+((float)subms)/10000.;
+    //    if(sign==1) temp*=-1;
+    //    //    printf("ms %d, subms %d, sign %d -- %f\n",ms,subms,sign,temp);
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (ms&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((ms&0xff00)>>8);
+    Curcmd[6] = 3;
+    Curcmd[7] = (subms&0xff);
+    Curcmd[8] = 4; 
+    Curcmd[9] = ((subms&0xff00)>>8);
+    Curcmd[10] = 5;
+    Curcmd[11] = (sign&0xff);
+    Curcmdlen = 12;
+    set_cmd_log("%d; Set G12 PPS offset to %3.4f ms.", idx, G12Offset);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
 
 static void
 SET_G12_PPS_PERIOD(int idx)
@@ -1716,43 +1774,9 @@ SET_G12_PPS_PERIOD(int idx)
     Curcmd[2] = 1;
     Curcmd[3] = (G12PPSPer&0xff);
     Curcmd[4] = 2; 
-    Curcmd[5] = ((G12PPSPer&0xf00)>>8);
+    Curcmd[5] = ((G12PPSPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set G12 PPS period period to %d.", idx, G12PPSPer);
-    sendcmd(Fd, Curcmd, Curcmdlen);
-}
-
-static void
-SET_G12_PPS_OFFSET(int idx)
-{
-    char resp[32];
-    short det;
-    int t;
-     
-    screen_dialog(resp, 31,
-	"Set G12 offset (in ms) to  (0-65535, -1 to cancel) [%d] ",
-	G12Offset);
-    if (resp[0] != '\0') {
-	t = atoi(resp);
-	if (0 <= t && t <= 65535) {
-	    G12Offset = t;
-	} else if (t == -1) {
-	    screen_printf("Cancelled.\n");
-	    return;
-	} else {
-	    screen_printf("Period in ms must be 0-65535, not %d.\n", t);
-	    return;
-	}
-    }
-
-    Curcmd[0] = 0;
-    Curcmd[1] = idx;
-    Curcmd[2] = 1;
-    Curcmd[3] = (G12Offset&0xff);
-    Curcmd[4] = 2; 
-    Curcmd[5] = ((G12Offset&0xf00)>>8);
-    Curcmdlen = 6;
-    set_cmd_log("%d; Set G12 PPS offset to %d.", idx, G12Offset);
+    set_cmd_log("%d; Set G12 PPS offset to %d ms.", idx, G12PPSPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -1783,20 +1807,20 @@ SET_HK_PERIOD(int idx)
 {
     char resp[32];
     short det;
-    short t;
+    int t;
      
     screen_dialog(resp, 31,
-	"Set Housekeeping readout period (in seconds) to  (0-255, -1 to cancel) [%d] ",
+	"Set Housekeeping readout period (in 100ms units) to  (0-65535, -1 to cancel) [%d] ",
 	HskPer);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (0 <= t && t <= 255) {
+	if (0 <= t && t <= 65535) {
 	    HskPer = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
-	    screen_printf("Period must be 0-255, not %d.\n", t);
+	    screen_printf("Period must be 0-65535, not %d.\n", t);
 	    return;
 	}
     }
@@ -1804,9 +1828,11 @@ SET_HK_PERIOD(int idx)
     Curcmd[0] = 0;
     Curcmd[1] = idx;
     Curcmd[2] = 1;
-    Curcmd[3] = HskPer;
-    Curcmdlen = 4;
-    set_cmd_log("%d; Set Housekeeping readout period to %d.", idx, HskPer);
+    Curcmd[3] = (HskPer&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((HskPer&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set Housekeeping readout period to %d (100ms units).", idx, HskPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -1838,7 +1864,7 @@ SET_HK_CAL_PERIOD(int idx)
     Curcmd[2] = 1;
     Curcmd[3] = (HskCalPer&0xff);
     Curcmd[4] = 2;
-    Curcmd[5] = ((HskCalPer&0xf00)>>8);
+    Curcmd[5] = ((HskCalPer&0xff00)>>8);
     Curcmdlen = 6;
     set_cmd_log("%d; Set Housekeeping calibration readout period to %d.", idx, HskCalPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
@@ -2637,7 +2663,7 @@ SET_GLOBAL_THRESHOLD(int idx)
     short t;
      
     screen_dialog(resp, 31,
-	"Set Global Threshold  (0-4095, -1 to cancel) [%d] ",
+	"Set Global Threshold  (0 means disable, 1-4095, -1 to cancel) [%d] ",
 	globalThreshold);
     if (resp[0] != '\0') {
 	t = atoi(resp);
