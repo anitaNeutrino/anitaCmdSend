@@ -1595,6 +1595,11 @@ SET_CALPULSER_ATTEN(int idx)
     short det;
     short v;
      
+    screen_printf("Approx. dB's based on UCI measurement\n");
+    screen_printf("0. 0dB     4. 18dB\n");
+    screen_printf("1. 3dB     5. 22dB\n");
+    screen_printf("2. 8dB     6. 28dB\n");
+    screen_printf("3. 12dB    7. 33dB\n");
     screen_dialog(resp, 31,
 	"Set Cal Pulser Atten to  (0-7, 8 for loop, -1 to cancel) [%d] ",
 	calPulserAtten);
