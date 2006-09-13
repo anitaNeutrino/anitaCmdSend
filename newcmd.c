@@ -1493,12 +1493,12 @@ CMD_TURN_CALPULSER_OFF(int idx)
 static void
 CMD_TURN_VETO_ON(int idx)
 {
-    if (screen_confirm("Really turn on Noise Diode")) {
+    if (screen_confirm("Really turn on Veto RFCMs")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = idx;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on Noise Diode.", idx);
+	set_cmd_log("%d; Turn on Veto RFCMs.", idx);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -1509,12 +1509,12 @@ CMD_TURN_VETO_ON(int idx)
 static void
 CMD_TURN_VETO_OFF(int idx)
 {
-    if (screen_confirm("Really turn off Noise Diode")) {
+    if (screen_confirm("Really turn off Veto RFCMs")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = idx;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off Noise Diode.", idx);
+	set_cmd_log("%d; Turn off Veto RFCMs.", idx);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -1525,12 +1525,12 @@ CMD_TURN_VETO_OFF(int idx)
 static void
 CMD_TURN_ALL_ON(int idx)
 {
-    if (screen_confirm("Really turn on GPS, RFCM, CalPulsr and ND")) {
+    if (screen_confirm("Really turn on GPS, RFCM, CalPulsr and Veto")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = idx;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on GPS, RFCM, CalPulser, and ND.", idx);
+	set_cmd_log("%d; Turn on GPS, RFCM, CalPulser, and Veto.", idx);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -1541,12 +1541,12 @@ CMD_TURN_ALL_ON(int idx)
 static void
 CMD_TURN_ALL_OFF(int idx)
 {
-    if (screen_confirm("Really turn off GPS, RFCM, CalPulser and ND")) {
+    if (screen_confirm("Really turn off GPS, RFCM, CalPulser and Veto")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = idx;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off GPS, RFCM, CalPulser and ND.", idx);
+	set_cmd_log("%d; Turn off GPS, RFCM, CalPulser and Veto.", idx);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
