@@ -780,3 +780,22 @@ Thu Sep 14 05:04:18 2006	Finished
 Thu Sep 14 05:04:39 2006	program starting.
 Thu Sep 14 05:04:39 2006	link is 0, route is 9.
 Thu Sep 14 05:38:57 2006	Finished
+Thu Sep 14 05:39:55 2006	program starting.
+Thu Sep 14 05:39:55 2006	link is 0, route is 9.
+Thu Sep 14 05:45:34 2006	Finished
+Thu Sep 14 05:46:18 2006	program starting.
+Thu Sep 14 05:46:18 2006	link is 0, route is 9.
+Thu Sep 14 05:46:28 2006	NSBF response; OK
+Thu Sep 14 05:46:28 2006	CMD 248; Set Reprogram Turf to 0.
+Thu Sep 14 05:47:10 2006	NSBF response; OK
+Thu Sep 14 05:47:10 2006	CMD 248; Set Reprogram Turf to 0.
+Thu Sep 14 05:47:20 2006	Finished
+Thu Sep 14 05:47:47 2006	program starting.
+Thu Sep 14 05:47:47 2006	link is 0, route is 9.
+Thu Sep 14 05:48:01 2006	NSBF response; OK
+Thu Sep 14 05:48:01 2006	CMD 248; Set Reprogram Turf to 0.
+Thu Sep 14 06:12:55 2006	NSBF response; OK
+Thu Sep 14 06:12:55 2006	CMD 3; Start new run.
+Thu Sep 14 06:13:07 2006	NSBF response; OK
+Thu Sep 14 06:13:07 2006	CMD 237; Take Threshold Scan 1.
+Thu Sep 14 06:26:18 2006	Finished

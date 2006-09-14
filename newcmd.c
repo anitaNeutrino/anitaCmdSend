@@ -3495,7 +3495,7 @@ BAND_SCALE_FACTOR(int idx)
     screen_printf("Obviously use with caution\n");    
     screen_dialog(resp, 31,
 	"Which SURF, 1-8, to change (-1 to cancel) [%d] ",
-	whichSurf);
+	whichSurf+1);
     if (resp[0] != '\0') {
 	t = atoi(resp);
 	if (1 <= t && t <= 8) {
@@ -3510,7 +3510,7 @@ BAND_SCALE_FACTOR(int idx)
     }   
     screen_dialog(resp, 31,
 	"Which DAC, 1-32, to change (-1 to cancel) [%d] ",
-	whichDac);
+	whichDac+1);
     if (resp[0] != '\0') {
 	t = atoi(resp);
 	if (1 <= t && t <= 32) {
@@ -3529,7 +3529,7 @@ BAND_SCALE_FACTOR(int idx)
 	scaleFactor);
     if (resp[0] != '\0') {
 	ft = atof(resp);
-	if (ft <= 0) {
+	if (ft >= 0) {
 	    scaleFactor = ft;
 	} else {
 	    screen_printf("Cancelled.\n");
