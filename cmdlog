@@ -685,5 +685,98 @@ Wed Sep 13 10:49:57 2006	CMD 171; Set CalPulser Switch to? 3.
 Wed Sep 13 10:54:02 2006	program starting.
 Wed Sep 13 10:54:02 2006	link is 0, route is 9.
 Wed Sep 13 10:54:12 2006	Finished
-Wed Sep 13 20:35:28 2006	program starting.
-Wed Sep 13 20:35:28 2006	link is 0, route is 9.
+Wed Sep 13 11:09:54 2006	NSBF response; OK
+Wed Sep 13 11:09:54 2006	CMD 171; Set CalPulser Switch to? 4.
+Wed Sep 13 11:17:12 2006	NSBF response; OK
+Wed Sep 13 11:17:12 2006	CMD 155; Turn off CalPulser.
+Wed Sep 13 11:17:45 2006	NSBF response; OK
+Wed Sep 13 11:17:45 2006	CMD 154; Turn on CalPulser.
+Wed Sep 13 11:42:12 2006	NSBF response; OK
+Wed Sep 13 11:42:12 2006	CMD 155; Turn off CalPulser.
+Wed Sep 13 11:42:33 2006	NSBF response; OK
+Wed Sep 13 11:42:33 2006	CMD 154; Turn on CalPulser.
+Wed Sep 13 11:57:31 2006	NSBF response; OK
+Wed Sep 13 11:57:31 2006	CMD 172; Set Cal Pulser Atten to 0.
+Wed Sep 13 12:00:13 2006	NSBF response; OK
+Wed Sep 13 12:00:13 2006	CMD 155; Turn off CalPulser.
+Wed Sep 13 12:00:40 2006	NSBF response; OK
+Wed Sep 13 12:00:40 2006	CMD 154; Turn on CalPulser.
+Wed Sep 13 12:20:07 2006	NSBF response; OK
+Wed Sep 13 12:20:07 2006	CMD 155; Turn off CalPulser.
+Wed Sep 13 12:28:10 2006	NSBF response; OK
+Wed Sep 13 12:28:10 2006	CMD 154; Turn on CalPulser.
+Wed Sep 13 12:30:31 2006	NSBF response; OK
+Wed Sep 13 12:30:31 2006	CMD 155; Turn off CalPulser.
+Wed Sep 13 13:14:55 2006	NSBF response; OK
+Wed Sep 13 13:14:55 2006	CMD 153; Turn off RFCM.
+Wed Sep 13 13:15:40 2006	NSBF response; OK
+Wed Sep 13 13:15:40 2006	CMD 152; Turn on RFCM.
+Wed Sep 13 13:18:10 2006	NSBF response; OK
+Wed Sep 13 13:18:10 2006	CMD 151; Turn off GPS/Magnetometer.
+Wed Sep 13 13:18:34 2006	NSBF response; OK
+Wed Sep 13 13:18:34 2006	CMD 150; Turn on GPS/Magnetometer.
+Wed Sep 13 13:22:37 2006	NSBF response; OK
+Wed Sep 13 13:22:37 2006	CMD 151; Turn off GPS/Magnetometer.
+Wed Sep 13 13:23:37 2006	NSBF response; OK
+Wed Sep 13 13:23:37 2006	CMD 150; Turn on GPS/Magnetometer.
+Wed Sep 13 13:37:55 2006	NSBF response; OK
+Wed Sep 13 13:37:55 2006	CMD 158; Turn on GPS, RFCM, CalPulser, and ND.
+Wed Sep 13 13:39:01 2006	NSBF response; OK
+Wed Sep 13 13:39:01 2006	CMD 159; Turn off GPS, RFCM, CalPulser and ND.
+Wed Sep 13 13:43:40 2006	NSBF response; OK
+Wed Sep 13 13:43:40 2006	CMD 150; Turn on GPS/Magnetometer.
+Wed Sep 13 13:44:07 2006	NSBF response; OK
+Wed Sep 13 13:44:07 2006	CMD 152; Turn on RFCM.
+Wed Sep 13 13:52:52 2006	NSBF response; OK
+Wed Sep 13 13:52:52 2006	CMD 2; Tail last 0 lines of /var/log/anita.log.
+Wed Sep 13 13:55:46 2006	NSBF response; OK
+Wed Sep 13 13:55:46 2006	CMD 131; Program  3575 killed.
+Wed Sep 13 13:56:40 2006	NSBF response; OK
+Wed Sep 13 13:56:40 2006	CMD 159; Turn off GPS, RFCM, CalPulser and ND.
+Wed Sep 13 13:58:01 2006	NSBF response; OK
+Wed Sep 13 13:58:01 2006	CMD 129; Shutdown and halt computer.
+Wed Sep 13 14:52:02 2006	NSBF response; OK
+Wed Sep 13 14:52:02 2006	CMD 3; Start new run.
+Wed Sep 13 14:52:26 2006	NSBF response; OK
+Wed Sep 13 14:52:26 2006	CMD 133; Program  3575 started.
+Wed Sep 13 14:53:26 2006	NSBF response; OK
+Wed Sep 13 14:53:26 2006	CMD 150; Turn on GPS/Magnetometer.
+Wed Sep 13 14:53:44 2006	NSBF response; OK
+Wed Sep 13 14:53:44 2006	CMD 152; Turn on RFCM.
+Wed Sep 13 15:07:59 2006	NSBF response; OK
+Wed Sep 13 15:07:59 2006	CMD 159; Turn off GPS, RFCM, CalPulser and ND.
+Wed Sep 13 15:08:38 2006	NSBF response; OK
+Wed Sep 13 15:08:38 2006	CMD 131; Program  3575 killed.
+Wed Sep 13 15:09:20 2006	NSBF response; OK
+Wed Sep 13 15:09:20 2006	CMD 130; Reboot.
+Wed Sep 13 15:10:59 2006	NSBF response; OK
+Wed Sep 13 15:10:59 2006	CMD 129; Shutdown and halt computer.
+Wed Sep 13 16:24:47 2006	NSBF response; OK
+Wed Sep 13 16:24:47 2006	CMD 131; Program  1 killed.
+Thu Sep 14 04:04:34 2006	program starting.
+Thu Sep 14 04:04:34 2006	link is 0, route is 9.
+Thu Sep 14 04:04:57 2006	NSBF response; OK
+Thu Sep 14 04:04:57 2006	CMD 237; Take Threshold Scan 1.
+Thu Sep 14 04:11:54 2006	NSBF response; OK
+Thu Sep 14 04:11:54 2006	CMD 3; Start new run.
+Thu Sep 14 04:22:27 2006	NSBF response; OK
+Thu Sep 14 04:22:27 2006	CMD 130; Reboot.
+Thu Sep 14 04:32:36 2006	NSBF response; OK
+Thu Sep 14 04:32:36 2006	CMD 3; Start new run.
+Thu Sep 14 04:42:21 2006	NSBF response; OK
+Thu Sep 14 04:42:21 2006	CMD 131; Program  1 killed.
+Thu Sep 14 04:58:03 2006	NSBF response; OK
+Thu Sep 14 04:58:03 2006	CMD 3; Start new run.
+Thu Sep 14 05:00:37 2006	Finished
+Thu Sep 14 05:01:10 2006	program starting.
+Thu Sep 14 05:01:10 2006	link is 0, route is 9.
+Thu Sep 14 05:02:15 2006	Finished
+Thu Sep 14 05:03:03 2006	program starting.
+Thu Sep 14 05:03:03 2006	link is 0, route is 9.
+Thu Sep 14 05:03:08 2006	Finished
+Thu Sep 14 05:03:51 2006	program starting.
+Thu Sep 14 05:03:51 2006	link is 0, route is 9.
+Thu Sep 14 05:04:18 2006	Finished
+Thu Sep 14 05:04:39 2006	program starting.
+Thu Sep 14 05:04:39 2006	link is 0, route is 9.
+Thu Sep 14 05:38:57 2006	Finished

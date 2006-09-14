@@ -851,9 +851,9 @@ show_cmds(void)
 	    got++;
 	}
 	if (got == 3) { 
-	    screen_printf("%d %s", val[0], Cmdarray[val[0]].name);
-	    screen_printf("%d %s", val[1], Cmdarray[val[1]].name);
-	    screen_printf("%d %s\n", val[2], Cmdarray[val[2]].name);
+	    screen_printf("%03d %s", val[0], Cmdarray[val[0]].name);
+	    screen_printf("%03d %s", val[1], Cmdarray[val[1]].name);
+	    screen_printf("%03d %s\n", val[2], Cmdarray[val[2]].name);
 	    got = 0;
 	}
     }
