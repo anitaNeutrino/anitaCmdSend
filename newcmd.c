@@ -166,6 +166,10 @@ static unsigned short storageType;
 static unsigned short telemType;
 static unsigned short encType;
 static unsigned short altUsb;
+static short whichSurf=0;
+static short whichDac=0;
+static float scaleFactor=1;
+
 
 static int Direct = 0;		/* nonzero for direct connection to flight */
 
@@ -3403,7 +3407,7 @@ SET_SURF_TRIG_MASK(int idx)
     Curcmd[8] = 4;
     Curcmd[9] = ((surfTrigBandVal2&0xff));
     Curcmd[10] = 5;
-    Curcmd[11] = ((surfTrigBandVal2&0xff)>>8);
+    Curcmd[11] = ((surfTrigBandVal2&0xff00)>>8);
     Curcmdlen = 12;
     set_cmd_log("%d; Take SURF trig band mask %d -- %#x %#x.", idx, surfTrigBandSurf,surfTrigBandVal1,surfTrigBandVal2);
     sendcmd(Fd, Curcmd, Curcmdlen);
@@ -3476,6 +3480,80 @@ ACQD_REPROGRAM_TURF(int idx)
     set_cmd_log("%d; Set Reprogram Turf to %d.", idx, reprogramTurf);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
+
+
+static void
+BAND_SCALE_FACTOR(int idx)
+{
+    char resp[32];
+    short det;
+    short t;
+    float ft;
+    unsigned short value;
+    
+    screen_printf("Use this command to change the scale factor for as single trigger band\n");
+    screen_printf("Obviously use with caution\n");    
+    screen_dialog(resp, 31,
+	"Which SURF, 1-8, to change (-1 to cancel) [%d] ",
+	whichSurf);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (1 <= t && t <= 8) {
+	    whichSurf = t-1;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 1-8, not %d.\n", t);
+	    return;
+	}
+    }   
+    screen_dialog(resp, 31,
+	"Which DAC, 1-32, to change (-1 to cancel) [%d] ",
+	whichDac);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (1 <= t && t <= 32) {
+	    whichDac = t-1;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 1-32, not %d.\n", t);
+	    return;
+	}
+    }  
+
+    screen_dialog(resp, 31,
+	"To what scale factor (1 is normal, <1 decreases rate, >1 increases rate (-1 to cancel) [%f] ",
+	scaleFactor);
+    if (resp[0] != '\0') {
+	ft = atof(resp);
+	if (ft <= 0) {
+	    scaleFactor = ft;
+	} else {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} 
+    }
+    value = ((unsigned short) scaleFactor*1000.);
+
+       
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = whichSurf&0xff;
+    Curcmd[4] = 2;
+    Curcmd[5] = whichDac&0xff;
+    Curcmd[6] = 3;
+    Curcmd[7] = value&0xff;
+    Curcmd[8] = 4;
+    Curcmd[9] = ((value&0xff00)>>8);
+    Curcmdlen = 10;
+    set_cmd_log("%d; Set Reprogram Turf to %d.", idx, reprogramTurf);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
 
 
 static void

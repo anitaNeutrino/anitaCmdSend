@@ -77,6 +77,7 @@
 #define NUM_PED_EVENTS  245
 #define THRESH_SCAN_STEP_SIZE  246
 #define THRESH_SCAN_REPEAT  247
+#define BAND_SCALE_FACTOR  248
 
 #endif /* _CMDLIST_H */
 
