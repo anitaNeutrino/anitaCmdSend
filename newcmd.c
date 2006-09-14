@@ -36,6 +36,14 @@
 #define MONITORD_ID_MASK 0x400
 #define ALL_ID_MASK 0xfff
 
+#define BLADE_MASK 0x1
+#define PUCK_MASK 0x2
+#define USBINT_MASK 0x4
+#define USBEXT_MASK 0x8
+#define PMC_MASK 0x10
+
+int diskBitMasks[5]={BLADE_MASK,PUCK_MASK,USBINT_MASK,USBEXT_MASK,PMC_MASK};
+
 
 WINDOW *Wuser;
 WINDOW *Wmenu;
@@ -118,9 +126,15 @@ static short disableBlade=0;
 static short disableUsbInt=0;
 static short disableUsbExt=0;
 static short calPulserAtten =0;
+static short cpAttenLoopPeriod =0;
+static short cpSwitchLoopPeriod =0;
+static short cpOffLoopPeriod =0;
+static short calibWritePeriod=0;
 static long ADU5PatPer =0;
 static long ADU5SatPer =0;
+static long ADU5VtgPer =0;
 static long G12PPSPer =0;
+static long G12PosPer =0;
 static float G12Offset =0;
 static unsigned short HskPer =0;
 static unsigned short HskCalPer =0;
@@ -144,6 +158,15 @@ static short turfhkTelemEvery=0;
 static short numPedEvents=0;
 static short threshScanStepSize=0;
 static short threshScanPointsPerStep=0;
+static unsigned short diskChoice;
+static unsigned short diskBitMask;
+static unsigned short eventBitMask;
+static unsigned short hkBitMask;
+static unsigned short storageType;
+static unsigned short telemType;
+static unsigned short encType;
+static unsigned short altUsb;
+
 static int Direct = 0;		/* nonzero for direct connection to flight */
 
 #define LOGSTRSIZE 2048
@@ -1296,57 +1319,230 @@ CMD_MOUNT_NEXT_USB(int idx)
 
 
 static void
-CMD_DISABLE_BLADES(int idx)
+CMD_EVENT_DISKTYPE(int idx)
 {
     char resp[32];
     short det;
     short v;
-     
+    screen_printf("You may be about to do something very bad\n");
+    screen_printf("Only change which disks events are written to if you are really certain of what is going on\n");
+    screen_printf("0: Disable a disk    1: Enable a disk");
+    screen_printf("2: Set Bitmask");
     screen_dialog(resp, 31,
-	"Disable Blade Drives (0 is enable, 1 is disable, -1 to cancel) [%d] ",
-	disableBlade);
+	"Which function (0,1, or 2)  (-1,to cancel), [%d]",
+	diskChoice);
     if (resp[0] != '\0') {
-	v = atoi(resp);
-	if (0 <= v && v <= 1) {
-	    disableBlade = v;
+	v = atoi(resp);	
+	if (0 <= v && v <= 2) {
+	    diskChoice= v;
 	} else if (v == -1) {
 	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 0 or 1, not %d.\n", v);
+	    screen_printf("Value must be 0-2, not %d.\n", v);
 	    return;
 	}
     }
+    
+    diskBitMask=0;
+    if(diskChoice==0 || diskChoice==1) {
+	screen_printf("0: Blade            1: Hockey Brick\n");
+	screen_printf("2: USB Internal     3: USB External\n");
+	screen_printf("4: PMC Drive\n");
+	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
+    
+	if(resp[0] != '\0') {
+	    v = atoi(resp);	
+	    if (0 <= v && v <= 4) {
+		diskBitMask = diskBitMasks[v];
+	    } else if (v == -1) {
+		screen_printf("Cancelled.\n");
+		return;
+	    } else {
+		screen_printf("Value must be 0-4, not %d.\n", v);
+		return;
+	    }       
+	} else return;
+    }
+    else {
+	screen_printf("0: Blade            1: Hockey Brick\n");
+	screen_printf("2: USB Internal     3: USB External\n");
+	screen_printf("4: PMC Drive\n");
+	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
+	if(resp[0] != '\0') {
+	    v = atoi(resp);	
+	    if (0 <= v && v <= 4) {
+		diskBitMask = diskBitMasks[v];
+	    } else if (v == -1) {
+		screen_printf("Cancelled.\n");
+		return;
+	    } else {
+		screen_printf("Value must be 0-4, not %d.\n", v);
+		return;
+	    }       
+	} else return;
+
+	while(1) {
+	    screen_printf("0: Blade            1: Hockey Brick\n");
+	    screen_printf("2: USB Internal     3: USB External\n");
+	    screen_printf("4: PMC Drive\n");
+	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
+	    if(resp[0] != '\0') {
+		v = atoi(resp);	
+		if (0 <= v && v <= 4) {
+		    diskBitMask |= diskBitMasks[v];
+		} else if (v == -1) {
+		    screen_printf("Cancelled.\n");
+		    return;
+		} else if (v == 5) {
+		    break;
+		}
+		else {
+		    screen_printf("Value must be 0-5, not %d.\n", v);
+		    return;
+		}       
+	    } else return;
+	}
+    }	    		       
 
     Curcmd[0] = 0;
     Curcmd[1] = idx;
     Curcmd[2] = 1;
-    Curcmd[3] = disableBlade;
-    Curcmdlen = 4;
-    set_cmd_log("%d; Disable Blade Drive %d.", idx, disableBlade);
+    Curcmd[3] = diskChoice;
+    Curcmd[4] = 2;
+    Curcmd[5] = (diskBitMask&0xff);
+    Curcmd[6] = 3;
+    Curcmd[7] = ((diskBitMask&0xff00)<<8);
+    Curcmdlen = 8;
+    set_cmd_log("%d; Send event disk bit mask command %d %#x.", idx, diskChoice,
+		diskBitMask);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+
+static void
+CMD_HK_DISKTYPE(int idx)
+{
+    char resp[32];
+    short det;
+    short v;
+    screen_printf("You may be about to do something very bad\n");
+    screen_printf("Only change which disks housekeeping is written to if you are really certain of what is going on\n");
+    screen_printf("0: Disable a disk    1: Enable a disk");
+    screen_printf("2: Set Bitmask");
+    screen_dialog(resp, 31,
+	"Which function (0, 1, or 2)  (-1,to cancel), [%d]",
+	diskChoice);
+    if (resp[0] != '\0') {
+	v = atoi(resp);	
+	if (0 <= v && v <= 2) {
+	    diskChoice= v;
+	} else if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-2, not %d.\n", v);
+	    return;
+	}
+    }
+    
+    diskBitMask=0;
+    if(diskChoice==0 || diskChoice==1) {
+	screen_printf("0: Blade            1: Hockey Brick\n");
+	screen_printf("2: USB Internal     3: USB External\n");
+	screen_printf("4: PMC Drive\n");
+	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
+    
+	if(resp[0] != '\0') {
+	    v = atoi(resp);	
+	    if (0 <= v && v <= 4) {
+		diskBitMask = diskBitMasks[v];
+	    } else if (v == -1) {
+		screen_printf("Cancelled.\n");
+		return;
+	    } else {
+		screen_printf("Value must be 0-4, not %d.\n", v);
+		return;
+	    }       
+	} else return;
+    }
+    else {
+	screen_printf("0: Blade            1: Hockey Brick\n");
+	screen_printf("2: USB Internal     3: USB External\n");
+	screen_printf("4: PMC Drive\n");
+	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
+	if(resp[0] != '\0') {
+	    v = atoi(resp);	
+	    if (0 <= v && v <= 4) {
+		diskBitMask = diskBitMasks[v];
+	    } else if (v == -1) {
+		screen_printf("Cancelled.\n");
+		return;
+	    } else {
+		screen_printf("Value must be 0-4, not %d.\n", v);
+		return;
+	    }       
+	} else return;
+
+	while(1) {
+	    screen_printf("0: Blade            1: Hockey Brick\n");
+	    screen_printf("2: USB Internal     3: USB External\n");
+	    screen_printf("4: PMC Drive\n");
+	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
+	    if(resp[0] != '\0') {
+		v = atoi(resp);	
+		if (0 <= v && v <= 4) {
+		    diskBitMask |= diskBitMasks[v];
+		} else if (v == -1) {
+		    screen_printf("Cancelled.\n");
+		    return;
+		} else if (v == 5) {
+		    break;
+		}
+		else {
+		    screen_printf("Value must be 0-5, not %d.\n", v);
+		    return;
+		}       
+	    } else return;
+	}
+    }	    		       
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = diskChoice;
+    Curcmd[4] = 2;
+    Curcmd[5] = (diskBitMask&0xff);
+    Curcmd[6] = 3;
+    Curcmd[7] = ((diskBitMask&0xff00)<<8);
+    Curcmdlen = 8;
+    set_cmd_log("%d; Send hk disk bit mask command %d %#x.", idx, diskChoice,
+		diskBitMask);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-CMD_DISABLE_USBINTS(int idx)
+ARCHIVE_STORAGE_TYPE(int idx)
 {
     char resp[32];
     short det;
     short v;
-     
+    screen_printf("1: Raw Data       2: Ped Subbed Raw Data\n");
+    screen_printf("3: Encoded Data   4: Ped Subbed Encoded Data\n");
     screen_dialog(resp, 31,
-	"Disable Internal Usb Drives (0 is enable, 1 is disable, -1 to cancel) [%d] ",
-	disableUsbInt);
+	"Set Storage type to (-1 to cancel) [%d] ",
+	storageType);
     if (resp[0] != '\0') {
 	v = atoi(resp);
-	if (0 <= v && v <= 1) {
-	    disableUsbInt = v;
+	if (1 <= v && v <= 4) {
+	    storageType = v;
 	} else if (v == -1) {
 	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 0 or 1, not %d.\n", v);
+	    screen_printf("Value must be 1-4, not %d.\n", v);
 	    return;
 	}
     }
@@ -1354,32 +1550,33 @@ CMD_DISABLE_USBINTS(int idx)
     Curcmd[0] = 0;
     Curcmd[1] = idx;
     Curcmd[2] = 1;
-    Curcmd[3] = disableUsbInt;
+    Curcmd[3] = storageType;
     Curcmdlen = 4;
-    set_cmd_log("%d; Disable Internal USB Drives %d.", idx, disableUsbInt);
+    set_cmd_log("%d; Set Storage Type to %d.", idx, storageType);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-CMD_DISABLE_USBEXTS(int idx)
+TELEM_TYPE(int idx)
 {
     char resp[32];
     short det;
-    short v;
-     
+    short v;    
+    screen_printf("1: Raw Data       2: Ped Subbed Raw Data\n");
+    screen_printf("3: Encoded Data   4: Ped Subbed Encoded Data\n");
     screen_dialog(resp, 31,
-	"Disable External USB Drives (0 is enable, 1 is disable, -1 to cancel) [%d] ",
-	disableUsbExt);
+	"Set Telemetry type to (-1 to cancel) [%d] ",
+	telemType);
     if (resp[0] != '\0') {
 	v = atoi(resp);
-	if (0 <= v && v <= 1) {
-	    disableUsbExt = v;
+	if (1 <= v && v <= 4) {
+	    telemType = v;
 	} else if (v == -1) {
 	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 0 or 1, not %d.\n", v);
+	    screen_printf("Value must be 1-4, not %d.\n", v);
 	    return;
 	}
     }
@@ -1387,9 +1584,212 @@ CMD_DISABLE_USBEXTS(int idx)
     Curcmd[0] = 0;
     Curcmd[1] = idx;
     Curcmd[2] = 1;
-    Curcmd[3] = disableUsbExt;
+    Curcmd[3] = telemType;
     Curcmdlen = 4;
-    set_cmd_log("%d; Disable External USB Drives %d.", idx, disableUsbExt);
+    set_cmd_log("%d; Set Telemetry Type to %d.", idx, telemType);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+ARCHIVE_PRI_DISK(int idx)
+{
+    char resp[32];
+    short pri;
+    short det;
+    short v;     
+    int t;
+    screen_dialog(resp,31,
+		  "Which priority to change event disk bit mask for? (-1 to cancel)");
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (0 <= v && v <= 9) {
+	    pri = v;
+	} else if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Priority must be 0-9, not %d.\n", v);
+	    return;
+	}
+    }
+
+    screen_dialog(resp,31,
+		  "To which bit mask [%#x] ? (-1 to cancel)",eventBitMask);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	}
+	
+	t = strtoul(resp,NULL,16);
+	eventBitMask=t&0xffff;
+    }
+        
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = pri;
+    Curcmd[4] = 2;
+    Curcmd[5] = eventBitMask&0xff;
+    Curcmd[6] = 3;
+    Curcmd[7] = (eventBitMask&0xff00)>>8;
+    Curcmdlen = 8;
+    set_cmd_log("%d; Set priDiskBitMask[%d] to %#x.", idx, pri,eventBitMask);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+ARCHIVE_ALTERNATE_USB(int idx)
+{
+    char resp[32];
+    short pri;
+    short det;
+    short v;     
+    int t;
+    screen_dialog(resp,31,
+		  "Which priority to change USB alternating for? (-1 to cancel)");
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (0 <= v && v <= 9) {
+	    pri = v;
+	} else if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Priority must be 0-9, not %d.\n", v);
+	    return;
+	}
+    }
+
+    screen_dialog(resp,31,
+		  "Enable (1) or disable (0) alternating? (-1 to cancel)",altUsb);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if(v>=0 && v<=1) {
+	    altUsb=v;
+	}
+	else if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	}
+	else {
+	    screen_printf("Value must be 0 or 1 not %d.\n",v);
+	    return;
+	}	    	
+    }
+        
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = pri;
+    Curcmd[4] = 2;
+    Curcmd[5] = altUsb;
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set alternateUsb[%d] to %d.", idx, pri,altUsb);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+
+static void
+ARCHIVE_PRI_ENC_TYPE(int idx)
+{
+    char resp[32];
+    short pri;
+    short det;
+    short v;     
+    int t;
+    screen_dialog(resp,31,
+		  "Which priority to change storage encoding type for? (-1 to cancel)");
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (0 <= v && v <= 9) {
+	    pri = v;
+	} else if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Priority must be 0-9, not %d.\n", v);
+	    return;
+	}
+    }
+
+    screen_dialog(resp,31,
+		  "To which encoding type [%d] ? (-1 to cancel)",encType);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	}
+	else {
+	    encType=v;
+	}
+    }
+        
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = pri;
+    Curcmd[4] = 2;
+    Curcmd[5] = encType&0xff;
+    Curcmd[6] = 3;
+    Curcmd[7] = (encType&0xff00)>>8;
+    Curcmdlen = 8;
+    set_cmd_log("%d; Set priTelemEncodingType[%d] to %d.", idx, pri,encType);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+TELEM_PRI_ENC_TYPE(int idx)
+{
+    char resp[32];
+    short pri;
+    short det;
+    short v;     
+    int t;
+    screen_dialog(resp,31,
+		  "Which priority to change telemetry encoding type for? (-1 to cancel)");
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (0 <= v && v <= 9) {
+	    pri = v;
+	} else if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Priority must be 0-9, not %d.\n", v);
+	    return;
+	}
+    }
+
+    screen_dialog(resp,31,
+		  "To which encoding type [%d] ? (-1 to cancel)",encType);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	}
+	else {
+	    encType=v;
+	}
+    }
+        
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = pri;
+    Curcmd[4] = 2;
+    Curcmd[5] = encType&0xff;
+    Curcmd[6] = 3;
+    Curcmd[7] = (encType&0xff00)>>8;
+    Curcmdlen = 8;
+    set_cmd_log("%d; Set priDiskencodingType[%d] to %d.", idx, pri,encType);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -1625,6 +2025,147 @@ SET_CALPULSER_ATTEN(int idx)
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
+
+static void
+CP_ATTEN_LOOP_PERIOD(int idx)
+{
+    char resp[32];
+    short det;
+    int t;
+     
+    screen_dialog(resp, 31,
+	"Set Attenuator Loop Period in seconds  (0-65535, -1 to cancel) [%d] ",
+	cpAttenLoopPeriod);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    cpAttenLoopPeriod = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in seconds must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (cpAttenLoopPeriod&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((cpAttenLoopPeriod&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set Attenuator loop period to %d secs.", idx, cpAttenLoopPeriod);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+CP_SWITCH_LOOP_PERIOD(int idx)
+{
+    char resp[32];
+    short det;
+    int t;
+     
+    screen_dialog(resp, 31,
+	"Set RF Switch Loop Period in seconds  (0-65535, -1 to cancel) [%d] ",
+	cpSwitchLoopPeriod);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    cpSwitchLoopPeriod = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in seconds must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (cpSwitchLoopPeriod&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((cpSwitchLoopPeriod&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set RF switch loop period to %d secs.", idx, cpSwitchLoopPeriod);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+CP_OFF_LOOP_PERIOD(int idx)
+{
+    char resp[32];
+    short det;
+    int t;
+     
+    screen_dialog(resp, 31,
+	"Set CalPulser off (between RF switch loops) period in seconds  (0-65535, -1 to cancel) [%d] ",
+	cpOffLoopPeriod);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    cpOffLoopPeriod = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in seconds must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (cpOffLoopPeriod&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((cpOffLoopPeriod&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set CalPulser off (between rf switch loops) period to %d secs.", idx, cpOffLoopPeriod);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+SET_CALIB_WRITE_PERIOD(int idx)
+{
+    char resp[32];
+    short det;
+    int t;
+     
+    screen_dialog(resp, 31,
+	"Set Calibd Data Write period in seconds  (0-65535, -1 to cancel) [%d] ",
+	calibWritePeriod);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    calibWritePeriod = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in seconds must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (calibWritePeriod&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((calibWritePeriod&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set Calibd data write period to %d secs.", idx, calibWritePeriod);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
 static void
 SET_ADU5_PAT_PERIOD(int idx)
 {
@@ -1658,6 +2199,78 @@ SET_ADU5_PAT_PERIOD(int idx)
     set_cmd_log("%d; Set ADU5 position readout period to %d.", idx, ADU5PatPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
+
+
+static void
+SET_ADU5_VTG_PERIOD(int idx)
+{
+    char resp[32];
+    short det;
+    int t;
+     
+    screen_dialog(resp, 31,
+	"Set ADU5 Velocity and Course readout period (in units of 100ms) to  (0-65535, -1 to cancel) [%d] ",
+	ADU5VtgPer);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    ADU5VtgPer = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in seconds must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (ADU5VtgPer&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((ADU5VtgPer&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set ADU5 velocity and course readout period to %d (100ms uints).", idx, ADU5VtgPer);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+SET_G12_POS_PERIOD(int idx)
+{
+    char resp[32];
+    short det;
+    int t;
+     
+    screen_dialog(resp, 31,
+	"Set G12 Position readout period (in units of 100ms) to  (0-65535, -1 to cancel) [%d] ",
+	G12PosPer);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    G12PosPer = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Period in seconds must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (G12PosPer&0xff);
+    Curcmd[4] = 2; 
+    Curcmd[5] = ((G12PosPer&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set G12 position readout period to %d (100ms uints).", idx, G12PosPer);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
 
 static void
 SET_ADU5_SAT_PERIOD(int idx)
@@ -1772,7 +2385,7 @@ SET_G12_PPS_PERIOD(int idx)
 	    screen_printf("Period in ms must be 0-65535, not %d.\n", t);
 	    return;
 	}
-    }
+    } 
 
     Curcmd[0] = 0;
     Curcmd[1] = idx;
@@ -1789,21 +2402,158 @@ SET_G12_PPS_PERIOD(int idx)
 static void 
 ADU5_CAL_12(int idx)
 {
-  screen_printf("Not implemented.\n");
+    int t;
+    char resp[32];
+    float v12[3]={0,3.088,0.035};
+    short det[3];
+    screen_printf("Are you sure you want to do this?.\n");
+    screen_dialog(resp, 31,
+		  "Press -1, to cancel (later you will have to cntl-c out):  ",NULL);
+    if (resp[0] != '\0') {
+	t=atoi(resp);
+	if(t==-1) return;
+    } else return;
+    screen_dialog(resp,31,"Enter calibV12[0]: [%3.3f]  ",v12[0]);
+    if (resp[0] != '\0') {
+	v12[0]=atof(resp);
+    }
+    screen_dialog(resp,31,"Enter calibV12[1]: [%3.3f]  ",v12[1]);
+    if (resp[0] != '\0') {
+	v12[1]=atof(resp);
+    }
+    screen_dialog(resp,31,"Enter calibV12[2]: [%3.3f]  ",v12[2]);
+    if (resp[0] != '\0') {
+	v12[2]=atof(resp);
+    }
+    for(t=0;t<3;t++) {
+	det[t]=((short)v12[t]*1000.);
+    }
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (det[0]&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((det[0]&0xff00)>>8);
+    Curcmd[6] = 3;
+    Curcmd[7] = (det[1]&0xff);
+    Curcmd[8] = 4;
+    Curcmd[9] = ((det[1]&0xff00)>>8);
+    Curcmd[10] = 5;
+    Curcmd[11] = (det[2]&0xff);
+    Curcmd[12] = 6;
+    Curcmd[13] = ((det[2]&0xff00)>>8);
+    Curcmdlen = 14;
+    set_cmd_log("%d; Set Adu5 Cal V12 to {%3.3f,%3.3f,%3.3f}.", idx, det[0],
+		det[1],det[2]);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
   return;
 }
 
 static void 
 ADU5_CAL_13(int idx)
 {
-  screen_printf("Not implemented.\n");
+    float v13[3]={-1.538,1.558,-0.001};
+    int t;
+    char resp[32];
+    short det[3];
+    screen_printf("Are you sure you want to do this?.\n");
+    screen_dialog(resp, 31,
+		  "Press -1, to cancel (later you will have to cntl-c out):  ",NULL);
+    if (resp[0] != '\0') {
+	t=atoi(resp);
+	if(t==-1) return;
+    } else return;
+    screen_dialog(resp,31,"Enter calibV13[0]: [%3.3f]  ",v13[0]);
+    if (resp[0] != '\0') {
+	v13[0]=atof(resp);
+    }
+    screen_dialog(resp,31,"Enter calibV13[1]: [%3.3f]  ",v13[1]);
+    if (resp[0] != '\0') {
+	v13[1]=atof(resp);
+    }
+    screen_dialog(resp,31,"Enter calibV13[2]: [%3.3f]  ",v13[2]);
+    if (resp[0] != '\0') {
+	v13[2]=atof(resp);
+    }
+    for(t=0;t<3;t++) {
+	det[t]=((short)v13[t]*1000.);
+    }
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (det[0]&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((det[0]&0xff00)>>8);
+    Curcmd[6] = 3;
+    Curcmd[7] = (det[1]&0xff);
+    Curcmd[8] = 4;
+    Curcmd[9] = ((det[1]&0xff00)>>8);
+    Curcmd[10] = 5;
+    Curcmd[11] = (det[2]&0xff);
+    Curcmd[12] = 6;
+    Curcmd[13] = ((det[2]&0xff00)>>8);
+    Curcmdlen = 14;
+    set_cmd_log("%d; Set Adu5 Cal V13 to {%3.3f,%3.3f,%3.3f}.", idx, det[0],
+		det[1],det[2]);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
+
+
+//  screen_printf("Not implemented.\n");
   return;
 }
 
 static void 
 ADU5_CAL_14(int idx)
 {
-  screen_printf("Not implemented.\n");
+    float v14[3]={1.543,1.553,-0.024};
+
+    int t;
+    char resp[32];
+    short det[3];
+    screen_printf("Are you sure you want to do this?.\n");
+    screen_dialog(resp, 31,
+		  "Press -1, to cancel (later you will have to cntl-c out):  ",NULL);
+    if (resp[0] != '\0') {
+	t=atoi(resp);
+	if(t==-1) return;
+    } else return;
+    screen_dialog(resp,31,"Enter calibV14[0]: [%3.3f]  ",v14[0]);
+    if (resp[0] != '\0') {
+	v14[0]=atof(resp);
+    }
+    screen_dialog(resp,31,"Enter calibV14[1]: [%3.3f]  ",v14[1]);
+    if (resp[0] != '\0') {
+	v14[1]=atof(resp);
+    }
+    screen_dialog(resp,31,"Enter calibV14[2]: [%3.3f]  ",v14[2]);
+    if (resp[0] != '\0') {
+	v14[2]=atof(resp);
+    }
+    for(t=0;t<3;t++) {
+	det[t]=((short)v14[t]*1000.);
+    }
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (det[0]&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((det[0]&0xff00)>>8);
+    Curcmd[6] = 3;
+    Curcmd[7] = (det[1]&0xff);
+    Curcmd[8] = 4;
+    Curcmd[9] = ((det[1]&0xff00)>>8);
+    Curcmd[10] = 5;
+    Curcmd[11] = (det[2]&0xff);
+    Curcmd[12] = 6;
+    Curcmd[13] = ((det[2]&0xff00)>>8);
+    Curcmdlen = 14;
+    set_cmd_log("%d; Set Adu5 Cal V14 to {%3.3f,%3.3f,%3.3f}.", idx, det[0],
+		det[1],det[2]);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
+//  screen_printf("Not implemented.\n");
   return;
 }
 
