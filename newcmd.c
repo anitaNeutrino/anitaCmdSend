@@ -1330,8 +1330,8 @@ CMD_EVENT_DISKTYPE(int idx)
     short v;
     screen_printf("You may be about to do something very bad\n");
     screen_printf("Only change which disks events are written to if you are really certain of what is going on\n");
-    screen_printf("0: Disable a disk    1: Enable a disk");
-    screen_printf("2: Set Bitmask");
+    screen_printf("0: Disable a disk    1: Enable a disk\n");
+    screen_printf("2: Set Bitmask\n");
     screen_dialog(resp, 31,
 	"Which function (0,1, or 2)  (-1,to cancel), [%d]",
 	diskChoice);
@@ -1433,8 +1433,8 @@ CMD_HK_DISKTYPE(int idx)
     short v;
     screen_printf("You may be about to do something very bad\n");
     screen_printf("Only change which disks housekeeping is written to if you are really certain of what is going on\n");
-    screen_printf("0: Disable a disk    1: Enable a disk");
-    screen_printf("2: Set Bitmask");
+    screen_printf("0: Disable a disk    1: Enable a disk\n");
+    screen_printf("2: Set Bitmask\n");
     screen_dialog(resp, 31,
 	"Which function (0, 1, or 2)  (-1,to cancel), [%d]",
 	diskChoice);
@@ -3536,8 +3536,9 @@ BAND_SCALE_FACTOR(int idx)
 	    return;
 	} 
     }
-    value = ((unsigned short) scaleFactor*1000.);
-
+    
+    value = ((unsigned short) (scaleFactor*1000.));
+    //    screen_printf("scaleFactor %f\tvalue %u\n",scaleFactor,value);
        
     Curcmd[0] = 0;
     Curcmd[1] = idx;
@@ -3550,7 +3551,7 @@ BAND_SCALE_FACTOR(int idx)
     Curcmd[8] = 4;
     Curcmd[9] = ((value&0xff00)>>8);
     Curcmdlen = 10;
-    set_cmd_log("%d; Set Reprogram Turf to %d.", idx, reprogramTurf);
+    set_cmd_log("%d; Set Band Scale Factor SURF %d, DAC %d, %f.", idx, whichSurf,whichDac,scaleFactor);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 

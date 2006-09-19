@@ -799,3 +799,349 @@ Thu Sep 14 06:12:55 2006	CMD 3; Start new run.
 Thu Sep 14 06:13:07 2006	NSBF response; OK
 Thu Sep 14 06:13:07 2006	CMD 237; Take Threshold Scan 1.
 Thu Sep 14 06:26:18 2006	Finished
+Thu Sep 14 08:51:12 2006	program starting.
+Thu Sep 14 08:51:12 2006	link is 0, route is 9.
+Thu Sep 14 08:51:26 2006	NSBF response; OK
+Thu Sep 14 08:51:26 2006	CMD 131; Program  1 killed.
+Thu Sep 14 08:51:35 2006	NSBF response; OK
+Thu Sep 14 08:51:35 2006	CMD 131; Program  2 killed.
+Thu Sep 14 08:51:44 2006	NSBF response; OK
+Thu Sep 14 08:51:44 2006	CMD 131; Program  4 killed.
+Thu Sep 14 08:51:53 2006	NSBF response; OK
+Thu Sep 14 08:51:53 2006	CMD 131; Program  32 killed.
+Thu Sep 14 08:52:02 2006	NSBF response; OK
+Thu Sep 14 08:52:02 2006	CMD 131; Program  64 killed.
+Thu Sep 14 08:52:08 2006	NSBF response; OK
+Thu Sep 14 08:52:08 2006	CMD 131; Program  1024 killed.
+Thu Sep 14 09:01:14 2006	NSBF response; OK
+Thu Sep 14 09:01:14 2006	CMD 139; Send hk disk bit mask command 0 0x1.
+Thu Sep 14 09:03:38 2006	NSBF response; OK
+Thu Sep 14 09:03:38 2006	CMD 133; Program  2 started.
+Thu Sep 14 09:08:08 2006	NSBF response; OK
+Thu Sep 14 09:08:08 2006	CMD 137; mount next blade drive
+Thu Sep 14 09:27:40 2006	Finished
+Thu Sep 14 09:33:09 2006	program starting.
+Thu Sep 14 09:33:09 2006	link is 0, route is 9.
+Thu Sep 14 09:35:37 2006	program starting.
+Thu Sep 14 09:35:37 2006	link is 0, route is 9.
+Thu Sep 14 09:36:10 2006	Finished
+Thu Sep 14 09:36:12 2006	program starting.
+Thu Sep 14 09:36:12 2006	link is 0, route is 9.
+Thu Sep 14 09:36:21 2006	Finished
+Thu Sep 14 09:37:07 2006	Finished
+Thu Sep 14 09:37:23 2006	program starting.
+Thu Sep 14 09:37:23 2006	link is 0, route is 9.
+Thu Sep 14 09:37:29 2006	NSBF response; OK
+Thu Sep 14 09:37:29 2006	
+Thu Sep 14 09:37:31 2006	Finished
+Thu Sep 14 09:37:36 2006	program starting.
+Thu Sep 14 09:37:36 2006	link is 0, route is 9.
+Thu Sep 14 09:37:56 2006	NSBF response; OK
+Thu Sep 14 09:37:56 2006	CMD 131; Program  1 killed.
+Thu Sep 14 09:53:49 2006	program starting.
+Thu Sep 14 09:53:49 2006	link is 0, route is 9.
+Thu Sep 14 09:53:59 2006	NSBF response; OK
+Thu Sep 14 09:53:59 2006	CMD 3; Start new run.
+Thu Sep 14 09:55:14 2006	NSBF response; OK
+Thu Sep 14 09:55:14 2006	CMD 3; Start new run.
+Thu Sep 14 10:02:42 2006	Finished
+Thu Sep 14 10:26:31 2006	program starting.
+Thu Sep 14 10:26:31 2006	link is 0, route is 9.
+Thu Sep 14 10:27:59 2006	NSBF response; OK
+Thu Sep 14 10:27:59 2006	CMD 159; Turn off GPS, RFCM, CalPulser and Veto.
+Thu Sep 14 10:28:59 2006	NSBF response; OK
+Thu Sep 14 10:28:59 2006	CMD 131; Program  3575 killed.
+Thu Sep 14 10:29:32 2006	NSBF response; OK
+Thu Sep 14 10:29:32 2006	CMD 129; Shutdown and halt computer.
+Thu Sep 14 12:27:33 2006	NSBF response; OK
+Thu Sep 14 12:27:33 2006	CMD 152; Turn on RFCM.
+Thu Sep 14 12:27:51 2006	NSBF response; OK
+Thu Sep 14 12:27:51 2006	CMD 150; Turn on GPS/Magnetometer.
+Thu Sep 14 14:18:57 2006	NSBF response; OK
+Thu Sep 14 14:18:57 2006	CMD 150; Turn on GPS/Magnetometer.
+Thu Sep 14 15:20:04 2006	NSBF response; OK
+Thu Sep 14 15:20:04 2006	CMD 138; Send event disk bit mask command 1 0x1.
+Thu Sep 14 15:22:49 2006	NSBF response; OK
+Thu Sep 14 15:22:49 2006	CMD 139; Send hk disk bit mask command 1 0x1.
+Thu Sep 14 16:13:35 2006	program starting.
+Thu Sep 14 16:13:35 2006	link is 0, route is 9.
+Fri Sep 15 04:53:52 2006	Finished
+Fri Sep 15 05:27:57 2006	program starting.
+Fri Sep 15 05:27:57 2006	link is 0, route is 9.
+Fri Sep 15 05:28:05 2006	NSBF response; OK
+Fri Sep 15 05:28:05 2006	CMD 3; Start new run.
+Fri Sep 15 08:46:43 2006	NSBF response; OK
+Fri Sep 15 08:46:43 2006	CMD 137; mount next blade drive
+Fri Sep 15 09:34:31 2006	NSBF response; OK
+Fri Sep 15 09:34:31 2006	CMD 1; Tail last 0 lines of /var/log/messages.
+Fri Sep 15 10:26:28 2006	NSBF response; OK
+Fri Sep 15 10:26:28 2006	CMD 239; Take SURF trig band mask 6 -- 0 0xc000.
+Fri Sep 15 10:26:32 2006	Finished
+Fri Sep 15 11:03:37 2006	NSBF response; OK
+Fri Sep 15 11:03:37 2006	CMD 239; Take SURF trig band mask 7 -- 0xc000 0x80.
+Fri Sep 15 13:26:29 2006	NSBF response; OK
+Fri Sep 15 13:26:29 2006	CMD 239; Take SURF trig band mask 6 -- 0 0.
+Fri Sep 15 13:27:32 2006	NSBF response; OK
+Fri Sep 15 13:27:32 2006	CMD 239; Take SURF trig band mask 7 -- 0 0.
+Fri Sep 15 13:44:17 2006	NSBF response; OK
+Fri Sep 15 13:44:17 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 13:50:02 2006	NSBF response; OK
+Fri Sep 15 13:50:02 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 13:52:50 2006	NSBF response; OK
+Fri Sep 15 13:52:50 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 13:53:32 2006	NSBF response; OK
+Fri Sep 15 13:53:32 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 13:55:11 2006	NSBF response; OK
+Fri Sep 15 13:55:11 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 13:57:59 2006	NSBF response; OK
+Fri Sep 15 13:57:59 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:07:41 2006	NSBF response; OK
+Fri Sep 15 14:07:41 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:11:35 2006	NSBF response; OK
+Fri Sep 15 14:11:35 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:12:05 2006	NSBF response; OK
+Fri Sep 15 14:12:05 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:14:08 2006	NSBF response; OK
+Fri Sep 15 14:14:08 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:15:17 2006	NSBF response; OK
+Fri Sep 15 14:15:17 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:21:26 2006	NSBF response; OK
+Fri Sep 15 14:21:26 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:21:53 2006	NSBF response; OK
+Fri Sep 15 14:21:53 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:24:56 2006	NSBF response; OK
+Fri Sep 15 14:24:56 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:28:11 2006	NSBF response; OK
+Fri Sep 15 14:28:11 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:31:17 2006	NSBF response; OK
+Fri Sep 15 14:31:17 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 14:59:03 2006	NSBF response; OK
+Fri Sep 15 14:59:03 2006	CMD 235; Setting pidGoal to 2500.
+Fri Sep 15 15:06:27 2006	NSBF response; OK
+Fri Sep 15 15:06:27 2006	CMD 235; Setting pidGoal to 2600.
+Fri Sep 15 15:19:03 2006	NSBF response; OK
+Fri Sep 15 15:19:03 2006	CMD 154; Turn on CalPulser.
+Fri Sep 15 15:22:30 2006	NSBF response; OK
+Fri Sep 15 15:22:30 2006	CMD 171; Set CalPulser Switch to? 2.
+Fri Sep 15 15:23:30 2006	NSBF response; OK
+Fri Sep 15 15:23:30 2006	CMD 171; Set CalPulser Switch to? 1.
+Fri Sep 15 15:24:09 2006	NSBF response; OK
+Fri Sep 15 15:24:09 2006	CMD 174; Set RF switch loop period to 3 secs.
+Fri Sep 15 15:26:09 2006	NSBF response; OK
+Fri Sep 15 15:26:09 2006	CMD 155; Turn off CalPulser.
+Fri Sep 15 15:26:21 2006	NSBF response; OK
+Fri Sep 15 15:26:21 2006	CMD 154; Turn on CalPulser.
+Fri Sep 15 15:27:30 2006	NSBF response; OK
+Fri Sep 15 15:27:30 2006	CMD 155; Turn off CalPulser.
+Fri Sep 15 15:29:15 2006	NSBF response; OK
+Fri Sep 15 15:29:15 2006	CMD 154; Turn on CalPulser.
+Fri Sep 15 15:30:12 2006	NSBF response; OK
+Fri Sep 15 15:30:12 2006	CMD 155; Turn off CalPulser.
+Fri Sep 15 15:30:54 2006	NSBF response; OK
+Fri Sep 15 15:30:54 2006	CMD 174; Set RF switch loop period to 1000 secs.
+Fri Sep 15 15:31:30 2006	NSBF response; OK
+Fri Sep 15 15:31:30 2006	CMD 154; Turn on CalPulser.
+Fri Sep 15 15:32:30 2006	NSBF response; OK
+Fri Sep 15 15:32:30 2006	CMD 171; Set CalPulser Switch to? 2.
+Fri Sep 15 15:32:51 2006	NSBF response; OK
+Fri Sep 15 15:32:51 2006	CMD 155; Turn off CalPulser.
+Fri Sep 15 15:33:00 2006	NSBF response; OK
+Fri Sep 15 15:33:00 2006	CMD 154; Turn on CalPulser.
+Fri Sep 15 15:37:09 2006	NSBF response; OK
+Fri Sep 15 15:37:09 2006	CMD 171; Set CalPulser Switch to? 0.
+Fri Sep 15 15:39:30 2006	NSBF response; OK
+Fri Sep 15 15:39:30 2006	CMD 172; Set Cal Pulser Atten to 0.
+Fri Sep 15 15:47:48 2006	NSBF response; OK
+Fri Sep 15 15:47:48 2006	CMD 172; Set Cal Pulser Atten to 2.
+Fri Sep 15 15:48:30 2006	NSBF response; OK
+Fri Sep 15 15:48:30 2006	CMD 172; Set Cal Pulser Atten to 0.
+Fri Sep 15 15:50:06 2006	NSBF response; OK
+Fri Sep 15 15:50:06 2006	CMD 173; Set Attenuator loop period to 10 secs.
+Fri Sep 15 15:56:45 2006	NSBF response; OK
+Fri Sep 15 15:56:45 2006	CMD 129; Shutdown and halt computer.
+Fri Sep 15 16:43:54 2006	NSBF response; OK
+Fri Sep 15 16:43:54 2006	CMD 138; Send event disk bit mask command 1 0x2.
+Fri Sep 15 16:52:33 2006	NSBF response; OK
+Fri Sep 15 16:52:33 2006	CMD 235; Setting pidGoal to 2700.
+Fri Sep 15 17:59:55 2006	program starting.
+Fri Sep 15 17:59:55 2006	link is 0, route is 9.
+Fri Sep 15 18:00:31 2006	NSBF response; OK
+Fri Sep 15 18:00:31 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 18:01:04 2006	Finished
+Fri Sep 15 18:03:39 2006	program starting.
+Fri Sep 15 18:03:39 2006	link is 0, route is 9.
+Fri Sep 15 18:03:55 2006	NSBF response; OK
+Fri Sep 15 18:03:55 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 18:03:58 2006	Finished
+Fri Sep 15 18:04:34 2006	program starting.
+Fri Sep 15 18:04:34 2006	link is 0, route is 9.
+Fri Sep 15 18:04:52 2006	NSBF response; OK
+Fri Sep 15 18:04:52 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 18:05:28 2006	NSBF response; OK
+Fri Sep 15 18:05:28 2006	CMD 248; Set Reprogram Turf to 0.
+Fri Sep 15 18:05:36 2006	Finished
+Fri Sep 15 19:29:00 2006	program starting.
+Fri Sep 15 19:29:00 2006	link is 0, route is 9.
+Fri Sep 15 19:29:25 2006	Finished
+Fri Sep 15 19:29:37 2006	program starting.
+Fri Sep 15 19:29:37 2006	link is 0, route is 9.
+Fri Sep 15 19:43:21 2006	Finished
+Sun Sep 17 05:59:40 2006	program starting.
+Sun Sep 17 05:59:40 2006	link is 0, route is 9.
+Sun Sep 17 05:59:55 2006	NSBF response; OK
+Sun Sep 17 05:59:55 2006	CMD 137; mount next blade drive
+Sun Sep 17 06:07:12 2006	Finished
+Mon Sep 18 11:04:36 2006	program starting.
+Mon Sep 18 11:04:36 2006	link is 0, route is 9.
+Mon Sep 18 11:04:49 2006	NSBF response; OK
+Mon Sep 18 11:04:49 2006	CMD 236; Take Pedestal Run 1.
+Mon Sep 18 11:09:04 2006	NSBF response; OK
+Mon Sep 18 11:09:04 2006	CMD 236; Take Pedestal Run 0.
+Mon Sep 18 11:26:52 2006	NSBF response; OK
+Mon Sep 18 11:26:52 2006	CMD 171; Set CalPulser Switch to? 2.
+Mon Sep 18 11:34:28 2006	NSBF response; OK
+Mon Sep 18 11:34:28 2006	CMD 171; Set CalPulser Switch to? 3.
+Mon Sep 18 11:39:53 2006	NSBF response; OK
+Mon Sep 18 11:39:53 2006	CMD 131; Program  1 killed.
+Mon Sep 18 11:41:53 2006	NSBF response; OK
+Mon Sep 18 11:41:53 2006	CMD 171; Set CalPulser Switch to? 2.
+Mon Sep 18 11:44:08 2006	NSBF response; OK
+Mon Sep 18 11:44:08 2006	CMD 171; Set CalPulser Switch to? 4.
+Mon Sep 18 11:45:20 2006	NSBF response; OK
+Mon Sep 18 11:45:20 2006	CMD 171; Set CalPulser Switch to? 2.
+Mon Sep 18 11:46:32 2006	NSBF response; OK
+Mon Sep 18 11:46:32 2006	CMD 171; Set CalPulser Switch to? 1.
+Mon Sep 18 11:46:50 2006	NSBF response; OK
+Mon Sep 18 11:46:50 2006	CMD 171; Set CalPulser Switch to? 2.
+Mon Sep 18 11:48:14 2006	NSBF response; OK
+Mon Sep 18 11:48:14 2006	CMD 174; Set RF switch loop period to 3 secs.
+Mon Sep 18 11:48:26 2006	NSBF response; OK
+Mon Sep 18 11:48:26 2006	CMD 171; Set CalPulser Switch to? 0.
+Mon Sep 18 11:50:08 2006	NSBF response; OK
+Mon Sep 18 11:50:08 2006	CMD 175; Set CalPulser off (between rf switch loops) period to 0 secs.
+Mon Sep 18 11:53:41 2006	NSBF response; OK
+Mon Sep 18 11:53:41 2006	CMD 172; Set Cal Pulser Atten to 1.
+Mon Sep 18 11:57:56 2006	NSBF response; OK
+Mon Sep 18 11:57:56 2006	CMD 172; Set Cal Pulser Atten to 6.
+Mon Sep 18 11:58:23 2006	NSBF response; OK
+Mon Sep 18 11:58:23 2006	CMD 172; Set Cal Pulser Atten to 8.
+Mon Sep 18 11:59:32 2006	NSBF response; OK
+Mon Sep 18 11:59:32 2006	CMD 172; Set Cal Pulser Atten to 2.
+Mon Sep 18 12:01:26 2006	Finished
+Mon Sep 18 12:01:50 2006	NSBF response; OK
+Mon Sep 18 12:01:50 2006	CMD 139; Send hk disk bit mask command 1 0x2.
+Mon Sep 18 12:17:05 2006	NSBF response; OK
+Mon Sep 18 12:17:05 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 12:20:33 2006	Finished
+Mon Sep 18 12:20:38 2006	program starting.
+Mon Sep 18 12:20:38 2006	link is 0, route is 9.
+Mon Sep 18 12:21:14 2006	NSBF response; OK
+Mon Sep 18 12:21:14 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 12:38:38 2006	NSBF response; OK
+Mon Sep 18 12:38:38 2006	CMD 231; Set SURF G12 Trigger Flag to 1.
+Mon Sep 18 12:39:56 2006	NSBF response; OK
+Mon Sep 18 12:39:56 2006	CMD 231; Set SURF G12 Trigger Flag to 0.
+Mon Sep 18 12:45:53 2006	program starting.
+Mon Sep 18 12:45:53 2006	link is 0, route is 9.
+Mon Sep 18 12:46:02 2006	NSBF response; OK
+Mon Sep 18 12:46:02 2006	CMD 131; Program  1 killed.
+Mon Sep 18 12:53:41 2006	NSBF response; OK
+Mon Sep 18 12:53:41 2006	CMD 133; Program  1 started.
+Mon Sep 18 13:48:59 2006	NSBF response; OK
+Mon Sep 18 13:48:59 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 13:50:47 2006	NSBF response; OK
+Mon Sep 18 13:50:47 2006	CMD 155; Turn off CalPulser.
+Mon Sep 18 13:52:20 2006	NSBF response; OK
+Mon Sep 18 13:52:20 2006	CMD 133; Program  4 started.
+Mon Sep 18 13:53:35 2006	NSBF response; OK
+Mon Sep 18 13:53:35 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:01:35 2006	NSBF response; OK
+Mon Sep 18 14:01:35 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:08:41 2006	NSBF response; OK
+Mon Sep 18 14:08:41 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:12:35 2006	NSBF response; OK
+Mon Sep 18 14:12:35 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:12:50 2006	NSBF response; OK
+Mon Sep 18 14:12:50 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:18:20 2006	NSBF response; OK
+Mon Sep 18 14:18:20 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:18:32 2006	NSBF response; OK
+Mon Sep 18 14:18:32 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:24:41 2006	NSBF response; OK
+Mon Sep 18 14:24:41 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:24:59 2006	NSBF response; OK
+Mon Sep 18 14:24:59 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:45:51 2006	NSBF response; OK
+Mon Sep 18 14:45:51 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:46:03 2006	NSBF response; OK
+Mon Sep 18 14:46:03 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 14:50:09 2006	NSBF response; OK
+Mon Sep 18 14:50:09 2006	CMD 230; Set SURF ADU5 Trigger Flag to 1.
+Mon Sep 18 14:51:21 2006	NSBF response; OK
+Mon Sep 18 14:51:21 2006	CMD 230; Set SURF ADU5 Trigger Flag to 0.
+Mon Sep 18 15:03:27 2006	NSBF response; OK
+Mon Sep 18 15:03:27 2006	CMD 248; Set Reprogram Turf to 0.
+Mon Sep 18 15:16:57 2006	NSBF response; OK
+Mon Sep 18 15:16:57 2006	CMD 230; Set SURF ADU5 Trigger Flag to 1.
+Mon Sep 18 15:18:06 2006	NSBF response; OK
+Mon Sep 18 15:18:06 2006	CMD 230; Set SURF ADU5 Trigger Flag to 0.
+Mon Sep 18 15:18:42 2006	NSBF response; OK
+Mon Sep 18 15:18:42 2006	CMD 231; Set SURF G12 Trigger Flag to 1.
+Mon Sep 18 15:19:51 2006	NSBF response; OK
+Mon Sep 18 15:19:51 2006	CMD 231; Set SURF G12 Trigger Flag to 0.
+Mon Sep 18 15:21:12 2006	NSBF response; OK
+Mon Sep 18 15:21:12 2006	CMD 232; Set SURF Software Trigger Flag to 1.
+Mon Sep 18 15:21:36 2006	NSBF response; OK
+Mon Sep 18 15:21:36 2006	CMD 232; Set SURF Software Trigger Flag to 0.
+Mon Sep 18 16:11:45 2006	NSBF response; OK
+Mon Sep 18 16:11:45 2006	CMD 180; Set ADU5 position readout period to 5.
+Mon Sep 18 16:12:21 2006	NSBF response; OK
+Mon Sep 18 16:12:21 2006	CMD 180; Set ADU5 position readout period to 100.
+Mon Sep 18 16:12:33 2006	NSBF response; OK
+Mon Sep 18 16:12:33 2006	CMD 180; Set ADU5 position readout period to 10.
+Mon Sep 18 16:16:12 2006	NSBF response; OK
+Mon Sep 18 16:16:12 2006	CMD 181; Set ADU5 satellite lock readout period to 500.
+Mon Sep 18 16:17:39 2006	NSBF response; OK
+Mon Sep 18 16:17:39 2006	CMD 181; Set ADU5 satellite lock readout period to 400.
+Mon Sep 18 16:23:18 2006	NSBF response; OK
+Mon Sep 18 16:23:18 2006	CMD 182; Set G12 PPS offset to 300 ms.
+Mon Sep 18 16:23:36 2006	NSBF response; OK
+Mon Sep 18 16:23:36 2006	CMD 182; Set G12 PPS offset to 200 ms.
+Mon Sep 18 16:25:54 2006	NSBF response; OK
+Mon Sep 18 16:25:54 2006	CMD 183; Set G12 PPS offset to 200.5000 ms.
+Mon Sep 18 16:26:09 2006	NSBF response; OK
+Mon Sep 18 16:26:09 2006	CMD 183; Set G12 PPS offset to 100.5000 ms.
+Mon Sep 18 16:40:12 2006	NSBF response; OK
+Mon Sep 18 16:40:12 2006	CMD 131; Program  1 killed.
+Mon Sep 18 17:34:15 2006	NSBF response; OK
+Mon Sep 18 17:34:15 2006	CMD 131; Program  3575 killed.
+Mon Sep 18 17:34:42 2006	NSBF response; OK
+Mon Sep 18 17:34:42 2006	CMD 130; Reboot.
+Tue Sep 19 03:26:37 2006	Finished
+Tue Sep 19 03:26:39 2006	program starting.
+Tue Sep 19 03:26:39 2006	link is 0, route is 9.
+Tue Sep 19 03:27:25 2006	NSBF response; OK
+Tue Sep 19 03:27:25 2006	CMD 146; Set Telemetry Type to 1.
+Tue Sep 19 03:27:49 2006	NSBF response; OK
+Tue Sep 19 03:27:49 2006	CMD 1; Tail last 0 lines of /var/log/messages.
+Tue Sep 19 03:27:58 2006	NSBF response; OK
+Tue Sep 19 03:27:58 2006	CMD 2; Tail last 0 lines of /var/log/anita.log.
+Tue Sep 19 03:28:13 2006	NSBF response; OK
+Tue Sep 19 03:28:13 2006	CMD 210; Config  4095 sent.
+Tue Sep 19 03:28:22 2006	NSBF response; OK
+Tue Sep 19 03:28:22 2006	CMD 210; Config  4095 sent.
+Tue Sep 19 03:39:16 2006	NSBF response; OK
+Tue Sep 19 03:39:16 2006	CMD 146; Set Telemetry Type to 2.
+Tue Sep 19 03:42:25 2006	NSBF response; OK
+Tue Sep 19 03:42:25 2006	CMD 235; Setting pidGoal to 2700.
+Tue Sep 19 03:43:46 2006	NSBF response; OK
+Tue Sep 19 03:43:46 2006	CMD 146; Set Telemetry Type to 4.
+Tue Sep 19 03:46:52 2006	NSBF response; OK
+Tue Sep 19 03:46:52 2006	CMD 146; Set Telemetry Type to 1.
+Tue Sep 19 03:48:37 2006	NSBF response; OK
+Tue Sep 19 03:48:37 2006	CMD 146; Set Telemetry Type to 4.
+Tue Sep 19 04:10:19 2006	NSBF response; OK
+Tue Sep 19 04:10:19 2006	CMD 133; Program  128 started.
+Tue Sep 19 04:24:07 2006	NSBF response; OK
+Tue Sep 19 04:24:07 2006	CMD 131; Program  3575 killed.
+Tue Sep 19 04:33:44 2006	Finished
