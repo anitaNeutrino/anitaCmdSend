@@ -1,6 +1,7 @@
 # cmd
 
 #include ../vars.mk
+BINDIR = /home/anita/bin	# install destination for most programs
 
 CC = gcc
 CFLAGS = -g
