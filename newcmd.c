@@ -117,6 +117,7 @@ static short numLines=0;
 
 static short Dir_det =0;
 static short Prog_det =0;
+static char Which_RFCM =0;
 static short Config_det =0;
 static short switchConfig =0;
 static short Priorit_det =0;
@@ -670,7 +671,7 @@ sendcmd(int fd, unsigned char *s, int len)
 	// direct connection to flight system
 	int i;
 	for (i=0; i<len; i += 2) {
-	    bp = buf;
+	    bp =(char*) buf;
 #ifdef NOTDEF
 	    *bp++ = 'p';
 	    *bp++ = 'a';
@@ -698,7 +699,7 @@ sendcmd(int fd, unsigned char *s, int len)
 	screen_printf("Direct to science computer.\n");
     } else {
 	// connection via sip
-	bp = buf;
+	bp = (char*)buf;
 	*bp++ = 0x10;
 	*bp++ = Curlink;
 	*bp++ = Curroute;
@@ -846,6 +847,7 @@ show_cmds(void)
     int val[2];
 
     for (i=0; i<256; i++) {
+
 	if (Cmdarray[i].f != NULL) {
 	    val[got] = i;
 	    got++;
@@ -1003,7 +1005,7 @@ CMD_KILL_PROGS(int idx)
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 12) {
+	if (1 >= det && det <= 12) {
 	  switch(det){
 	  case 1:
             Prog_det = ACQD_ID_MASK;
@@ -1834,32 +1836,80 @@ CMD_TURN_GPS_OFF(int idx)
 static void
 CMD_TURN_RFCM_ON(int idx)
 {
-    if (screen_confirm("Really turn on RFCM")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Turn on RFCM.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
+    char resp[32];
+    short det;        
+    char rfcmVal;
+    screen_printf("1. RFCM Manifold 1 \n");
+    screen_printf("2. RFCM Manifold 2\n");
+    screen_printf("3. RFCM Manifold 3\n");
+    screen_printf("4. RFCM Manifold 4\n");
+    screen_printf("8. All RFCM Manifolds\n");
+    screen_dialog(resp, 31, "Which RFCM Manifold to turn ON? (-1 to cancel) [%d] ",
+		  Which_RFCM);
+    if (resp[0] != '\0') {
+	det = atoi(resp);
+	if (1 >= det && det <= 4) {
+	    rfcmVal=1<<(det-1);
+	} else if (det == 8) {
+	    rfcmVal=0xf;      
+	} else if (det == -1) {
+	    screen_printf("Cancelled\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 1-4, or 8, not %d.\n", det);
+	    return;
+	}
     }
+
+    
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 0;
+    Curcmd[3] = rfcmVal;
+    Curcmdlen = 4;
+    screen_printf("\n");
+    set_cmd_log("%d; Turn on RFCM with mask %#x.", idx,rfcmVal);
+    sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
 CMD_TURN_RFCM_OFF(int idx)
 {
-    if (screen_confirm("Really turn off RFCM")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; Turn off RFCM.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
+    char resp[32];
+    short det;
+    char rfcmVal;
+    screen_printf("1. RFCM Manifold 1 \n");
+    screen_printf("2. RFCM Manifold 2\n");
+    screen_printf("3. RFCM Manifold 3\n");
+    screen_printf("4. RFCM Manifold 4\n");
+    screen_printf("8. All RFCM Manifolds\n");
+    screen_dialog(resp, 31, "Which RFCM Manifold to turn OFF? (-1 to cancel) [%d] ",
+		  Which_RFCM);
+    if (resp[0] != '\0') {
+	det = atoi(resp);
+	if (1 >= det && det <= 4) {
+	    rfcmVal=1<<(det-1);
+	} else if (det == 8) {
+	    rfcmVal=0xf;      
+	} else if (det == -1) {
+	    screen_printf("Cancelled\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 1-4, or 8, not %d.\n", det);
+	    return;
+	}
     }
+
+    
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 0;
+    Curcmd[3] = rfcmVal;
+    Curcmdlen = 4;
+    screen_printf("\n");
+    set_cmd_log("%d; Turn off RFCM with mask %#x.", idx,rfcmVal);
+    sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
