@@ -60,16 +60,18 @@ void screen_beep(void);
 
 #define TIMEOUT	't'	/* set_timeout */
 #define NEWCMD	'n'	/* new_cmd */
-#define CURCMD	'c'	/* cur_cmd */
+//#define CURCMD	'c'	/* cur_cmd */
 #define LINKSEL 'l'	/* select_link */
 #define RTSEL	'r'	/* select_route */
 #define SHOWCMD	's'	/* show_cmds */
+#define EXPERT  'e'     /*show expert commands*/
 #define QUIT	'Q'
 
 static void set_timeout(void);
 static void new_cmd(void);
-static void cur_cmd(void);
+//static void cur_cmd(void);
 static void show_cmds(void);
+static void expert(void);
 
 #define NMENULINES 2
 char *progmenu[NMENULINES-1];
@@ -82,7 +84,7 @@ static void clear_screen(void);
 static void generic_exit_routine(void);
 
 char *menuformat[] = {
-"%c=set_timeout  %c=new_cmd  %c=cur_cmd  %c=quit   %c=link   %c=route  %c=show_cmds",
+"%c=set_timeout  %c=new_cmd %c=quit  %c=link %c=route %c=show_cmds %c=expert",
 };
 
 #define CMDLEN		25	/* max length of command buffer */
@@ -96,6 +98,7 @@ char *menuformat[] = {
 #define PROMPT		": "
 #define ROUTE_COMM1	0x09
 #define ROUTE_COMM2	0x0C
+//#define PRINT_EXTRA_STUFF
 
 static void accum_cmd(int key);
 static void select_link(void);
@@ -139,6 +142,10 @@ static long G12PosPer =0;
 static float G12Offset =0;
 static unsigned short HskPer =0;
 static unsigned short HskCalPer =0;
+static short HskTelemEvery=0;
+static short sendWave=1;
+static unsigned short sipThrottle=680;
+static short losSendData=0;
 static long SoftTrigPer =0;
 static short TrigADU5 =0;
 static short TrigG12 =0;
@@ -256,9 +263,9 @@ main(int argc, char *argv[])
 	case NEWCMD:
 	    new_cmd();
 	    break;
-	case CURCMD:
-	    cur_cmd();
-	    break;
+//	case CURCMD:
+//	    cur_cmd();
+//	    break;
 	case LINKSEL:
 	    select_link();
 	    break;
@@ -268,6 +275,9 @@ main(int argc, char *argv[])
 	case SHOWCMD:
 	    show_cmds();
 	    break;
+	case EXPERT:
+	     expert();
+	     break;
 	case CTL('L'):
 	    clear_screen();
 	    break;
@@ -316,8 +326,8 @@ initdisp()
 	    exit(1);
 	}
     }
-    sprintf(progmenu[0], menuformat[0] , TIMEOUT, NEWCMD, CURCMD, QUIT,
-	LINKSEL, RTSEL, SHOWCMD);
+    sprintf(progmenu[0], menuformat[0] , TIMEOUT, NEWCMD, QUIT,
+	LINKSEL, RTSEL, SHOWCMD, EXPERT);
 
     menu(progmenu, NMENULINES);
 }
@@ -456,19 +466,20 @@ new_cmd(void)
 }
 #endif
 
-static void
-cur_cmd()
-{
-    int i;
-    screen_printf("Sending: ");
-    for (i=0; i<Curcmdlen; i++) {
-	if (i % 2) {
-	    screen_printf("%d ", Curcmd[i]);
-	}
-    }
-    screen_printf("\n");
-    sendcmd(Fd, Curcmd, Curcmdlen);
-}
+//static void
+//cur_cmd()
+//{
+//     screen_printf("This is not a used ANITA function.\n");
+//     int i;
+//    screen_printf("Sending: ");
+//    for (i=0; i<Curcmdlen; i++) {
+//	if (i % 2) {
+//	    screen_printf("%d ", Curcmd[i]);
+//	}
+//    }
+//    screen_printf("\n");
+//    sendcmd(Fd, Curcmd, Curcmdlen);
+//}
 
 
 
@@ -731,6 +742,10 @@ sendcmd(int fd, unsigned char *s, int len)
     for (i=0; i<n; i++) {
 	screen_printf("0x%02x ", buf[i]);
     }
+    screen_printf("\n");
+    for (i=0; i<n; i++) {
+	screen_printf("%c", buf[i]);
+    }
 #endif /* NOTDEF */
     screen_printf("\n");
 #endif /* PRINT_EXTRA_STUFF */
@@ -843,10 +858,15 @@ static void
 show_cmds(void)
 {
     int got = 0;
-    int i;
+    int i,j;
     int val[2];
+    
+    int easyCmdArray[]={1,2,3,127,128,129,130,131,132,133,
+			152,153,154,155,156,157,158,159,182,183,
+			210};
 
-    for (i=0; i<256; i++) {
+    for (j=0; j<21; j++) {
+	i=easyCmdArray[j];
 
 	if (Cmdarray[i].f != NULL) {
 	    val[got] = i;
@@ -867,6 +887,34 @@ show_cmds(void)
     }
 }
 
+
+static void
+expert(void)
+{
+    int got = 0;
+    int i;
+    int val[2];
+    
+    for (i=0; i<256; i++) {
+
+	if (Cmdarray[i].f != NULL) {
+	    val[got] = i;
+	    got++;
+	}
+	if (got == 3) { 
+	    screen_printf("%03d %s", val[0], Cmdarray[val[0]].name);
+	    screen_printf("%03d %s", val[1], Cmdarray[val[1]].name);
+	    screen_printf("%03d %s\n", val[2], Cmdarray[val[2]].name);
+	    got = 0;
+	}
+    }
+    if (got) {
+	for (i=0; i<got; i++) {
+	    screen_printf("%d %s", val[i], Cmdarray[val[i]].name);
+	}
+	screen_printf("\n");
+    }
+}
 
 
 static void
@@ -954,6 +1002,35 @@ CMD_START_NEW_RUN(int idx)
     }
 }
 
+static void
+CMD_MAKE_NEW_RUN_DIRS(int idx)
+{
+    if (screen_confirm("Really make new run directories?")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = idx;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Make new run directories.", idx);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
+
+static void
+CMD_SIPD_REBOOT(int idx)
+{
+    if (screen_confirm("Really reboot through SIPD?")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = idx;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; SIPD Reboot.", idx);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
 
 
 static void
@@ -988,7 +1065,7 @@ CMD_REBOOT(int idx)
 
 
 static void
-CMD_KILL_PROGS(int idx)
+CMD_REALLY_KILL_PROGS(int idx)
 {
     short det;
     int i;
@@ -1005,7 +1082,7 @@ CMD_KILL_PROGS(int idx)
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 >= det && det <= 12) {
+	if (1 <= det && det <= 12) {
 	  switch(det){
 	  case 1:
             Prog_det = ACQD_ID_MASK;
@@ -1071,6 +1148,92 @@ CMD_KILL_PROGS(int idx)
 }
 
 
+
+
+static void
+CMD_KILL_PROGS(int idx)
+{
+    short det;
+    int i;
+    char resp[32];
+    
+    screen_printf("1. Acqd       6. GPSd\n");
+    screen_printf("2. Archived   7. Hkd\n");
+    screen_printf("3. Calibdd    8. LOSd\n");
+    screen_printf("4. Cmdd       9. Monitord\n");
+    screen_printf("5. Eventd     10. Prioritizerd\n");
+    screen_printf("11. SIPd\n");
+    screen_printf("12. All of the above\n");
+    screen_dialog(resp, 31, "Kill which daemon? (-1 to cancel) [%d] ",
+	Prog_det);
+    if (resp[0] != '\0') {
+	det = atoi(resp);
+	if (1 <= det && det <= 12) {
+	  switch(det){
+	  case 1:
+            Prog_det = ACQD_ID_MASK;
+	    break;
+          case 2:
+            Prog_det = ARCHIVED_ID_MASK;
+	    break;
+          case 3:
+            Prog_det = CALIBD_ID_MASK;
+	    break;
+          case 4:
+	    screen_printf("Not allowed\n");
+	    return;
+	    //            Prog_det = CMDD_ID_MASK;
+	    break;
+          case 5:
+            Prog_det = EVENTD_ID_MASK;
+	    break;
+          case 6:
+            Prog_det = GPSD_ID_MASK;
+	    break; 
+          case 7:
+            Prog_det = HKD_ID_MASK;
+	    break; 
+          case 8:
+            Prog_det = LOSD_ID_MASK;
+	    break;
+          case 9:
+            Prog_det = MONITORD_ID_MASK;
+            break;
+          case 10:
+            Prog_det = PRIORITIZERD_ID_MASK; 
+            break;
+          case 11:
+	       // Prog_det = SIPD_ID_MASK;
+	    screen_printf("Not allowed\n");
+	    return;
+          case 12:
+            Prog_det = ALL_ID_MASK;
+	    Prog_det &= ~CMDD_ID_MASK;
+	    Prog_det &= ~SIPD_ID_MASK;
+	    break;
+          default: break;
+	  }
+	} else if (det == -1) {
+	    screen_printf("Cancelled\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (Prog_det&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((Prog_det&0xf00)>>8); 
+    Curcmdlen = 6;
+    set_cmd_log("%d; Program  %d killed.", idx, Prog_det);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
 static void
 CMD_RESPAWN_PROGS(int idx)
 {
@@ -1101,11 +1264,10 @@ CMD_RESPAWN_PROGS(int idx)
             Prog_det = CALIBD_ID_MASK;
 	    break;
           case 4:
-	    Prog_det = CMDD_ID_MASK;
-	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
-	    break;
+	      //Prog_det = CMDD_ID_MASK;
+	      //break;
+	    screen_printf("Not allowed\n");
+	    return;
           case 5:
             Prog_det = EVENTD_ID_MASK;
 	    break;
@@ -1172,7 +1334,7 @@ CMD_START_PROGS(int idx)
     screen_printf("5. Eventd     10. Prioritizerd\n");
     screen_printf("11. SIPd\n");
     screen_printf("12. All of the above\n");
-    screen_dialog(resp, 31, "Respawn which daemon? (-1 to cancel) [%d] ",
+    screen_dialog(resp, 31, "Start which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
@@ -1188,11 +1350,10 @@ CMD_START_PROGS(int idx)
             Prog_det = CALIBD_ID_MASK;
 	    break;
           case 4:
-	    Prog_det = CMDD_ID_MASK;
-	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
-	    break;
+	      //Prog_det = CMDD_ID_MASK;
+	      //break;
+	    screen_printf("Not allowed\n");
+	    return;
           case 5:
             Prog_det = EVENTD_ID_MASK;
 	    break;
@@ -1262,7 +1423,9 @@ CMD_MOUNT(int idx)
 static void
 CMD_WHITEHEAT(int idx)
 {
-   if (screen_confirm("Really do something with the whiteheat?")) {
+    screen_printf("Not Implemented\n");
+    return;
+/* if (screen_confirm("Really do something with the whiteheat?")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = idx;
 	Curcmdlen = 2;
@@ -1271,7 +1434,7 @@ CMD_WHITEHEAT(int idx)
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
-    }
+	}*/
 }
 
 
@@ -1562,6 +1725,161 @@ ARCHIVE_STORAGE_TYPE(int idx)
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
+static void
+SET_PPS_PRIORITIES(int idx)
+{
+    char resp[32];
+    short det;
+    short v;
+    static int pps1Pri=2;
+    static int pps2Pri=2;
+
+    screen_dialog(resp, 31,
+		  "Priority of PPS1  (0 to 9, -1 for Prioritizerd [%d] or -10 to cancel) ",
+		  pps1Pri);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (-1 <= v && v <= 9) {
+	    pps1Pri = v;
+	} 
+	else if(v==-10){
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be -1-9, not %d.\n", v);
+	    return;
+	}
+    }
+
+    screen_dialog(resp, 31,
+		  "Priority of PPS2  (0 to 9, -1 for Prioritizerd [%d] ",
+		  pps2Pri);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (-1 <= v && v <= 9) {
+	    pps2Pri = v;
+	} else {
+	    screen_printf("Value must be -1-9, not %d.\n", v);
+	    return;
+	}
+    }
+    
+
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = pps1Pri;
+    Curcmd[4] = 2;
+    Curcmd[5] = pps2Pri;
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set PPS Priorities to PPS1 %d and PPS2 %d.", idx, pps1Pri,pps2Pri);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+SET_PPS_DECIMATE(int idx)
+{
+    char resp[32];
+    short det;
+    short v;
+    float fv;
+    static int whichPPS=1;
+    static float decimateFrac=0;
+
+    screen_dialog(resp, 31,
+		  "Enter 1 for G12, 2 for ADU5 (-1 to cancel) [%d] ",
+		  whichPPS);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (1 <= v && v <= 2) {
+	    whichPPS = v;
+	} else {
+	    screen_printf("Value must be 1 or 2, not %d.\n", v);
+	    return;
+	}
+    }
+
+    screen_dialog(resp, 31,
+		  "Enter decimation fraction 0.000 to 1.000 (-1 to cancel) [%f]",
+		  decimateFrac);
+    if (resp[0] != '\0') {
+	fv = atof(resp);
+	if (0 <= fv && fv <= 1) {
+	    decimateFrac = fv;
+	} else {
+	    screen_printf("Value must be 0.000 to 1.000, not %f.\n", fv);
+	    return;
+	}
+    }
+    
+    short decWord=(short)(1000.*decimateFrac);
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = whichPPS;
+    Curcmd[4] = 2;
+    Curcmd[5] = (decWord&0xff);
+    Curcmd[6] = 3;
+    Curcmd[7] = (decWord&0xff00)>>8;
+    Curcmdlen = 8;
+    set_cmd_log("%d; Set PPS %d decimation fraction to %f.", idx, whichPPS,decimateFrac);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+static void
+ARCHIVE_DECIMATE_PRI(int idx)
+{
+    char resp[32];
+    short det;
+    short v;
+    float fv;
+    static int whichPri=1;
+    static float decimateFrac=0;
+
+    screen_dialog(resp, 31,
+		  "Which priority (0-9) to decimate (-1 to cancel) [%d] ",
+		  whichPri);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (0 <= v && v <= 9) {
+	    whichPri = v;
+	} else {
+	    screen_printf("Value must be 0-9, not %d.\n", v);
+	    return;
+	}
+    }
+
+    screen_dialog(resp, 31,
+		  "Enter decimation fraction 0.000 to 1.000 (-1 to cancel) [%f]",
+		  decimateFrac);
+    if (resp[0] != '\0') {
+	fv = atof(resp);
+	if (0 <= fv && fv <= 1) {
+	    decimateFrac = fv;
+	} else {
+	    screen_printf("Value must be 0.000 to 1.000, not %f.\n", fv);
+	    return;
+	}
+    }
+    
+    short decWord=(short)(1000.*decimateFrac);
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = whichPri;
+    Curcmd[4] = 2;
+    Curcmd[5] = (decWord&0xff);
+    Curcmd[6] = 3;
+    Curcmd[7] = (decWord&0xff00)>>8;
+    Curcmdlen = 8;
+    set_cmd_log("%d; Set archived priority %d decimation fraction to %f.", idx, whichPri,decimateFrac);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
 
 static void
 TELEM_TYPE(int idx)
@@ -1656,7 +1974,7 @@ ARCHIVE_ALTERNATE_USB(int idx)
     short v;     
     int t;
     screen_dialog(resp,31,
-		  "Which priority to change USB alternating for? (-1 to cancel)");
+		  "Which priority(0-9) to change USB alternating for? (-1 to cancel)");
     if (resp[0] != '\0') {
 	v = atoi(resp);
 	if (0 <= v && v <= 9) {
@@ -1699,6 +2017,39 @@ ARCHIVE_ALTERNATE_USB(int idx)
 }
 
 
+static void
+SIPD_SEND_WAVE(int idx)
+{
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Send Wave Packets(0 is disable, 1 is enable, -1 to cancel) [%d] ",
+	sendWave);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 1) {
+	    sendWave = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-1, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = sendWave;
+    Curcmdlen = 4;
+    set_cmd_log("%d; SendWavePackets sets to %d.", idx, sendWave);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
+}
+
 
 static void
 ARCHIVE_PRI_ENC_TYPE(int idx)
@@ -1709,7 +2060,7 @@ ARCHIVE_PRI_ENC_TYPE(int idx)
     short v;     
     int t;
     screen_dialog(resp,31,
-		  "Which priority to change storage encoding type for? (-1 to cancel)");
+		  "Which priority(0-9) to change storage encoding type for? (-1 to cancel)");
     if (resp[0] != '\0') {
 	v = atoi(resp);
 	if (0 <= v && v <= 9) {
@@ -1759,7 +2110,7 @@ TELEM_PRI_ENC_TYPE(int idx)
     short v;     
     int t;
     screen_dialog(resp,31,
-		  "Which priority to change telemetry encoding type for? (-1 to cancel)");
+		  "Which priority(0-9) to change telemetry encoding type for? (-1 to cancel)");
     if (resp[0] != '\0') {
 	v = atoi(resp);
 	if (0 <= v && v <= 9) {
@@ -1848,7 +2199,7 @@ CMD_TURN_RFCM_ON(int idx)
 		  Which_RFCM);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 >= det && det <= 4) {
+	if (1 <= det && det <= 4) {
 	    rfcmVal=1<<(det-1);
 	} else if (det == 8) {
 	    rfcmVal=0xf;      
@@ -1864,7 +2215,7 @@ CMD_TURN_RFCM_ON(int idx)
     
     Curcmd[0] = 0;
     Curcmd[1] = idx;
-    Curcmd[2] = 0;
+    Curcmd[2] = 1;
     Curcmd[3] = rfcmVal;
     Curcmdlen = 4;
     screen_printf("\n");
@@ -1883,14 +2234,14 @@ CMD_TURN_RFCM_OFF(int idx)
     screen_printf("2. RFCM Manifold 2\n");
     screen_printf("3. RFCM Manifold 3\n");
     screen_printf("4. RFCM Manifold 4\n");
-    screen_printf("8. All RFCM Manifolds\n");
+    screen_printf("5. All RFCM Manifolds\n");
     screen_dialog(resp, 31, "Which RFCM Manifold to turn OFF? (-1 to cancel) [%d] ",
 		  Which_RFCM);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 >= det && det <= 4) {
+	if (1 <= det && det <= 4) {
 	    rfcmVal=1<<(det-1);
-	} else if (det == 8) {
+	} else if (det == 5) {
 	    rfcmVal=0xf;      
 	} else if (det == -1) {
 	    screen_printf("Cancelled\n");
@@ -1904,7 +2255,7 @@ CMD_TURN_RFCM_OFF(int idx)
     
     Curcmd[0] = 0;
     Curcmd[1] = idx;
-    Curcmd[2] = 0;
+    Curcmd[2] = 1;
     Curcmd[3] = rfcmVal;
     Curcmdlen = 4;
     screen_printf("\n");
@@ -1979,7 +2330,7 @@ CMD_TURN_VETO_OFF(int idx)
 static void
 CMD_TURN_ALL_ON(int idx)
 {
-    if (screen_confirm("Really turn on GPS, RFCM, CalPulsr and Veto")) {
+    if (screen_confirm("Really turn on GPS, RFCM, CalPulser and Veto")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = idx;
 	Curcmdlen = 2;
@@ -2263,7 +2614,7 @@ SET_ADU5_VTG_PERIOD(int idx)
     int t;
      
     screen_dialog(resp, 31,
-	"Set ADU5 Velocity and Course readout period (in units of 100ms) to  (0-65535, -1 to cancel) [%d] ",
+	"Set ADU5 Velocity and Course readout period (in units of seconds) to  (0-65535, -1 to cancel) [%d] ",
 	ADU5VtgPer);
     if (resp[0] != '\0') {
 	t = atoi(resp);
@@ -2285,7 +2636,7 @@ SET_ADU5_VTG_PERIOD(int idx)
     Curcmd[4] = 2; 
     Curcmd[5] = ((ADU5VtgPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set ADU5 velocity and course readout period to %d (100ms uints).", idx, ADU5VtgPer);
+    set_cmd_log("%d; Set ADU5 velocity and course readout period to %d s.", idx, ADU5VtgPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -2298,7 +2649,7 @@ SET_G12_POS_PERIOD(int idx)
     int t;
      
     screen_dialog(resp, 31,
-	"Set G12 Position readout period (in units of 100ms) to  (0-65535, -1 to cancel) [%d] ",
+	"Set G12 Position readout period (in units of ms) to  (0-65535, -1 to cancel) [%d] ",
 	G12PosPer);
     if (resp[0] != '\0') {
 	t = atoi(resp);
@@ -2320,7 +2671,7 @@ SET_G12_POS_PERIOD(int idx)
     Curcmd[4] = 2; 
     Curcmd[5] = ((G12PosPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set G12 position readout period to %d (100ms uints).", idx, G12PosPer);
+    set_cmd_log("%d; Set G12 position readout period to %d ms.", idx, G12PosPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -2462,7 +2813,7 @@ ADU5_CAL_12(int idx)
     short det[3];
     screen_printf("Are you sure you want to do this?.\n");
     screen_dialog(resp, 31,
-		  "Press -1, to cancel (later you will have to cntl-c out):  ",NULL);
+		  "Press -1 to cancel (later you will have to cntl-c out):  ",NULL);
     if (resp[0] != '\0') {
 	t=atoi(resp);
 	if(t==-1) return;
@@ -2651,7 +3002,7 @@ SET_HK_CAL_PERIOD(int idx)
     char resp[32];
     short det;
     int t;
-     
+   
     screen_dialog(resp, 31,
 	"Set Housekeeping calibration readout period (in seconds) to  (0-65535, -1 to cancel) [%d] ",
 	HskCalPer);
@@ -2679,10 +3030,211 @@ SET_HK_CAL_PERIOD(int idx)
     sendcmd(Fd, Curcmd, Curcmdlen);
 } 
 
+
+static void
+SET_HK_TELEM_EVERY(int idx)
+{
+    char resp[32];
+    short det;
+    int t;
+     
+    screen_dialog(resp, 31,
+	"Set Housekeeping telem every (0-255)in HK events (-1 to cancel) [%d] ",
+	HskTelemEvery);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 255) {
+	    HskTelemEvery = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-255, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (HskTelemEvery&0xff);
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set Housekeeping telem to every %d.", idx, HskTelemEvery);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+SIPD_THROTTLE_RATE(int idx)
+{
+    char resp[32];
+    short det;
+    int t;
+     
+    screen_dialog(resp, 31,
+	"Set data rate to CSBF in approx Bytes/s to  (0-680, -1 to cancel) [%d] ",
+	HskPer);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 680) {
+	    sipThrottle = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Throttle rate must be 0-680, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (sipThrottle&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((sipThrottle&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Sip throttle rate set to %d.", idx, sipThrottle);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+} 
+
+
+static void
+SIPD_PRIORITY_BANDWIDTH(int idx)
+{
+    char resp[32];
+    short det;
+    short v;
+    float fv;
+    static int whichPri=1;
+    static short bandFrac=0;
+
+    screen_dialog(resp, 31,
+		  "Which priority (0-9) to set bandwidth for (-1 to cancel) [%d] ",
+		  whichPri);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (0 <= v && v <= 9) {
+	    whichPri = v;
+	} else {
+	    screen_printf("Value must be 0-9, not %d.\n", v);
+	    return;
+	}
+    }
+
+    screen_dialog(resp, 31,
+		  "Enter bandwidth fraction 0 to 100 (-1 to cancel) [%f]",
+		  bandFrac);
+    if (resp[0] != '\0') {
+	fv = atof(resp);
+	if (0 <= fv && fv <= 100) {
+	    bandFrac = fv;
+	} else {
+	    screen_printf("Value must be 0 to 100, not %f.\n", fv);
+	    return;
+	}
+    }
+    
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = whichPri;
+    Curcmd[4] = 2;
+    Curcmd[5] = (bandFrac&0xff);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set sip priority %d bandwidth fraction to %f.", idx, whichPri,bandFrac);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+LOSD_PRIORITY_BANDWIDTH(int idx)
+{
+    char resp[32];
+    short det;
+    short v;
+    float fv;
+    static int whichPri=1;
+    static short bandFrac=0;
+
+    screen_dialog(resp, 31,
+		  "Which priority (0-9) to set bandwidth for (-1 to cancel) [%d] ",
+		  whichPri);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (0 <= v && v <= 9) {
+	    whichPri = v;
+	} else {
+	    screen_printf("Value must be 0-9, not %d.\n", v);
+	    return;
+	}
+    }
+
+    screen_dialog(resp, 31,
+		  "Enter bandwidth fraction 0 to 100 (-1 to cancel) [%f]",
+		  bandFrac);
+    if (resp[0] != '\0') {
+	fv = atof(resp);
+	if (0 <= fv && fv <= 100) {
+	    bandFrac = fv;
+	} else {
+	    screen_printf("Value must be 0 to 100, not %f.\n", fv);
+	    return;
+	}
+    }
+    
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = whichPri;
+    Curcmd[4] = 2;
+    Curcmd[5] = (bandFrac&0xff);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set los priority %d bandwidth fraction to %f.", idx, whichPri,bandFrac);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+LOSD_SEND_DATA(int idx)
+{
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Send LOS Data(0 is disable, 1 is enable, -1 to cancel) [%d] ",
+	losSendData);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 1) {
+	    losSendData = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-1, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = losSendData;
+    Curcmdlen = 4;
+    set_cmd_log("%d;LOS Send Data set to %d.", idx, losSendData);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
+}
+
+
 static void
 CLEAN_DIRS(int idx)
 {
-    short det;
+     screen_printf("Not an available command.\n");
+     return;
+ /* short det;
     int i;
     char resp[32];
     
@@ -2711,9 +3263,24 @@ CLEAN_DIRS(int idx)
     Curcmd[3] = Dir_det;
     Curcmdlen = 4;
     set_cmd_log("%d; Directory  %d cleaned.", idx, Dir_det);
-    sendcmd(Fd, Curcmd, Curcmdlen);
+    sendcmd(Fd, Curcmd, Curcmdlen);*/
 }
 
+
+static void
+CLEAR_RAMDISK(int idx)
+{
+    if (screen_confirm("Really clear ramdisk")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = idx;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Clear RAMdisk.", idx);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
 
 
 static void
@@ -3075,6 +3642,108 @@ SWITCH_CONFIG(int idx)
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
+static void
+SAVE_CONFIG(int idx)
+{
+    short det;
+    int i;
+    char resp[32];
+    static int configNum;
+//    static int whichConfig;
+
+    screen_printf("1. Acqd.config      6. GPSd.config\n");
+    screen_printf("2. Archived.config   7. Hkd.config\n");
+    screen_printf("3. Calibd.config    8. LOSd.config\n");
+    screen_printf("4. Cmdd.config       9. Monitord.config\n");
+    screen_printf("5. Eventd.config     10. Prioritizerd.config\n");
+    screen_printf("11. SIPd.config\n");
+    screen_dialog(resp, 31, "Which config file to switch? (-1 to cancel) [%d] ",
+	Config_det);
+    if (resp[0] != '\0') {
+	det = atoi(resp);
+	if (1 <= det && det <= 11) {
+	  switch(det){
+	  case 1:
+            Config_det = ACQD_ID_MASK;
+	    break;
+          case 2:
+            Config_det = ARCHIVED_ID_MASK;
+	    break;
+          case 3:
+            Config_det = CALIBD_ID_MASK;
+	    break;
+          case 4:
+	    Config_det = CMDD_ID_MASK;
+	    break;
+	    //	    screen_printf("Not allowed\n");
+	    //	    return;
+	    break;
+          case 5:
+            Config_det = EVENTD_ID_MASK;
+	    break;
+          case 6:
+            Config_det = GPSD_ID_MASK;
+	    break; 
+          case 7:
+            Config_det = HKD_ID_MASK;
+	    break; 
+          case 8:
+            Config_det = LOSD_ID_MASK;
+	    break;
+          case 9:
+            Config_det = MONITORD_ID_MASK;
+            break;
+          case 10:
+            Config_det = PRIORITIZERD_ID_MASK; 
+            break;
+          case 11:
+            Config_det = SIPD_ID_MASK;
+	    break;
+	    //	    screen_printf("Not allowed\n");
+	    //	    return;
+          case 12:
+            Config_det = ALL_ID_MASK;
+
+	    break;
+          default: break;
+	  }
+	} else if (det == -1) {
+	    screen_printf("Cancelled\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    return;
+	}
+    }
+    
+    screen_dialog(resp, 31, "Which config number? (10-255, -1 to cancel) [%d] ",configNum);
+    if (resp[0] != '\0') {
+      det = atoi(resp);
+      if (10 <= det && det <= 255) {
+	configNum=det;
+      }
+      else if (det == -1) {
+	screen_printf("Cancelled\n");
+	    return;
+      } else {
+	screen_printf("Value must be 10-255, not %d.\n", det);
+	return;
+      }
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (Config_det&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((Config_det&0xf00)>>8); 
+    Curcmd[6] = 3;
+    Curcmd[7] = (configNum&0xff); 
+    Curcmdlen = 8;
+    set_cmd_log("%d; Current coonfig %d saved as %d.", idx, Config_det,configNum);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
 
 
 static void
@@ -3107,6 +3776,7 @@ ACQD_ADU5_TRIG_FLAG(int idx)
     set_cmd_log("%d; Set SURF ADU5 Trigger Flag to %d.", idx,TrigADU5);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
+
 
 
 static void
@@ -3344,38 +4014,107 @@ THRESHOLD_SCAN(int idx)
 static void
 SET_ANT_TRIG_MASK(int idx)
 {
+
     char resp[32];
     short det;
     unsigned long t;
+    unsigned long test;
     int fred; 
+    int antAdd=-1;
+    int allOn=0;
+    antTrigMask=0;
     
-    screen_dialog(resp, 31,
-	"Set antTrigMask  (as 0xXXXXX in hex, -1 to cancel) [%ul] ",
-	antTrigMask);
+    screen_dialog(resp, 31,"Add First antenna to mask  (0 for all on)( -1 to cancel) [%d] ", antAdd);
+    
     if (resp[0] != '\0') {
-      fred=atoi(resp);
-      if(fred==-1) {
-	screen_printf("Cancelled.\n");
-	return;
-      }
-      t = strtoul(resp,NULL,16);
-      antTrigMask = t;
-
+	 
+	 antAdd=atoi(resp);
+	 if(antAdd==0){
+	      allOn=1;
+	 }
+	 else if(antAdd>=1 && antAdd<=32) {
+	
+	 }
+	 
+	 else if(antAdd==-1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	 }
+	 else {
+	      screen_printf("Not a valid antenna number");
+	      return;
+	 }
     }
+    else { 
+	 screen_printf("Cancelled.\n");
+	 return;
+    }
+	 	 
+    int bit=(antAdd%4);
+    if(bit) bit=4-bit;
+    int nibble=7-(antAdd-1)/4;
+    
+    int bitShift=bit+4*nibble;
+    test=(1<<bitShift);
+    if(allOn==1){
+	 test=0;
+    }
+    antTrigMask|=test;
 
-    Curcmd[0] = 0;
-    Curcmd[1] = idx;
-    Curcmd[2] = 1;
-    Curcmd[3] = (antTrigMask&0xff);
-    Curcmd[4] = 2;
-    Curcmd[5] = ((antTrigMask&0xff00)>>8);
-    Curcmd[6] = 3;
-    Curcmd[7] = ((antTrigMask&0xff0000)>>16);
-    Curcmd[8] = 4;
-    Curcmd[9] = ((antTrigMask&0xff000000)>>24);
-    Curcmdlen = 10;
-    set_cmd_log("%d; Set antTrigMask %#x.", idx, antTrigMask);
-    sendcmd(Fd, Curcmd, Curcmdlen);
+    while(1) {
+	 antAdd=-1;
+	 screen_dialog(resp, 31, 
+		       "Add next antenna to mask  ( -1 to cancel, 0 to finish) [%d]",antAdd);
+      
+	 if (resp[0] != '\0') {
+	      antAdd=atoi(resp);
+	      if(antAdd==0) break;
+	      if(antAdd>=1 && antAdd<=32) {
+	  
+	      }
+	      else {
+		   screen_printf("Not a valid antenna number");
+		   continue;
+	      }
+	      if(antAdd==-1) {
+		   screen_printf("Cancelled.\n");
+		   return;
+	      }
+	 }
+	 else { 
+	      screen_printf("Cancelled.\n");
+	      return;
+	 }
+	 bit=(antAdd%4);
+	 if(bit) bit=4-bit;
+	 nibble=7-(antAdd-1)/4;
+    
+	 bitShift=bit+4*nibble;
+	 test=(1<<bitShift);
+	 antTrigMask|=test;
+    }
+   
+      
+    if (screen_confirm("Really Set antTrigMask to: %#010x",antTrigMask)) {
+
+      Curcmd[0] = 0;
+      Curcmd[1] = idx;
+      Curcmd[2] = 1;
+      Curcmd[3] = (antTrigMask&0xff);
+      Curcmd[4] = 2;
+      Curcmd[5] = ((antTrigMask&0xff00)>>8);
+      Curcmd[6] = 3;
+      Curcmd[7] = ((antTrigMask&0xff0000)>>16);
+      Curcmd[8] = 4;
+      Curcmd[9] = ((antTrigMask&0xff000000)>>24);
+      Curcmdlen = 10;
+      set_cmd_log("%d; Set antTrigMask %#x.", idx, antTrigMask);
+      sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+	return;
+    }
+     
 }
 
 
@@ -3507,7 +4246,7 @@ ACQD_REPROGRAM_TURF(int idx)
     short t;
      
     screen_dialog(resp, 31,
-	"Reprogram SURF when Acqd restarts  (0 is disable, 1 is enable, -1 to cancel) [%d] ",
+	"Reprogram TURF when Acqd restarts  (0 is disable, 1 is enable, -1 to cancel) [%d] ",
 	reprogramTurf);
     if (resp[0] != '\0') {
 	t = atoi(resp);
@@ -3541,7 +4280,7 @@ BAND_SCALE_FACTOR(int idx)
     float ft;
     unsigned short value;
     
-    screen_printf("Use this command to change the scale factor for as single trigger band\n");
+    screen_printf("Use this command to change the scale factor for a single trigger band\n");
     screen_printf("Obviously use with caution\n");    
     screen_dialog(resp, 31,
 	"Which SURF, 1-8, to change (-1 to cancel) [%d] ",
@@ -3808,6 +4547,140 @@ THRESH_SCAN_REPEAT(int idx)
 }
 
 
+
+static void
+RAMDISK_KILL_ACQD(int idx)
+{
+    char resp[32];
+    short det;
+    short t;
+    static short megaBytes=50;
+
+    screen_dialog(resp, 31,
+	"Ramdisk Acqd Kill Threshold in MB (-1 to cancel) [%d] ", megaBytes);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 200) {
+	    megaBytes = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Set Acqd Kill threshold to %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = megaBytes;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set Ramdisk Acqd kill threshold to %d MB.", idx,megaBytes);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+RAMDISK_DUMP_DATA(int idx)
+{
+    char resp[32];
+    short det;
+    short t;
+    static short megaBytes=50;
+
+    screen_dialog(resp, 31,
+	"Ramdisk Dump Data Threshold in MB (-1 to cancel) [%d] ", megaBytes);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 200) {
+	    megaBytes = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Set Ramdisk Data Dump Threshold to %d MB.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = megaBytes;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set Ramdisk Data Dump Threshold to %d MB.", idx,megaBytes);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+static void
+MONITORD_ACQD_WAIT(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+
+static void
+MONITOR_PERIOD(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+
+static void
+USB_CHANGE_THRESH(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+
+static void
+BLADE_CHANGE_THRESH(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+
+static void
+MAX_EVENT_QUEUE(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+
+static void
+INODES_KILL_ACQD(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+
+static void
+INODES_DUMP_DATA(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+
+static void
+ACQD_SET_RATE_SERVO(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+
+static void
+ACQD_SET_NICE_VALUE(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+
+static void
+PRIORITIZERD_COMMAND(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
 
 void
 clr_cmd_log(void)
