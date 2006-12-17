@@ -2109,6 +2109,7 @@ TELEM_PRI_ENC_TYPE(int idx)
     short det;
     short v;     
     int t;
+    int encTypeClock=0;
     screen_dialog(resp,31,
 		  "Which priority(0-9) to change telemetry encoding type for? (-1 to cancel)");
     if (resp[0] != '\0') {
@@ -2136,6 +2137,19 @@ TELEM_PRI_ENC_TYPE(int idx)
 	    encType=v;
 	}
     }
+
+    screen_dialog(resp,31,
+		  "Clock to which encoding type [%d] ? (-1 to cancel)",encTypeClock);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	}
+	else {
+	    encTypeClock=v;
+	}
+    }
         
     Curcmd[0] = 0;
     Curcmd[1] = idx;
@@ -2145,8 +2159,12 @@ TELEM_PRI_ENC_TYPE(int idx)
     Curcmd[5] = encType&0xff;
     Curcmd[6] = 3;
     Curcmd[7] = (encType&0xff00)>>8;
-    Curcmdlen = 8;
-    set_cmd_log("%d; Set priDiskencodingType[%d] to %d.", idx, pri,encType);
+    Curcmd[8] = 4;
+    Curcmd[9] = encTypeClock&0xff;
+    Curcmd[10] = 5;
+    Curcmd[11] = (encTypeClock&0xff00)>>8;
+    Curcmdlen = 12;
+    set_cmd_log("%d; Set priDiskencodingType[%d] to %d. (clock %d)", idx, pri,encType,encTypeClock);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -4664,7 +4682,42 @@ INODES_DUMP_DATA(idx){
 
 static void
 ACQD_SET_RATE_SERVO(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
+    static unsigned short eventRate;
+    char resp[32];
+    short det;
+    short t;    
+    float ft=0;
+    float rate=0;
+
+    screen_dialog(resp, 31,
+	"Set Desired Event Rate  (0 to disable servo, -1 to cancel) [%f] ",
+	rate);
+    if (resp[0] != '\0') {
+	 ft = atof(resp);
+	if (0 < ft && ft <= 10) {
+	    rate = ft;
+	    rate*=1000;
+	    eventRate=(int)rate;
+	} else if (ft < 0) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    rate=0;
+	    eventRate=0;
+	    return;
+	}
+    }
+
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (eventRate&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((eventRate&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Setting event rate goal to %f.", idx, eventRate);
+    sendcmd(Fd, Curcmd, Curcmdlen);
      return;
 }
 
