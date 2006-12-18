@@ -177,6 +177,11 @@ static unsigned short altUsb;
 static short whichSurf=0;
 static short whichDac=0;
 static float scaleFactor=1;
+static short acqdWait=180;
+static short maxQueue=300;
+static short inodesKill=10000;
+static short inodesDump=2000;
+
 
 
 static int Direct = 0;		/* nonzero for direct connection to flight */
@@ -4633,50 +4638,244 @@ RAMDISK_DUMP_DATA(int idx)
 
 static void
 MONITORD_ACQD_WAIT(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set seconds for max wait time to restart acqd after ramdisk filling  (0-65535, -1 to cancel) [%d] ",
+	acqdWait);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    acqdWait = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (acqdWait&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((acqdWait&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Setting maxAcqdWaitPeriod to %d seconds.", idx, acqdWait);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+    
 }
 
 
 static void
 MONITOR_PERIOD(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+    char resp[32];
+    short det;
+    short t;
+    static short monPeriod=30;
+
+    screen_dialog(resp, 31,
+	"Set the monitor period in seconds (0-256, -1 to cancel) [%d] ", monPeriod);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 256) {
+	    monPeriod = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Set monitor period to  %d seconds.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = monPeriod;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set monitor period to  %d seconds.", idx, monPeriod);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
 }
 
 
 static void
 USB_CHANGE_THRESH(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+    char resp[32];
+    short det;
+    short t;
+    static short usbMegaBytes=50;
+
+    screen_dialog(resp, 31,
+	"Set the threeshold to switch USB drives in MB (0-255,-1 to cancel) [%d] ", usbMegaBytes);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 255) {
+	    usbMegaBytes = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Set usb switch threshold to %d MB.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = usbMegaBytes;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set usb switch threshold to %d MB.", idx, usbMegaBytes);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
 }
 
 
 static void
 BLADE_CHANGE_THRESH(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+    char resp[32];
+    short det;
+    short t;
+    static short bladeMegaBytes=120;
+
+    screen_dialog(resp, 31,
+	"Set Blade switch threshold in MB (0-255, -1 to cancel) [%d] ", bladeMegaBytes);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 255) {
+	    bladeMegaBytes = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Set blade switch threshold to %d MB.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = bladeMegaBytes;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set Blade switch threshold %d MB.", idx,bladeMegaBytes);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
 }
 
 
 static void
 MAX_EVENT_QUEUE(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+    
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set size for max event queue (0-65535, -1 to cancel) [%d] ",
+	maxQueue);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    maxQueue = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (maxQueue&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((maxQueue&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Setting maximum event queue to %d.", idx, maxQueue);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+  
 }
 
 
 static void
 INODES_KILL_ACQD(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+     
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set the inodesKillAcqd (0-65535, -1 to cancel) [%d] ",
+	inodesKill);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    acqdWait = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (inodesKill&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((inodesKill&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Setting inodesKillAcqd %d.", idx, inodesKill);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+  
 }
 
 
 static void
 INODES_DUMP_DATA(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+     
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_dialog(resp, 31,
+	"Set inodesDumpData variable(0-65535, -1 to cancel) [%d] ",
+	inodesDump);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t <= 65535) {
+	    inodesDump = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-65535, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = (inodesDump&0xff);
+    Curcmd[4] = 2;
+    Curcmd[5] = ((inodesDump&0xff00)>>8);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Setting inodesDumpData to %d.", idx, inodesDump);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+  
 }
 
 
@@ -4718,14 +4917,40 @@ ACQD_SET_RATE_SERVO(idx){
     Curcmdlen = 6;
     set_cmd_log("%d; Setting event rate goal to %f.", idx, eventRate);
     sendcmd(Fd, Curcmd, Curcmdlen);
-     return;
+ 
 }
 
 
 static void
 ACQD_SET_NICE_VALUE(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+    char resp[32];
+    short det;
+    short t;
+    static short acqdNice=-10;
+
+    screen_dialog(resp, 31,
+	"Set Acqd nice value(-20 to 19, 100 to cancel) [%d] ", acqdNice);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (-20 <= t && t <=19) {
+	    acqdNice = t;
+	    acqdNice+=20;
+	} else if (t == 100) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Set Acqd Nice value to %d .\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = acqdNice;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set Acqd nice value to %d.", idx,acqdNice-20);
+    sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
