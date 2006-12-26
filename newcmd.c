@@ -92,8 +92,8 @@ char *menuformat[] = {
 #define LINK_TDRSS	1
 #define LINK_HF		2
 #define LINK_LOS	0
-#define PORT		"/dev/ttyUSB0"
-//#define PORT		"/dev/ttyS0"
+//#define PORT		"/dev/ttyUSB0"
+#define PORT		"/dev/ttyS0"
 //#define PORT		"/dev/ttyS2"
 #define PROMPT		": "
 #define ROUTE_COMM1	0x09
@@ -4887,6 +4887,7 @@ ACQD_SET_RATE_SERVO(idx){
     short t;    
     float ft=0;
     float rate=0;
+    short enabler=0;
 
     screen_dialog(resp, 31,
 	"Set Desired Event Rate  (0 to disable servo, -1 to cancel) [%f] ",
@@ -4894,6 +4895,7 @@ ACQD_SET_RATE_SERVO(idx){
     if (resp[0] != '\0') {
 	 ft = atof(resp);
 	if (0 < ft && ft <= 10) {
+	    enabler=1;
 	    rate = ft;
 	    rate*=1000;
 	    eventRate=(int)rate;
@@ -4901,6 +4903,7 @@ ACQD_SET_RATE_SERVO(idx){
 	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
+	    enabler=0;
 	    rate=0;
 	    eventRate=0;
 	    return;
@@ -4910,7 +4913,7 @@ ACQD_SET_RATE_SERVO(idx){
 
     Curcmd[0] = 0;
     Curcmd[1] = idx;
-    Curcmd[2] = 1;
+    Curcmd[2] = enabler;
     Curcmd[3] = (eventRate&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((eventRate&0xff00)>>8);

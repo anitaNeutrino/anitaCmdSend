@@ -76,3 +76,27 @@ Mon Nov 20 20:49:55 2006	program starting.
 Mon Nov 20 20:49:55 2006	link is 0, route is 9.
 Mon Nov 20 20:53:14 2006	program starting.
 Mon Nov 20 20:53:14 2006	link is 0, route is 9.
+Sat Dec 23 11:32:14 2006	program starting.
+Sat Dec 23 11:32:14 2006	link is 0, route is 9.
+Sat Dec 23 11:32:21 2006	Finished
+Sat Dec 23 11:32:22 2006	program starting.
+Sat Dec 23 11:32:22 2006	link is 0, route is 9.
+Sat Dec 23 11:32:25 2006	Finished
+Sat Dec 23 14:10:25 2006	program starting.
+Sat Dec 23 14:10:25 2006	link is 0, route is 9.
+Sat Dec 23 14:10:35 2006	Finished
+Sat Dec 23 14:17:17 2006	program starting.
+Sat Dec 23 14:17:17 2006	link is 0, route is 9.
+Sat Dec 23 14:17:29 2006	Finished
+Sat Dec 23 14:29:23 2006	program starting.
+Sat Dec 23 14:29:23 2006	link is 0, route is 9.
+Sat Dec 23 14:29:41 2006	NSBF response; no response after 10 seconds
+Sat Dec 23 14:29:41 2006	CMD 210; Config  4095 sent.
+Sat Dec 23 14:30:07 2006	Finished
+Sat Dec 23 14:53:53 2006	program starting.
+Sat Dec 23 14:53:53 2006	link is 0, route is 9.
+Sat Dec 23 14:54:02 2006	link set to '0'
+Sat Dec 23 14:54:17 2006	NSBF response; malformed response!
+Sat Dec 23 14:54:17 2006	CMD 210; Config  1 sent.
+Sat Dec 23 14:54:27 2006	NSBF response; OK
+Sat Dec 23 14:54:27 2006	CMD 210; Config  1 sent.
