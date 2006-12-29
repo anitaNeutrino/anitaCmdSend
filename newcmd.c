@@ -64,7 +64,7 @@ void screen_beep(void);
 #define LINKSEL 'l'	/* select_link */
 #define RTSEL	'r'	/* select_route */
 #define SHOWCMD	's'	/* show_cmds */
-#define EXPERT  'e'     /*show expert commands*/
+#define EXPERT  'x'     /*show expert commands*/
 #define QUIT	'Q'
 
 static void set_timeout(void);
@@ -84,7 +84,7 @@ static void clear_screen(void);
 static void generic_exit_routine(void);
 
 char *menuformat[] = {
-"%c=set_timeout  %c=new_cmd %c=quit  %c=link %c=route %c=show_cmds %c=expert",
+"%c=set_timeout  %c=new_cmd %c=quit  %c=link %c=route %c=show_cmds",
 };
 
 #define CMDLEN		25	/* max length of command buffer */
@@ -373,7 +373,7 @@ select_link(void)
 {
     char resp[32];
     screen_dialog(resp, 31,
-    	"Choose link 0=LOS, 1=TDRSS (COMM1), 2=HF (COMM2) [%d] ", Curlink);
+    	"Choose link 0=LOS, 1=TDRSS (COMM1), 2=Iridium (COMM2) [%d] ", Curlink);
     if (resp[0] == '\0') {
 	screen_printf("value unchanged\n");
     } else {
@@ -866,9 +866,9 @@ show_cmds(void)
     int i,j;
     int val[2];
     
-    int easyCmdArray[]={1,2,3,127,128,129,130,131,132,133,
-			152,153,154,155,156,157,158,159,182,183,
-			210};
+    int easyCmdArray[]={1,2,3,132,152,153,154,155,
+			156,157,158,159,171,172,173,
+			174,175,182,183,210,230,231,235,238,239};
 
     for (j=0; j<21; j++) {
 	i=easyCmdArray[j];
