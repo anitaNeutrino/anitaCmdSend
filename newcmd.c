@@ -23,7 +23,29 @@
 
 #include "newcmdfunc.h"	// generated from newcmdlist.h
 
+#define DISK_TYPES 5
 
+
+typedef enum {
+    ID_FIRST =100,
+    ID_ACQD = 100,
+    ID_ARCHIVED,
+    ID_CALIBD,
+    ID_CMDD,
+    ID_EVENTD,
+    ID_GPSD,
+    ID_HKD,
+    ID_LOSD,
+    ID_PRIORITIZERD,
+    ID_SIPD,
+    ID_MONITORD,
+    ID_PLAYBACKD,
+    ID_LOGWATCHD,
+    ID_NOT_AN_ID
+} ProgramId_t;
+
+
+//Program Id Masks
 #define ACQD_ID_MASK 0x001
 #define ARCHIVED_ID_MASK 0x002
 #define CALIBD_ID_MASK 0x004
@@ -35,15 +57,20 @@
 #define PRIORITIZERD_ID_MASK 0x100
 #define SIPD_ID_MASK 0x200
 #define MONITORD_ID_MASK 0x400
-#define ALL_ID_MASK 0xfff
+#define PLAYBACKD_ID_MASK 0x800
+#define LOGWATCHD_ID_MASK 0x1000
+#define ALL_ID_MASK 0xffff
 
-#define BLADE_MASK 0x1
-#define PUCK_MASK 0x2
-#define USBINT_MASK 0x4
-#define USBEXT_MASK 0x8
-#define PMC_MASK 0x10
 
-int diskBitMasks[5]={BLADE_MASK,PUCK_MASK,USBINT_MASK,USBEXT_MASK,PMC_MASK};
+
+//Disk Bit Masks
+#define SATABLADE_DISK_MASK 0x1
+#define SATAMINI_DISK_MASK 0x2
+#define USB_DISK_MASK 0x4
+#define NEOBRICK_DISK_MASK 0x8
+#define PMC_DISK_MASK 0x10
+
+int diskBitMasks[DISK_TYPES]={SATABLADE_DISK_MASK,SATAMINI_DISK_MASK,USB_DISK_MASK,PMC_DISK_MASK,NEOBRICK_DISK_MASK};
 
 
 WINDOW *Wuser;
@@ -61,7 +88,6 @@ void screen_beep(void);
 
 #define TIMEOUT	't'	/* set_timeout */
 #define NEWCMD	'n'	/* new_cmd */
-//#define CURCMD	'c'	/* cur_cmd */
 #define LINKSEL 'l'	/* select_link */
 #define RTSEL	'r'	/* select_route */
 #define SHOWCMD	's'	/* show_cmds */
@@ -973,6 +999,26 @@ expert(void)
 
 
 static void
+LOG_REQUEST_COMMAND(int idx)
+{
+    char resp[32];
+    short det;
+    short t;     
+    screen_printf("Not implemented\n ");
+}
+
+
+static void
+CMD_DISABLE_DISK(int idx)
+{
+    char resp[32];
+    short det;
+    short t;
+     
+    screen_printf("Not implemented\n ");
+}
+
+static void
 TAIL_MESSAGES(int idx)
 {
     char resp[32];
@@ -1460,42 +1506,15 @@ CMD_START_PROGS(int idx)
 
 }
 
-static void
-CMD_MOUNT(int idx)
-{
-   if (screen_confirm("Really mount -a?")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; mount -a.", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
-    }
-}
 
-static void
-CMD_WHITEHEAT(int idx)
-{
-    screen_printf("Not Implemented\n");
-    return;
-/* if (screen_confirm("Really do something with the whiteheat?")) {
-	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
-	screen_printf("\n");
-	set_cmd_log("%d; whiteheat??", idx);
-	sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
-	}*/
-}
+
+
 
 
 static void
-CMD_MOUNT_NEXT_BLADE(int idx)
+CMD_MOUNT_NEXT_SATA(int idx)
 {
+    screen_printf("Not updated");
    if (screen_confirm("Really mount next blade drive?")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = idx;
@@ -1746,6 +1765,108 @@ CMD_HK_DISKTYPE(int idx)
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
+
+static void
+SET_DECIMATION(int idx)
+{
+    screen_printf("Not implemented\n");
+    char resp[32];
+    short det;
+    short v;
+    screen_printf("1: Raw Data       2: Ped Subbed Raw Data\n");
+    screen_printf("3: Encoded Data   4: Ped Subbed Encoded Data\n");
+    screen_dialog(resp, 31,
+	"Set Storage type to (-1 to cancel) [%d] ",
+	storageType);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (1 <= v && v <= 4) {
+	    storageType = v;
+	} else if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 1-4, not %d.\n", v);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = storageType;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set Storage Type to %d.", idx, storageType);
+//    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+static void
+SET_SPECIAL_PRI(int idx)
+{
+    screen_printf("Not implemented\n");
+    char resp[32];
+    short det;
+    short v;
+    screen_printf("1: Raw Data       2: Ped Subbed Raw Data\n");
+    screen_printf("3: Encoded Data   4: Ped Subbed Encoded Data\n");
+    screen_dialog(resp, 31,
+	"Set Storage type to (-1 to cancel) [%d] ",
+	storageType);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (1 <= v && v <= 4) {
+	    storageType = v;
+	} else if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 1-4, not %d.\n", v);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = storageType;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set Storage Type to %d.", idx, storageType);
+//    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+static void
+SET_SPECIAL_DECIMATE(int idx)
+{
+    screen_printf("Not implemented\n");
+    char resp[32];
+    short det;
+    short v;
+    screen_printf("1: Raw Data       2: Ped Subbed Raw Data\n");
+    screen_printf("3: Encoded Data   4: Ped Subbed Encoded Data\n");
+    screen_dialog(resp, 31,
+	"Set Storage type to (-1 to cancel) [%d] ",
+	storageType);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (1 <= v && v <= 4) {
+	    storageType = v;
+	} else if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 1-4, not %d.\n", v);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = idx;
+    Curcmd[2] = 1;
+    Curcmd[3] = storageType;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Set Storage Type to %d.", idx, storageType);
+//    sendcmd(Fd, Curcmd, Curcmdlen);
+}
 
 static void
 ARCHIVE_STORAGE_TYPE(int idx)
@@ -2226,7 +2347,7 @@ TELEM_PRI_ENC_TYPE(int idx)
 
 
 static void
-CMD_TURN_GPS_ON(int idx)
+TURN_GPS_ON(int idx)
 {
     if (screen_confirm("Really turn on GPS/Magnetometer")) {
 	Curcmd[0] = 0;
@@ -2242,7 +2363,7 @@ CMD_TURN_GPS_ON(int idx)
 
 
 static void
-CMD_TURN_GPS_OFF(int idx)
+TURN_GPS_OFF(int idx)
 {
     if (screen_confirm("Really turn off GPS/Magnetometer")) {
 	Curcmd[0] = 0;
@@ -2258,7 +2379,7 @@ CMD_TURN_GPS_OFF(int idx)
 
 
 static void
-CMD_TURN_RFCM_ON(int idx)
+TURN_RFCM_ON(int idx)
 {
     char resp[32];
     short det;        
@@ -2298,7 +2419,7 @@ CMD_TURN_RFCM_ON(int idx)
 
 
 static void
-CMD_TURN_RFCM_OFF(int idx)
+TURN_RFCM_OFF(int idx)
 {
     char resp[32];
     short det;
@@ -2338,7 +2459,7 @@ CMD_TURN_RFCM_OFF(int idx)
 
 
 static void
-CMD_TURN_CALPULSER_ON(int idx)
+TURN_CALPULSER_ON(int idx)
 {
     if (screen_confirm("Really turn on CalPulser")) {
 	Curcmd[0] = 0;
@@ -2354,7 +2475,7 @@ CMD_TURN_CALPULSER_ON(int idx)
 
 
 static void
-CMD_TURN_CALPULSER_OFF(int idx)
+TURN_CALPULSER_OFF(int idx)
 {
     if (screen_confirm("Really turn off CalPulser")) {
 	Curcmd[0] = 0;
@@ -2369,7 +2490,7 @@ CMD_TURN_CALPULSER_OFF(int idx)
 }
 
 static void
-CMD_TURN_VETO_ON(int idx)
+TURN_VETO_ON(int idx)
 {
     if (screen_confirm("Really turn on Veto RFCMs")) {
 	Curcmd[0] = 0;
@@ -2385,7 +2506,7 @@ CMD_TURN_VETO_ON(int idx)
 
 
 static void
-CMD_TURN_VETO_OFF(int idx)
+TURN_VETO_OFF(int idx)
 {
     if (screen_confirm("Really turn off Veto RFCMs")) {
 	Curcmd[0] = 0;
@@ -2401,7 +2522,7 @@ CMD_TURN_VETO_OFF(int idx)
 
 
 static void
-CMD_TURN_ALL_ON(int idx)
+TURN_ALL_ON(int idx)
 {
     if (screen_confirm("Really turn on GPS, RFCM, CalPulser and Veto")) {
 	Curcmd[0] = 0;
@@ -2417,7 +2538,7 @@ CMD_TURN_ALL_ON(int idx)
 
 
 static void
-CMD_TURN_ALL_OFF(int idx)
+TURN_ALL_OFF(int idx)
 {
     if (screen_confirm("Really turn off GPS, RFCM, CalPulser and Veto")) {
 	Curcmd[0] = 0;
@@ -2575,7 +2696,7 @@ CP_SWITCH_LOOP_PERIOD(int idx)
 
 
 static void
-CP_OFF_LOOP_PERIOD(int idx)
+CP_PULSER_OFF_PERIOD(int idx)
 {
     char resp[32];
     short det;
@@ -2610,7 +2731,7 @@ CP_OFF_LOOP_PERIOD(int idx)
 
 
 static void
-SET_CALIB_WRITE_PERIOD(int idx)
+CP_CALIB_WRITE_PERIOD(int idx)
 {
     char resp[32];
     short det;
@@ -2978,7 +3099,7 @@ ADU5_CAL_13(int idx)
 
 
 
-//  screen_printf("Not implemented.\n");
+//  screen_printf("Not implemented\n.\n");
   return;
 }
 
@@ -3031,7 +3152,7 @@ ADU5_CAL_14(int idx)
 		det[1],det[2]);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
-//  screen_printf("Not implemented.\n");
+//  screen_printf("Not implemented\n.\n");
   return;
 }
 
@@ -4686,6 +4807,13 @@ RAMDISK_DUMP_DATA(int idx)
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
+
+static void
+EVENTD_MATCH_GPS(int idx)
+{
+    screen_printf("Not implemented yet");
+}
+
 static void
 MONITORD_ACQD_WAIT(idx){
 
@@ -4698,7 +4826,7 @@ MONITORD_ACQD_WAIT(idx){
 	acqdWait);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (0 <= t && t <= 65535) {
+	if (0 <= t) {
 	    acqdWait = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
@@ -4723,7 +4851,7 @@ MONITORD_ACQD_WAIT(idx){
 
 
 static void
-MONITOR_PERIOD(idx){
+MONITORD_PERIOD(idx){
     char resp[32];
     short det;
     short t;
@@ -4789,7 +4917,7 @@ USB_CHANGE_THRESH(idx){
 
 
 static void
-BLADE_CHANGE_THRESH(idx){
+SATA_CHANGE_THRESH(idx){
     char resp[32];
     short det;
     short t;
@@ -4822,7 +4950,7 @@ BLADE_CHANGE_THRESH(idx){
 
 
 static void
-MAX_EVENT_QUEUE(idx){
+MAX_QUEUE_LENGTH(idx){
     
     char resp[32];
     short det;
@@ -4833,7 +4961,7 @@ MAX_EVENT_QUEUE(idx){
 	maxQueue);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (0 <= t && t <= 65535) {
+	if (0 <= t) {
 	    maxQueue = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
@@ -4869,7 +4997,7 @@ INODES_KILL_ACQD(idx){
 	inodesKill);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (0 <= t && t <= 65535) {
+	if (0 <= t ) {
 	    acqdWait = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
@@ -4905,7 +5033,7 @@ INODES_DUMP_DATA(idx){
 	inodesDump);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (0 <= t && t <= 65535) {
+	if (0 <= t ) {
 	    inodesDump = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
@@ -5012,6 +5140,50 @@ PRIORITIZERD_COMMAND(idx){
      screen_printf("Not yet Implemented in cmdSend.\n");
      return;
 }
+
+
+static void
+GPSD_EXTRA_COMMAND(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+static void
+SIPD_CONTROL_COMMAND(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+static void
+LOSD_CONTROL_COMMAND(idx){
+    screen_printf("Not yet Implemented in cmdSend.\n");
+    return;
+}
+
+static void
+ACQD_EXTRA_COMMAND(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+static void
+ACQD_RATE_COMMAND(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+static void
+GPS_PHI_MASK_COMMAND(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
+static void
+PLAYBACKD_COMMAND(idx){
+     screen_printf("Not yet Implemented in cmdSend.\n");
+     return;
+}
+
 
 void
 clr_cmd_log(void)

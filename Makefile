@@ -7,12 +7,12 @@ CC = gcc
 CFLAGS = -g
 LIBS = -L/usr/local/lib -lncurses
 
-TARGETS = cmd batchcmd
+TARGETS = cmdTui batchcmd
 
 all:	$(TARGETS)
 
-cmd:	newcmd.c newcmdfunc.h
-	$(CC) $(CFLAGS) -o cmd newcmd.c $(LIBS)
+cmdTui:	newcmd.c newcmdfunc.h
+	$(CC) $(CFLAGS) -o cmdTui newcmd.c $(LIBS)
 
 batchcmd:	batchcmd.c
 	$(CC) $(CFLAGS) -o batchcmd batchcmd.c
