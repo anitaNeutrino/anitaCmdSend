@@ -3,6 +3,7 @@
  * USAGE: cmd [-d] [-l link] [-r route] [-g logfile]
  *
  * Marty Olevitch, June '01, editted KJP 7/05
+ * 	12/27/06 Check for another 'cmd' running at startup. (MAO)
  */
 
 #include <stdio.h>
@@ -110,7 +111,7 @@ void wait_for_ack(void);
 
 unsigned char Curcmd[32];
 int Curcmdlen = 0;
-unsigned char Curlink = LINK_LOS;
+unsigned char Curlink = LINK_TDRSS;
 unsigned char Curroute = ROUTE_COMM1;
 int Fd;
 struct termios Origopts;
@@ -191,6 +192,10 @@ static char Logstr[LOGSTRSIZE];
 static char Logfilename[LOGSTRSIZE];
 static FILE *Logfp;
 
+#define PIDFILENAME "/tmp/cmd.pid"
+int check_pidfile();
+int make_pidfile();
+
 void clr_cmd_log(void);
 void set_cmd_log(char *fmt, ...);
 void cmd_log(void);
@@ -235,7 +240,45 @@ main(int argc, char *argv[])
 	}
     }
 
+    {
+	int pid = check_pidfile();
+	if (pid) {
+	    fprintf(stderr, "There may be another cmd program running, PID %d\n", pid);
+	    fprintf(stderr, "\n");
+	    fprintf(stderr, "Check using this command:\n");
+	    fprintf(stderr, "   ps ax | grep '\\<cmd\\>' | grep -v grep\n");
+	    fprintf(stderr, "It should print something like this if it is in use:\n");
+	    fprintf(stderr, "  %5d pts/2    S+     0:00 cmdSend/cmd\n", pid);
+	    fprintf(stderr, "\n");
+	    fprintf(stderr, "If you see that another 'cmd' is in use, you\n");
+	    fprintf(stderr, "may want to try to contact whoever is using it.\n");
+	    fprintf(stderr, "\n");
+	    fprintf(stderr, "If you don't know who to contact, you may want to\n");
+	    fprintf(stderr, "kill the running program.  In our case, that would be\n");
+	    fprintf(stderr, "    kill %d\n", pid);
+	    fprintf(stderr, "and try starting 'cmd' again.\n");
+	    fprintf(stderr, "\n");
+	    fprintf(stderr, "If there was no 'cmd' program running or if\n");
+	    fprintf(stderr, "you can't kill it, then just remove the %s file:\n",
+	    	PIDFILENAME);
+	    fprintf(stderr, "    rm %s\n", PIDFILENAME);
+	    fprintf(stderr, "and try starting 'cmd' again.\n");
+	    exit(1);
+	}
+
+	if (make_pidfile()) {
+	    char junk[1];
+	    fprintf(stderr,
+	    	"Can't make PID file '%s' (%s). Press <ret> to continue.\n",
+		PIDFILENAME);
+
+	    fgets(junk, 1, stdin);
+	}
+    }
+
     signal(SIGINT, catchsig);
+    signal(SIGTERM, catchsig);
+
     if (serial_init()) {
 	exit(1);
     }
@@ -509,6 +552,7 @@ quit_confirm(void)
 static void
 generic_exit_routine()
 {
+    unlink(PIDFILENAME);
     log_close();
     if (serial_end()) {
 	exit(1);
@@ -520,9 +564,15 @@ void
 catchsig(int sig)
 {
     signal(sig, catchsig);
-    quit_confirm();
-    wprintw(Wuser, PROMPT);
-    wrefresh(Wuser);
+    if (sig == SIGINT) {
+	quit_confirm();
+	wprintw(Wuser, PROMPT);
+	wrefresh(Wuser);
+    } else if (sig == SIGTERM) {
+	screen_printf("I've been killed...");
+	endwin();
+	generic_exit_routine();
+    }
 }
 
 int
@@ -870,7 +920,7 @@ show_cmds(void)
 			156,157,158,159,171,172,173,
 			174,175,182,183,210,230,231,235,238,239};
 
-    for (j=0; j<21; j++) {
+    for (j=0; j<25; j++) {
 	i=easyCmdArray[j];
 
 	if (Cmdarray[i].f != NULL) {
@@ -5033,4 +5083,42 @@ log_close(void)
 	log_out("Finished");
 	fclose(Logfp);
     }
+}
+
+/* check_pidfile - return 0 if no pid file is found, else return the value
+ * of the PID found in it.
+ */
+int
+check_pidfile()
+{
+#define PSIZ 8
+    FILE *fp = fopen(PIDFILENAME, "r");
+    int pid;
+    char pidtxt[PSIZ];
+
+    if (fp == NULL) {
+	return 0;
+    }
+
+    if (fgets(pidtxt, PSIZ, fp) == NULL) {
+	return 0;
+    }
+
+    pid = atoi(pidtxt);
+    return (pid);
+}
+
+/* make_pidfile - create a pid file with our PID in it. Return 0 on
+ * success, else -1.
+ */
+int
+make_pidfile()
+{
+    FILE *fp = fopen(PIDFILENAME, "w");
+    if (fp == NULL) {
+	return -1;
+    }
+    fprintf(fp, "%d\n", getpid());
+    fclose(fp);
+    return 0;
 }
