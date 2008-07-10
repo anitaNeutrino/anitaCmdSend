@@ -134,7 +134,7 @@ static short enableChanServo=0;
 static short pidGoal=0;
 static short pedestalRun=0;
 static short thresholdRun=0;
-static unsigned long antTrigMask=0;
+
 static unsigned short surfTrigBandSurf=0;
 static unsigned short surfTrigBandVal1=0;
 static unsigned short surfTrigBandVal2=0;
@@ -959,7 +959,6 @@ LOG_REQUEST_COMMAND(int cmdCode)
     short numLines=500;
     short t;     
     int fileNum=0;
-    screen_printf("Not implemented\n ");
 
     for(fileNum=LOG_FIRST_LOG;fileNum<LOG_NOT_A_LOG;fileNum++) {
 	if(fileNum%2==1)
@@ -3232,7 +3231,6 @@ ADU5_CAL_13(int cmdCode)
 
 
 
-//  screen_printf("Not implemented\n.\n");
   return;
 }
 
@@ -3285,7 +3283,6 @@ ADU5_CAL_14(int cmdCode)
 		det[1],det[2]);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
-//  screen_printf("Not implemented\n.\n");
   return;
 }
 
@@ -4338,232 +4335,6 @@ THRESHOLD_SCAN(int cmdCode)
 }
 
 
-static void
-SET_ANT_TRIG_MASK(int cmdCode)
-{
-
-    char resp[32];
-    short det;
-    unsigned long t;
-    unsigned long test;
-    int fred; 
-    int antAdd=-1;
-    int allOn=0;
-    antTrigMask=0;
-    
-    screen_dialog(resp, 31,"Add First antenna to mask  (0 for all on)( -1 to cancel) [%d] ", antAdd);
-    
-    if (resp[0] != '\0') {
-	 
-	 antAdd=atoi(resp);
-	 if(antAdd==0){
-	      allOn=1;
-	 }
-	 else if(antAdd>=1 && antAdd<=32) {
-	
-	 }
-	 
-	 else if(antAdd==-1) {
-	      screen_printf("Cancelled.\n");
-	      return;
-	 }
-	 else {
-	      screen_printf("Not a valid antenna number");
-	      return;
-	 }
-    }
-    else { 
-	 screen_printf("Cancelled.\n");
-	 return;
-    }
-	 	 
-    int bit=(antAdd%4);
-    if(bit) bit=4-bit;
-    int nibble=7-(antAdd-1)/4;
-    
-    int bitShift=bit+4*nibble;
-    test=(1<<bitShift);
-    if(allOn==1){
-	 test=0;
-    }
-    antTrigMask|=test;
-
-    while(1) {
-	 antAdd=-1;
-	 screen_dialog(resp, 31, 
-		       "Add next antenna to mask  ( -1 to cancel, 0 to finish) [%d]",antAdd);
-      
-	 if (resp[0] != '\0') {
-	      antAdd=atoi(resp);
-	      if(antAdd==0) break;
-	      if(antAdd>=1 && antAdd<=32) {
-	  
-	      }
-	      else {
-		   screen_printf("Not a valid antenna number");
-		   continue;
-	      }
-	      if(antAdd==-1) {
-		   screen_printf("Cancelled.\n");
-		   return;
-	      }
-	 }
-	 else { 
-	      screen_printf("Cancelled.\n");
-	      return;
-	 }
-	 bit=(antAdd%4);
-	 if(bit) bit=4-bit;
-	 nibble=7-(antAdd-1)/4;
-    
-	 bitShift=bit+4*nibble;
-	 test=(1<<bitShift);
-	 antTrigMask|=test;
-    }
-   
-      
-    if (screen_confirm("Really Set antTrigMask to: %#010x",antTrigMask)) {
-
-      Curcmd[0] = 0;
-      Curcmd[1] = cmdCode;
-      Curcmd[2] = 1;
-      Curcmd[3] = (antTrigMask&0xff);
-      Curcmd[4] = 2;
-      Curcmd[5] = ((antTrigMask&0xff00)>>8);
-      Curcmd[6] = 3;
-      Curcmd[7] = ((antTrigMask&0xff0000)>>16);
-      Curcmd[8] = 4;
-      Curcmd[9] = ((antTrigMask&0xff000000)>>24);
-      Curcmdlen = 10;
-      set_cmd_log("%d; Set antTrigMask %#x.", cmdCode, antTrigMask);
-      sendcmd(Fd, Curcmd, Curcmdlen);
-    } else {
-	screen_printf("\nCancelled\n");
-	return;
-    }
-     
-}
-
-
-static void
-SET_SURF_TRIG_MASK(int cmdCode)
-{
-    char resp[32];
-    short det;
-    int t;
-    int fred; 
-
-    
-    screen_dialog(resp, 31,
-	"Which SURF to change trigBandMask  (1-9, -1 to cancel) [%ul] ",
-	antTrigMask);
-    if (resp[0] != '\0') {
-      t=atoi(resp);
-      if(t>=1 && t<=9) {
-	surfTrigBandSurf=t-1;
-      }
-      else if(t==-1) {
-	screen_printf("Cancelled.\n");
-	return;
-      }
-      else {	
-	screen_printf("SURF must be between 1 and 9.\n");
-	return;
-      }	
-    }
-
-    screen_dialog(resp, 31,
-	"Hex bitmask for lower 16 channels  (0 - 0xffff, -1 to cancel) [%ul] ",
-	antTrigMask);
-    if (resp[0] != '\0') {
-      t=atoi(resp);
-      if(t==-1) {
-	screen_printf("Cancelled.\n");
-	return;	
-      }
-      t=strtol(resp,NULL,16);
-      if(t>=0 && t<=0xffff) {
-	surfTrigBandVal1=t;
-      }
-      else {	
-	screen_printf("SURF must be between 0 and 0xffff (not %#x).\n",t);
-	return;
-      }	
-    }
-
-    screen_dialog(resp, 31,
-	"Hex bitmask for upper 16 channels  (0 - 0xffff, -1 to cancel) [%ul] ",
-	antTrigMask);
-    if (resp[0] != '\0') {
-      t=atoi(resp);
-      if(t==-1) {
-	screen_printf("Cancelled.\n");
-	return;	
-      }
-      t=strtol(resp,NULL,16);
-      if(t>=0 && t<=0xffff) {
-	surfTrigBandVal2=t;
-      }
-      else {	
-	screen_printf("SURF must be between 0 and 0xffff (not %#x).\n",t);
-	return;
-      }	
-    }
-
-
-
-    Curcmd[0] = 0;
-    Curcmd[1] = cmdCode;
-    Curcmd[2] = 1;
-    Curcmd[3] = (surfTrigBandSurf&0xff);
-    Curcmd[4] = 2;
-    Curcmd[5] = ((surfTrigBandVal1&0xff));
-    Curcmd[6] = 3;
-    Curcmd[7] = ((surfTrigBandVal1&0xff00)>>8);
-    Curcmd[8] = 4;
-    Curcmd[9] = ((surfTrigBandVal2&0xff));
-    Curcmd[10] = 5;
-    Curcmd[11] = ((surfTrigBandVal2&0xff00)>>8);
-    Curcmdlen = 12;
-    set_cmd_log("%d; Take SURF trig band mask %d -- %#x %#x.", cmdCode, surfTrigBandSurf,surfTrigBandVal1,surfTrigBandVal2);
-    sendcmd(Fd, Curcmd, Curcmdlen);
-}
-
-
-static void
-SET_GLOBAL_THRESHOLD(int cmdCode)
-{
-    char resp[32];
-    short det;
-    short t;
-     
-    screen_dialog(resp, 31,
-	"Set Global Threshold  (0 means disable, 1-4095, -1 to cancel) [%d] ",
-	globalThreshold);
-    if (resp[0] != '\0') {
-	t = atoi(resp);
-	if (0 <= t && t <= 4095) {
-	    globalThreshold = t;
-	} else if (t == -1) {
-	    screen_printf("Cancelled.\n");
-	    return;
-	} else {
-	    screen_printf("Value must be 0-4095, not %d.\n", t);
-	    return;
-	}
-    }
-
-    Curcmd[0] = 0;
-    Curcmd[1] = cmdCode;
-    Curcmd[2] = 1;
-    Curcmd[3] = (globalThreshold&0xff);
-    Curcmd[4] = 2;
-    Curcmd[5] = ((globalThreshold&0xff00)>>8);
-    Curcmdlen = 6;
-    set_cmd_log("%d; Setting globalThreshold to %d.", cmdCode, globalThreshold);
-    sendcmd(Fd, Curcmd, Curcmdlen);
-}
-
 
 static void
 ACQD_REPROGRAM_TURF(int cmdCode)
@@ -4594,80 +4365,6 @@ ACQD_REPROGRAM_TURF(int cmdCode)
     Curcmd[3] = reprogramTurf;
     Curcmdlen = 4;
     set_cmd_log("%d; Set Reprogram Turf to %d.", cmdCode, reprogramTurf);
-    sendcmd(Fd, Curcmd, Curcmdlen);
-}
-
-
-static void
-BAND_SCALE_FACTOR(int cmdCode)
-{
-    char resp[32];
-    short det;
-    short t;
-    float ft;
-    unsigned short value;
-    
-    screen_printf("Use this command to change the scale factor for a single trigger band\n");
-    screen_printf("Obviously use with caution\n");    
-    screen_dialog(resp, 31,
-	"Which SURF, 1-8, to change (-1 to cancel) [%d] ",
-	whichSurf+1);
-    if (resp[0] != '\0') {
-	t = atoi(resp);
-	if (1 <= t && t <= 8) {
-	    whichSurf = t-1;
-	} else if (t == -1) {
-	    screen_printf("Cancelled.\n");
-	    return;
-	} else {
-	    screen_printf("Value must be 1-8, not %d.\n", t);
-	    return;
-	}
-    }   
-    screen_dialog(resp, 31,
-	"Which DAC, 1-32, to change (-1 to cancel) [%d] ",
-	whichDac+1);
-    if (resp[0] != '\0') {
-	t = atoi(resp);
-	if (1 <= t && t <= 32) {
-	    whichDac = t-1;
-	} else if (t == -1) {
-	    screen_printf("Cancelled.\n");
-	    return;
-	} else {
-	    screen_printf("Value must be 1-32, not %d.\n", t);
-	    return;
-	}
-    }  
-
-    screen_dialog(resp, 31,
-	"To what scale factor (1 is normal, <1 decreases rate, >1 increases rate (-1 to cancel) [%f] ",
-	scaleFactor);
-    if (resp[0] != '\0') {
-	ft = atof(resp);
-	if (ft >= 0) {
-	    scaleFactor = ft;
-	} else {
-	    screen_printf("Cancelled.\n");
-	    return;
-	} 
-    }
-    
-    value = ((unsigned short) (scaleFactor*1000.));
-    //    screen_printf("scaleFactor %f\tvalue %u\n",scaleFactor,value);
-       
-    Curcmd[0] = 0;
-    Curcmd[1] = cmdCode;
-    Curcmd[2] = 1;
-    Curcmd[3] = whichSurf&0xff;
-    Curcmd[4] = 2;
-    Curcmd[5] = whichDac&0xff;
-    Curcmd[6] = 3;
-    Curcmd[7] = value&0xff;
-    Curcmd[8] = 4;
-    Curcmd[9] = ((value&0xff00)>>8);
-    Curcmdlen = 10;
-    set_cmd_log("%d; Set Band Scale Factor SURF %d, DAC %d, %f.", cmdCode, whichSurf,whichDac,scaleFactor);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -4944,14 +4641,41 @@ RAMDISK_DUMP_DATA(int cmdCode)
 static void
 EVENTD_MATCH_GPS(int cmdCode)
 {
-    screen_printf("Not implemented yet");
+    char resp[32];
+    short det;
+    short t=0;
+    short val=0;
+
+    screen_dialog(resp, 31,
+		  "Enable (1) or disable (0) gps matching (-1 to cancel) [%d] ",
+		  val);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t<=1) {
+	    val = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0 or 1, not %d.\n", t);
+	    return;
+	}
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = val;
+    Curcmdlen = 4;
+    set_cmd_log("%d; Setting event match GPS to %d.", cmdCode, val);
+    sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 static void
 MONITORD_ACQD_WAIT(cmdCode){
-
     char resp[32];
     short det;
+
     short t;
      
     screen_dialog(resp, 31,
@@ -5344,9 +5068,9 @@ GPSD_EXTRA_COMMAND(cmdCode){
     Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = extraCode;
-    Curcmd[4] = 1;
+    Curcmd[4] = 2;
     Curcmd[5] = whichGps;
-    Curcmd[6] = 1;
+    Curcmd[6] = 3;
     Curcmd[7] = cval;
     Curcmdlen = 8;
     set_cmd_log("%d; Extra GPS command %d %d to %d.", cmdCode,extraCode,whichGps,value);
@@ -5357,32 +5081,1432 @@ GPSD_EXTRA_COMMAND(cmdCode){
 
 static void
 SIPD_CONTROL_COMMAND(cmdCode){
-     screen_printf("Not yet Implemented in cmdSend.\n");
+    char resp[32];
+    short det;
+    int t;
+    unsigned char cval=0;
+    static short extraCode=127;
+    static short whichInd=0;
+    static unsigned short value=0;
+    screen_printf("127. SIPD_SEND_WAVE\n");
+    screen_printf("128. SIPD_THROTTLE_RATE\n");
+    screen_printf("129. SIPD_PRIORITY_BANDWIDTH\n");
+    screen_printf("130. SIPD_HEADERS_PER_EVENT\n");
+    screen_printf("131. SIPD_HK_TELEM_ORDER\n");
+    screen_printf("132. SIPD_HK_TELEM_MAX_PACKETS\n");
+    screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (127<= t && t <=132) {
+	    extraCode = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Not a valid command\n");
+	    return;
+	}
+    }
+    int extraByte=0;
+    if(extraCode==SIPD_PRIORITY_BANDWIDTH) {
+	extraByte=1;
+	screen_dialog(resp,31,"Select priority %d (-1 to cancel)\n",whichInd);
+    }
+    else if(extraCode==SIPD_HK_TELEM_ORDER ||
+	    extraCode==SIPD_HK_TELEM_MAX_PACKETS) {
+	extraByte=1;
+	screen_dialog(resp,31,"Select hk index %d (-1 to cancel)\n",whichInd);
+    }
+    if(extraByte) {
+	if (resp[0] != '\0') {
+	    t= atoi(resp);
+	    if (0<= t && t <=20) {
+		whichInd = t;
+	    } else if (t == -1) {
+		screen_printf("Cancelled.\n");
+		return;
+	    } else {
+		screen_printf("Not a valid index\n");
+		return;
+	    }
+	}
+    }
+    screen_dialog(resp,31,"Enter value (-1 to cancel)\n",value);
+    if (resp[0] != '\0') {
+	t= atoi(resp);
+	if (t < 0) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} 
+	value=t;
+    }
+
+  
+    
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = extraCode;
+    Curcmd[4] = 2;
+    Curcmd[6] = 3;    
+    if(extraByte) {
+	Curcmd[5] = whichInd;
+	Curcmd[7] = value&0xff;
+    }
+    else {
+	Curcmd[5] = value&0xff;
+	Curcmd[7] = 0;
+	if(extraCode==SIPD_THROTTLE_RATE) {
+	    Curcmd[7] = (value&0xff00)>>8;
+	}
+    }    
+    Curcmdlen = 8;
+    set_cmd_log("%d; Extra SIPd command %d %d to %d.", cmdCode,extraCode,whichInd,value);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+    
+
      return;
 }
 
 static void
 LOSD_CONTROL_COMMAND(cmdCode){
-    screen_printf("Not yet Implemented in cmdSend.\n");
+    char resp[32];
+    short det;
+    int t;
+    unsigned char firstByte=0;
+    unsigned char secondByte=0;
+    static short extraCode=1;
+    static short whichPri=0;
+    static unsigned short value=0;
+    screen_printf("1. LOSD_SEND_DATA\n");
+    screen_printf("2. LOSD_PRIORITY_BANDWIDTH\n");
+    screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (1<= t && t <=2) {
+	    extraCode = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Not a valid command\n");
+	    return;
+	}
+    }
+    if(extraCode==LOSD_SEND_DATA) {
+	screen_dialog(resp, 31,
+		      "Send LOS Data(0 is disable, 1 is enable, -1 to cancel) [%d] ",
+		      losSendData);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0 <= t && t <= 1) {
+		losSendData = t;
+	    } else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	    } else {
+		screen_printf("Value must be 0-1, not %d.\n", t);
+		return;
+	    }
+	}
+	firstByte=losSendData;
+	secondByte=0;
+    }
+    if(extraCode==LOSD_PRIORITY_BANDWIDTH) {
+	screen_dialog(resp, 31,
+		      "Which priority (0-9) to set bandwidth for (-1 to cancel) [%d] ",
+		      whichPri);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0 <= t && t <= 9) {
+		whichPri = t;
+	    } else {
+		screen_printf("Value must be 0-9, not %d.\n", t);
+		return;
+	    }
+	}
+	
+	value=20;
+	screen_dialog(resp, 31,
+		      "Enter bandwidth fraction 0 to 100 (-1 to cancel) [%d]",
+		      value);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0 <= t && t <= 100) {
+		value=t;
+	    } else {
+		screen_printf("Value must be 0 to 100, not %d.\n", t);
+		return;
+	    }
+	}
+	firstByte=whichPri;
+	secondByte=value;
+    }
+  
+    
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = extraCode;
+    Curcmd[4] = 2;
+    Curcmd[5] = firstByte;
+    Curcmd[6] = 3;    
+    Curcmd[7] = secondByte;
+    Curcmdlen = 8;
+    set_cmd_log("%d; Extra SIPd command %d %d to %d.", cmdCode,extraCode,firstByte,secondByte);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+    
     return;
 }
 
 static void
 ACQD_EXTRA_COMMAND(cmdCode){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+    char resp[32];
+    short det;
+    int t;
+    unsigned char firstByte=0;
+    unsigned char secondByte=0;
+    static short extraCode=1;
+    static short enableOrDisable=0;
+    static short surfNumber=0;
+    static unsigned short value=0;
+    screen_printf("127. DISABLE_SURF\n");
+    screen_printf("128. SET_TURF_RATE_AVERAGE\n");
+    screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (127<= t && t <=128) {
+	    extraCode = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Not a valid command\n");
+	    return;
+	}
+    }
+    if(extraCode==ACQD_DISABLE_SURF) {
+	screen_dialog(resp, 31,
+		      "Enable or disable(0 is disable, 1 is enable, -1 to cancel) [%d] ",
+		      enableOrDisable);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0 <= t && t <= 1) {
+		enableOrDisable = t;
+	    } else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	    } else {
+		screen_printf("Value must be 0-1, not %d.\n", t);
+		return;
+	    }
+	}
+	screen_dialog(resp, 31,
+		      "Enter SURF number (1-10), -1 to cancel) [%d] ",
+		      surfNumber);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (1 <= t && t <= 10) {
+		surfNumber = t;
+	    } else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	    } else {
+		screen_printf("Value must be 1-10, not %d.\n", t);
+		return;
+	    }
+	}	
+	firstByte=enableOrDisable;
+	secondByte=surfNumber;
+    }
+    if(extraCode==ACQD_SET_TURF_RATE_AVERAGE) {
+	value=60;
+	screen_dialog(resp, 31,
+		      "How many Turf Rates to Average? (-1 to cancel) [%d] ",
+		      value);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (1 <= t && t <= 255) {
+		value = t;
+	    } else {
+		screen_printf("Value must be 1-255, not %d.\n", t);
+		return;
+	    }
+	}
+	firstByte=value;
+	secondByte=0;
+    }
+  
+    
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = extraCode;
+    Curcmd[4] = 2;
+    Curcmd[5] = firstByte;
+    Curcmd[6] = 3;    
+    Curcmd[7] = secondByte;
+    Curcmdlen = 8;
+    set_cmd_log("%d; Extra Acqd command %d %d to %d.", cmdCode,extraCode,firstByte,secondByte);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+    return;
 }
 
 static void
 ACQD_RATE_COMMAND(cmdCode){
-     screen_printf("Not yet Implemented in cmdSend.\n");
+    char resp[32];
+    short det;
+    int t;
+    float ft;
+    unsigned char cmdBytes[8]={0};
+    static short extraCode=1;
+    static short enableOrDisable=0;
+    static short surfNumber=0;
+    static short dacNumber=0;
+    static float scaleFactor=0;
+    static float fvalue=0;
+    static unsigned short usvalue=0;
+    static unsigned int uivalue=0;
+    static unsigned int antTrigMask=0;
+    static unsigned short phiTrigMask=0;
+    static unsigned short surfTrigMask=0;
+    static unsigned short eventRate=0;
+
+
+
+
+     screen_printf("1. ENABLE_CHAN_SERVO\n");
+     screen_printf("2. SET_PID_GOALS\n");
+     screen_printf("3. SET_ANT_TRIG_MASK\n");
+     screen_printf("4. SET_PHI_MASK\n");
+     screen_printf("5. SET_SURF_BAND_TRIG_MASK\n");
+     screen_printf("6. SET_CHAN_PID_GOAL_SCALE\n");
+     screen_printf("7. SET_RATE_SERVO\n");
+     screen_printf("8. ENABLE_DYNAMIC_PHI_MASK\n");
+     screen_printf("9. ENABLE_DYNAMIC_ANT_MASK\n");
+     screen_printf("10. SET_DYNAMIC_PHI_MASK_OVER\n");  
+     screen_printf("11. SET_DYNAMIC_PHI_MASK_UNDER\n"); 
+     screen_printf("12. SET_DYNAMIC_ANT_MASK_OVER\n"); 
+     screen_printf("13. SET_DYNAMIC_ANT_MASK_UNDER\n");
+     screen_printf("14. SET_GLOBAL_THRESHOLD\n");
+     screen_printf("16. SET_NADIR_PID_GOALS\n");
+     screen_printf("17. SET_PID_PGAIN\n");
+     screen_printf("18. SET_PID_IGAIN\n");
+     screen_printf("19. SET_PID_DGAIN\n");
+     screen_printf("20. SET_PID_IMAX\n");
+     screen_printf("21. SET_PID_IMIN\n");
+     screen_printf("22. SET_PID_AVERAGE\n");
+     screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
+     if (resp[0] != '\0') {
+	 t = atoi(resp);
+	if (1<= t && t <=22) {
+	    extraCode = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Not a valid command\n");
+	    return;
+	}
+     }
+     if(extraCode==ACQD_RATE_ENABLE_CHAN_SERVO) {
+
+	 screen_dialog(resp,31,"1 for enable, 0 for disable %d (-1 to cancel)\n",enableOrDisable);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=1) {
+		 enableOrDisable = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=enableOrDisable;
+	     
+
+     }
+     if(extraCode==ACQD_RATE_SET_PID_GOALS) {
+	 screen_dialog(resp,31,"Enter low band goal (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=65535) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue&0xff;
+	 cmdBytes[1]=(usvalue&0xff00)>>8;
+	 screen_dialog(resp,31,"Enter mid band goal (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=65535) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[2]=usvalue&0xff;
+	 cmdBytes[3]=(usvalue&0xff00)>>8;
+	 screen_dialog(resp,31,"Enter high band goal (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=65535) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[4]=usvalue&0xff;
+	 cmdBytes[5]=(usvalue&0xff00)>>8;
+	 screen_dialog(resp,31,"Enter full band goal (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=65535) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[6]=usvalue&0xff;
+	 cmdBytes[7]=(usvalue&0xff00)>>8;
+	     	 
+     }
+     if(extraCode==ACQD_RATE_SET_ANT_TRIG_MASK) {
+	 unsigned long t;
+	 unsigned long test;
+	 int fred; 
+	 int antAdd=-1;
+	 int allOn=0;
+	 antTrigMask=0;
+	 
+	 screen_dialog(resp, 31,"Add First antenna to mask  (0 for all on)( -1 to cancel) [%d] ", antAdd);
+	 
+	 if (resp[0] != '\0') {	     
+	     antAdd=atoi(resp);
+	     if(antAdd==0){
+		 allOn=1;
+	     }
+	     else if(antAdd>=1 && antAdd<=32) {		 
+	     }
+	     
+	     else if(antAdd==-1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     }
+	     else {
+		 screen_printf("Not a valid antenna number");
+		 return;
+	     }
+	 }
+	 else { 
+	     screen_printf("Cancelled.\n");
+	     return;
+	 }
+	 
+	 int bit=(antAdd%4);
+	 if(bit) bit=4-bit;
+	 int nibble=7-(antAdd-1)/4;
+	 
+	 int bitShift=bit+4*nibble;
+	 test=(1<<bitShift);
+	 if(allOn==1){
+	     test=0;
+	 }
+	 antTrigMask|=test;
+	 
+	 while(1) {
+	     antAdd=-1;
+	     screen_dialog(resp, 31, 
+			   "Add next antenna to mask  ( -1 to cancel, 0 to finish) [%d]",antAdd);
+	     
+	     if (resp[0] != '\0') {
+		 antAdd=atoi(resp);
+		 if(antAdd==0) break;
+		 if(antAdd>=1 && antAdd<=32) {
+		     
+		 }
+		 else {
+		     screen_printf("Not a valid antenna number");
+		   continue;
+		 }
+		 if(antAdd==-1) {
+		   screen_printf("Cancelled.\n");
+		   return;
+		 }
+	     }
+	     else { 
+		 screen_printf("Cancelled.\n");
+		 return;
+	     }
+	     bit=(antAdd%4);
+	     if(bit) bit=4-bit;
+	     nibble=7-(antAdd-1)/4;
+	     
+	     bitShift=bit+4*nibble;
+	     test=(1<<bitShift);
+	     antTrigMask|=test;
+	 }
+   
+      
+	 if (screen_confirm("Really Set antTrigMask to: %#010x",antTrigMask)) {
+	     cmdBytes[0]=(antTrigMask&0xff);
+	     cmdBytes[1]=((antTrigMask&0xff00)>>8);
+	     cmdBytes[2]=((antTrigMask&0xff0000)>>16);
+	     cmdBytes[3]=((antTrigMask&0xff000000)>>24);
+	 } else {
+	     screen_printf("\nCancelled\n");
+	     return;
+	 }
+     }
+     if(extraCode==ACQD_RATE_SET_PHI_MASK) {
+	 unsigned long t;
+	 unsigned long test;
+	 int fred; 
+	 int phiAdd=-1;
+	 int allOn=0;
+	 phiTrigMask=0;
+	 
+	 screen_dialog(resp, 31,"Add First Phi Sector to mask  (0 for all on)( -1 to cancel) [%d] ", phiAdd);
+	 
+	 if (resp[0] != '\0') {	     
+	     phiAdd=atoi(resp);
+	     if(phiAdd==0){
+		 allOn=1;
+	     }
+	     else if(phiAdd>=1 && phiAdd<=16) {		 
+	     }	     
+	     else if(phiAdd==-1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     }
+	     else {
+		 screen_printf("Not a valid phi sector");
+		 return;
+	     }
+	 }
+	 else { 
+	     screen_printf("Cancelled.\n");
+	     return;
+	 }
+	 
+	 test=(1<<(phiAdd-1));
+	 if(allOn==1){
+	     test=0;
+	 }
+	 phiTrigMask|=test;
+	 
+	 while(1) {
+	     phiAdd=-1;
+	     screen_dialog(resp, 31, 
+			   "Add next phi sector to mask  ( -1 to cancel, 0 to finish) [%d]",phiAdd);
+	     
+	     if (resp[0] != '\0') {
+		 phiAdd=atoi(resp);
+		 if(phiAdd==0) break;
+		 if(phiAdd>=1 && phiAdd<=16) {
+		     
+		 }
+		 else {
+		     screen_printf("Not a valid phi sector");
+		   continue;
+		 }
+		 if(phiAdd==-1) {
+		   screen_printf("Cancelled.\n");
+		   return;
+		 }
+	     }
+	     else { 
+		 screen_printf("Cancelled.\n");
+		 return;
+	     }
+	     test=(1<<(phiAdd-1));
+	     phiTrigMask|=test;
+	 }
+   
+      
+	 if (screen_confirm("Really Set phiTrigMask to: %#010x",phiTrigMask)) {
+	     cmdBytes[0]=(phiTrigMask&0xff);
+	     cmdBytes[1]=((phiTrigMask&0xff00)>>8);
+
+	 } else {
+	     screen_printf("\nCancelled\n");
+	     return;
+	 }
+
+
+     }
+     if(extraCode==ACQD_RATE_SET_SURF_BAND_TRIG_MASK) {
+	 
+	 screen_dialog(resp, 31,
+		       "Which SURF to change trigBandMask  (1-10, -1 to cancel) [%ul] ",
+		       surfNumber);
+	 if (resp[0] != '\0') {
+	     t=atoi(resp);
+	     if(t>=1 && t<=9) {
+		 surfNumber=t-1;
+	     }
+	     else if(t==-1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     }
+	     else {	
+		 screen_printf("SURF must be between 1 and 10.\n");
+		 return;
+	     }	
+	 }
+
+	 screen_dialog(resp, 31,
+		       "Hex bitmask for 16 channels  (0 - 0xffff, -1 to cancel) [%ul] ",
+		       surfTrigMask);
+	 if (resp[0] != '\0') {
+	     t=atoi(resp);
+	     if(t==-1) {
+		 screen_printf("Cancelled.\n");
+		 return;	
+	     }
+	     t=strtol(resp,NULL,16);
+	     if(t>=0 && t<=0xffff) {
+		 surfTrigMask=t;
+	     }
+	     else {	
+		 screen_printf("SURF must be between 0 and 0xffff (not %#x).\n",t);
+		 return;
+	     }	
+	 }
+	 
+	 cmdBytes[0]=surfNumber;
+	 cmdBytes[1]=surfTrigMask&0xff;
+	 cmdBytes[2]=(surfTrigMask&0xff00)>>8;
+     }
+     if(extraCode==ACQD_RATE_SET_CHAN_PID_GOAL_SCALE) {
+    
+	 screen_printf("Use this command to change the scale factor for a single trigger band\n");
+	 screen_printf("Obviously use with caution\n");    
+	 screen_dialog(resp, 31,
+		       "Which SURF, 1-10, to change (-1 to cancel) [%d] ",
+		       surfNumber);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (1 <= t && t <= 10) {
+		 surfNumber = t-1;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Value must be 1-10, not %d.\n", t);
+		 return;
+	     }
+	 }   
+	 screen_dialog(resp, 31,
+		       "Which DAC, 1-16, to change (-1 to cancel) [%d] ",
+		       dacNumber+1);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (1 <= t && t <= 16) {
+		 dacNumber = t-1;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Value must be 1-16, not %d.\n", t);
+		 return;
+	     }
+	 }  
+	 
+	 
+	 screen_dialog(resp, 31,
+		       "To what scale factor (1 is normal, <1 decreases rate, >1 increases rate (-1 to cancel) [%f] ",
+		       scaleFactor);
+	 if (resp[0] != '\0') {
+	     ft = atof(resp);
+	     if (ft >= 0) {
+		 scaleFactor = ft;
+	     } else {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } 
+	 }
+	 
+	 usvalue = ((unsigned short) (scaleFactor*1000.));
+	 //    screen_printf("scaleFactor %f\tvalue %u\n",scaleFactor,value);
+	 cmdBytes[0]=surfNumber;
+	 cmdBytes[1]=dacNumber;
+	 cmdBytes[2]=usvalue&0xff;
+	 cmdBytes[3]=(usvalue&0xff00)>>8;	 
+
+     }
+     if(extraCode==ACQD_RATE_SET_RATE_SERVO) {
+	 float rate=0;
+	 short enabler=0;
+	 eventRate=0;
+	 screen_dialog(resp, 31,
+		       "Set Desired Event Rate  (0 to disable servo, -1 to cancel) [%f] ",
+		       rate);
+	 if (resp[0] != '\0') {
+	     ft = atof(resp);
+	     if (0 < ft && ft <= 10) {
+		 enabler=1;
+		 rate = ft;
+		 rate*=1000;
+		 eventRate=(int)rate;
+	     } else if (ft < 0) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 enabler=0;
+		 rate=0;
+		 eventRate=0;
+	     }
+	 }
+	 cmdBytes[0]=eventRate&0xff;
+	 cmdBytes[1]=(eventRate&0xff00)>>8;	 
+     }
+     if(extraCode==ACQD_RATE_ENABLE_DYNAMIC_PHI_MASK) {
+	 screen_dialog(resp,31,"1 for enable, 0 for disable %d (-1 to cancel)\n",enableOrDisable);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=1) {
+	    enableOrDisable = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	     cmdBytes[0]=enableOrDisable;
+	 }
+
+     }
+     if(extraCode==ACQD_RATE_ENABLE_DYNAMIC_ANT_MASK) {
+	 screen_dialog(resp,31,"1 for enable, 0 for disable %d (-1 to cancel)\n",enableOrDisable);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=1) {
+	    enableOrDisable = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=enableOrDisable;
+
+     }
+     if(extraCode==ACQD_RATE_SET_DYNAMIC_PHI_MASK_OVER) {
+	 usvalue=20;
+	 screen_dialog(resp,31,"Set L3 phi  over threshold rate (1-255Hz) (-1 to cancel) [%d]\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (1<= t && t <=255) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid rate\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue;
+
+	 usvalue=20;
+	 screen_dialog(resp,31,"Set L3 phi threshold window (1-60) (-1 to cancel) [%d]\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (1<= t && t <=60) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid time window\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[1]=usvalue;     
+	 
+     }
+     if(extraCode==ACQD_RATE_SET_DYNAMIC_PHI_MASK_UNDER) {
+	 usvalue=2;
+	 screen_dialog(resp,31,"Set L3 phi under threshold rate (1-255Hz) (-1 to cancel) [%d]\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (1<= t && t <=255) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid rate\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue;
+
+	 usvalue=40;
+	 screen_dialog(resp,31,"Set L3 phi threshold window (1-60) (-1 to cancel) [%d]\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (1<= t && t <=60) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid time window\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[1]=usvalue;  
+
+     }
+     if(extraCode==ACQD_RATE_SET_DYNAMIC_ANT_MASK_OVER) {
+	 uivalue=100000;
+	 screen_dialog(resp,31,"Set L1 ant over threshold rate (Hz) (-1 to cancel) [%d]\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (1<= t ) {
+		 uivalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid rate\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=(uivalue&0xff);
+	 cmdBytes[1]=(uivalue&0xff00)>>8;
+	 cmdBytes[2]=(uivalue&0xff0000)>>16;
+	 cmdBytes[3]=(uivalue&0xff000000)>>24;
+
+	 usvalue=40;
+	 screen_dialog(resp,31,"Set L1 ant threshold window (1-60) (-1 to cancel) [%d]\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (1<= t && t <=60) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid time window\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[4]=usvalue; 
+
+     }
+     if(extraCode==ACQD_RATE_SET_DYNAMIC_ANT_MASK_UNDER) {
+
+	 uivalue=100000;
+	 screen_dialog(resp,31,"Set L1 ant over threshold rate (Hz) (-1 to cancel) [%d]\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (1<= t ) {
+		 uivalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid rate\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=(uivalue&0xff);
+	 cmdBytes[1]=(uivalue&0xff00)>>8;
+	 cmdBytes[2]=(uivalue&0xff0000)>>16;
+	 cmdBytes[3]=(uivalue&0xff000000)>>24;
+
+	 usvalue=40;
+	 screen_dialog(resp,31,"Set L1 ant threshold window (1-60) (-1 to cancel) [%d]\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (1<= t && t <=60) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid time window\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[4]=usvalue; 
+
+     }
+     if(extraCode==ACQD_RATE_SET_GLOBAL_THRESHOLD) {
+	 usvalue=0;
+	 screen_dialog(resp,31,"Enter global threshold (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=4095) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue&0xff;
+	 cmdBytes[1]=(usvalue&0xff00)>>8;
+     }
+     if(extraCode==ACQD_SET_NADIR_PID_GOALS) {
+	 screen_dialog(resp,31,"Enter low band goal (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=65535) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue&0xff;
+	 cmdBytes[1]=(usvalue&0xff00)>>8;
+	 screen_dialog(resp,31,"Enter mid band goal (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=65535) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[2]=usvalue&0xff;
+	 cmdBytes[3]=(usvalue&0xff00)>>8;
+	 screen_dialog(resp,31,"Enter high band goal (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=65535) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[4]=usvalue&0xff;
+	 cmdBytes[5]=(usvalue&0xff00)>>8;
+	 screen_dialog(resp,31,"Enter full band goal (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=65535) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[6]=usvalue&0xff;
+	 cmdBytes[7]=(usvalue&0xff00)>>8;
+	     	 
+
+     }
+     if(extraCode==ACQD_SET_PID_PGAIN) {
+	 usvalue=0;
+	 screen_dialog(resp,31,"Enter band 0-low, 1-mid, 2-high, 3-full (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=3) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue;
+	 fvalue=0.01;
+	 screen_dialog(resp,31,"Enter Gain -- [%f]\n",fvalue);
+	 if (resp[0] != '\0') {
+	     fvalue = atof(resp);
+	     if(fvalue<0) {
+		 screen_printf("Not a valid gain\n");
+		 return;
+	     }
+	 }
+	 uivalue=fvalue*10000;
+	 cmdBytes[1]=uivalue&0xff;
+	 cmdBytes[2]=(uivalue&0xff00)>>8;
+	 cmdBytes[3]=(uivalue&0xff0000)>>16;
+	 cmdBytes[4]=(uivalue&0xff000000)>>24;
+	     
+	 
+     }
+     if(extraCode==ACQD_SET_PID_IGAIN) {
+	 usvalue=0;
+	 screen_dialog(resp,31,"Enter band 0-low, 1-mid, 2-high, 3-full (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=3) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue;
+	 fvalue=0.01;
+	 screen_dialog(resp,31,"Enter Gain -- [%f]\n",fvalue);
+	 if (resp[0] != '\0') {
+	     fvalue = atof(resp);
+	     if(fvalue<0) {
+		 screen_printf("Not a valid gain\n");
+		 return;
+	     }
+	 }
+	 uivalue=fvalue*10000;
+	 cmdBytes[1]=uivalue&0xff;
+	 cmdBytes[2]=(uivalue&0xff00)>>8;
+	 cmdBytes[3]=(uivalue&0xff0000)>>16;
+	 cmdBytes[4]=(uivalue&0xff000000)>>24;
+	 
+
+     }
+     if(extraCode==ACQD_SET_PID_DGAIN) {
+	 usvalue=0;
+	 screen_dialog(resp,31,"Enter band 0-low, 1-mid, 2-high, 3-full (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=3) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue;
+	 fvalue=0.01;
+	 screen_dialog(resp,31,"Enter Gain -- [%f]\n",fvalue);
+	 if (resp[0] != '\0') {
+	     fvalue = atof(resp);
+	     if(fvalue<0) {
+		 screen_printf("Not a valid gain\n");
+		 return;
+	     }
+	 }
+	 uivalue=fvalue*10000;
+	 cmdBytes[1]=uivalue&0xff;
+	 cmdBytes[2]=(uivalue&0xff00)>>8;
+	 cmdBytes[3]=(uivalue&0xff0000)>>16;
+	 cmdBytes[4]=(uivalue&0xff000000)>>24;
+	 
+
+     }
+     if(extraCode==ACQD_SET_PID_IMAX) {
+	 usvalue=0;
+	 screen_dialog(resp,31,"Enter band 0-low, 1-mid, 2-high, 3-full (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=3) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue;
+	 fvalue=0.01;
+	 screen_dialog(resp,31,"Enter Gain -- [%f]\n",fvalue);
+	 if (resp[0] != '\0') {
+	     fvalue = atof(resp);
+	     if(fvalue<0) {
+		 screen_printf("Not a valid gain\n");
+		 return;
+	     }
+	 }
+	 uivalue=fvalue*10000;
+	 cmdBytes[1]=uivalue&0xff;
+	 cmdBytes[2]=(uivalue&0xff00)>>8;
+	 cmdBytes[3]=(uivalue&0xff0000)>>16;
+	 cmdBytes[4]=(uivalue&0xff000000)>>24;
+	 
+
+     }
+     if(extraCode==ACQD_SET_PID_IMIN) {
+	 usvalue=0;
+	 screen_dialog(resp,31,"Enter band 0-low, 1-mid, 2-high, 3-full (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=3) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue;
+	 fvalue=0.01;
+	 screen_dialog(resp,31,"Enter Gain -- [%f]\n",fvalue);
+	 if (resp[0] != '\0') {
+	     fvalue = atof(resp);
+	     if(fvalue<0) {
+		 screen_printf("Not a valid gain\n");
+		 return;
+	     }
+	 }
+	 uivalue=fvalue*10000;
+	 cmdBytes[1]=uivalue&0xff;
+	 cmdBytes[2]=(uivalue&0xff00)>>8;
+	 cmdBytes[3]=(uivalue&0xff0000)>>16;
+	 cmdBytes[4]=(uivalue&0xff000000)>>24;
+	 
+
+     }
+     if(extraCode==ACQD_SET_PID_AVERAGE) {
+	 usvalue=0;
+	 screen_dialog(resp,31,"PID Surf Hk Average (-1 to cancel)\n",usvalue);
+	 if (resp[0] != '\0') {
+	     t = atoi(resp);
+	     if (0<= t && t <=3) {
+		 usvalue = t;
+	     } else if (t == -1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     } else {
+		 screen_printf("Not a valid option\n");
+		 return;
+	     }
+	 }
+	 cmdBytes[0]=usvalue;	 
+     }
+
+     
+     Curcmd[0] = 0;
+     Curcmd[1] = cmdCode;
+     Curcmd[2] = 1;
+     Curcmd[3] = extraCode;
+     int ind=0;
+     for(ind=0;ind<8;ind++) {
+	 Curcmd[4+2*ind]=ind+2;
+	 Curcmd[5+2*ind]=cmdBytes[ind];
+     }     
+     Curcmdlen = 20;     
+     set_cmd_log("%d; Acqd Rate command %d (%d %d %d %d %d %d %d %d)", cmdCode,extraCode,cmdBytes[0],cmdBytes[1],cmdBytes[2],cmdBytes[3],cmdBytes[4],cmdBytes[5],cmdBytes[6],cmdBytes[7]);
+     sendcmd(Fd, Curcmd, Curcmdlen);
+
      return;
 }
 
 static void
 GPS_PHI_MASK_COMMAND(cmdCode){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+    char resp[32];
+    short det;
+    int t;
+    float ft;
+    unsigned char cmdBytes[5]={0};
+    static short extraCode=1;
+    static short enableOrDisable=0;
+    static float fvalue=0;
+    static unsigned short usvalue=0;
+    static unsigned int uivalue=0;
+
+  screen_printf("1. GPS_PHI_MASK_ENABLE\n");
+  screen_printf("2. GPS_PHI_MASK_UPDATE_PERIOD\n");
+  screen_printf("3. GPS_PHI_MASK_SET_SOURCE_LATITUDE\n");
+  screen_printf("4. GPS_PHI_MASK_SET_SOURCE_LONGITUDE\n");
+  screen_printf("5. GPS_PHI_MASK_SET_SOURCE_ALTITUDE\n");
+  screen_printf("6. GPS_PHI_MASK_SET_SOURCE_HORIZON\n");
+  screen_printf("7. GPS_PHI_MASK_SET_SOURCE_WIDTH\n");
+  screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
+  if (resp[0] != '\0') {
+      t = atoi(resp);
+	if (1<= t && t <=7) {
+	    extraCode = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Not a valid command\n");
+	    return;
+	}
+     }
+
+
+  if(extraCode== GPS_PHI_MASK_ENABLE) {
+      screen_dialog(resp,31,"1 for enable, 0 for disable %d (-1 to cancel)\n",enableOrDisable);
+      if (resp[0] != '\0') {
+	  t = atoi(resp);
+	  if (0<= t && t <=1) {
+	      enableOrDisable = t;
+	  } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[0]=enableOrDisable;
+  }
+  if(extraCode==GPS_PHI_MASK_UPDATE_PERIOD) 
+  {
+      usvalue=30;
+      screen_dialog(resp,31,"Set update period [%d] (-1 to cancel)\n",usvalue);
+      if (resp[0] != '\0') {
+	  t = atoi(resp);
+	  if (1<= t && t <=65535) {
+	      usvalue = t;
+	  } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[0]=usvalue&0xff;
+      cmdBytes[1]=(usvalue&0xff00)>>8;
+
+  }
+  if(extraCode==GPS_PHI_MASK_SET_SOURCE_LATITUDE)
+  {
+      usvalue=30;
+      screen_dialog(resp,31,"Select source (1-20) [%d] (-1 to cancel)\n",usvalue);
+      if (resp[0] != '\0') {
+	  t = atoi(resp);
+	  if (1<= t && t <=20) {
+	      usvalue = t;
+	  } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[0]=usvalue&0xff;
+      fvalue=-90;
+      screen_dialog(resp,31,"Enter latitude [%f] (-1 to cancel)\n",fvalue);
+      if (resp[0] != '\0') {
+	  ft = atof(resp);
+	  if (-180<= ft && ft <=180) {
+	      uivalue = (180+ft)*1e7;
+	  } else if (ft == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[1]=(uivalue&0xff);
+      cmdBytes[2]=(uivalue&0xff00)>>8;
+      cmdBytes[3]=(uivalue&0xff0000)>>16;
+      cmdBytes[4]=(uivalue&0xff000000)>>24;
+      
+  }
+  if(extraCode==GPS_PHI_MASK_SET_SOURCE_LONGITUDE) 
+  {
+      usvalue=30;
+      screen_dialog(resp,31,"Select source (1-20) [%d] (-1 to cancel)\n",usvalue);
+      if (resp[0] != '\0') {
+	  t = atoi(resp);
+	  if (1<= t && t <=20) {
+	      usvalue = t;
+	  } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[0]=usvalue&0xff;
+      fvalue=-90;
+      screen_dialog(resp,31,"Enter longitude [%f] (-1 to cancel)\n",fvalue);
+      if (resp[0] != '\0') {
+	  ft = atof(resp);
+	  if (-180<= ft && ft <=180) {
+	      uivalue = (180+ft)*1e7;
+	  } else if (ft == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[1]=(uivalue&0xff);
+      cmdBytes[2]=(uivalue&0xff00)>>8;
+      cmdBytes[3]=(uivalue&0xff0000)>>16;
+      cmdBytes[4]=(uivalue&0xff000000)>>24;
+
+  }
+  if(extraCode==GPS_PHI_MASK_SET_SOURCE_ALTITUDE)
+  {
+      usvalue=30;
+      screen_dialog(resp,31,"Select source (1-20) [%d] (-1 to cancel)\n",usvalue);
+      if (resp[0] != '\0') {
+	  t = atoi(resp);
+	  if (1<= t && t <=20) {
+	      usvalue = t;
+	  } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[0]=usvalue&0xff;
+      fvalue=-90;
+      screen_dialog(resp,31,"Enter altitude (in m) [%f] (-1 to cancel)\n",fvalue);
+      if (resp[0] != '\0') {
+	  ft = atof(resp);
+	  if (0<= ft && ft <=45000) {
+	      uivalue = ft*1e3;
+	  } else if (ft == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[1]=(uivalue&0xff);
+      cmdBytes[2]=(uivalue&0xff00)>>8;
+      cmdBytes[3]=(uivalue&0xff0000)>>16;
+      cmdBytes[4]=(uivalue&0xff000000)>>24;
+
+  }
+  if(extraCode==GPS_PHI_MASK_SET_SOURCE_HORIZON)
+  {
+      usvalue=30;
+      screen_dialog(resp,31,"Select source (1-20) [%d] (-1 to cancel)\n",usvalue);
+      if (resp[0] != '\0') {
+	  t = atoi(resp);
+	  if (1<= t && t <=20) {
+	      usvalue = t;
+	  } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[0]=usvalue&0xff;
+      fvalue=-90;
+      screen_dialog(resp,31,"Enter source horizon (in m) [%f] (-1 to cancel)\n",fvalue);
+      if (resp[0] != '\0') {
+	  ft = atof(resp);
+	  if (0<= ft && ft <=1e6) {
+	      uivalue = ft;
+	  } else if (ft == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[1]=(uivalue&0xff);
+      cmdBytes[2]=(uivalue&0xff00)>>8;
+      cmdBytes[3]=(uivalue&0xff0000)>>16;
+      cmdBytes[4]=(uivalue&0xff000000)>>24;
+
+  }
+  if(extraCode==GPS_PHI_MASK_SET_SOURCE_WIDTH) 
+  {
+      usvalue=30;
+      screen_dialog(resp,31,"Select source (1-20) [%d] (-1 to cancel)\n",usvalue);
+      if (resp[0] != '\0') {
+	  t = atoi(resp);
+	  if (1<= t && t <=20) {
+	      usvalue = t;
+	  } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[0]=usvalue&0xff;
+      usvalue=1;
+      screen_dialog(resp,31,"Enter mask width (in phi sectors) [%d] (-1 to cancel)\n",usvalue);
+       if (resp[0] != '\0') {
+	  t = atoi(resp);
+	  if (1<= t && t <=16) {
+	      usvalue = t;
+	  } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	  } else {
+	      screen_printf("Not a valid option\n");
+	      return;
+	  }
+      }
+      cmdBytes[1]=(usvalue&0xff);
+
+  }
+
+  Curcmd[0] = 0;
+  Curcmd[1] = cmdCode;
+  Curcmd[2] = 1;
+  Curcmd[3] = extraCode;
+  int ind=0;
+  for(ind=0;ind<5;ind++) {
+      Curcmd[4+2*ind]=ind+2;
+      Curcmd[5+2*ind]=cmdBytes[ind];
+  }     
+  Curcmdlen = 14;     
+  set_cmd_log("%d; GPS Phi Mask command %d (%d %d %d %d %d)", cmdCode,extraCode,cmdBytes[0],cmdBytes[1],cmdBytes[2],cmdBytes[3],cmdBytes[4]);
+  sendcmd(Fd, Curcmd, Curcmdlen);
+  return;
 }
 
 static void
