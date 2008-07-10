@@ -5644,6 +5644,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 }
    
       
+
 	 if (screen_confirm("Really Set phiTrigMask to: %#010x",phiTrigMask)) {
 	     cmdBytes[0]=(phiTrigMask&0xff);
 	     cmdBytes[1]=((phiTrigMask&0xff00)>>8);
@@ -6511,8 +6512,113 @@ GPS_PHI_MASK_COMMAND(cmdCode){
 
 static void
 PLAYBACKD_COMMAND(cmdCode){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
+    char resp[32];
+    short det;
+    int t;
+    float ft;
+    unsigned char cmdBytes[5]={0};
+    static short extraCode=1;
+    static short enableOrDisable=0;
+    static float fvalue=0;
+    static unsigned short usvalue=0;
+    static unsigned int uivalue=0;
+    screen_printf("1. PLAY_GET_EVENT\n");    
+    screen_printf("2. PLAY_START_PRI\n");
+    screen_printf("3. PLAY_STOP_PRI\n");
+    screen_printf("4. PLAY_USE_DISK\n");
+
+    screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (1<= t && t <=4) {
+	    extraCode = t;
+	} else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Not a valid command\n");
+	    return;
+	}
+     }
+    if(extraCode==PLAY_GET_EVENT) {
+	uivalue=1000;
+        screen_dialog(resp,31,"Enter event number [%d] (-1 to cancel)\n",uivalue);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0<= t) {
+		uivalue = t;
+	    } else if (t == -1) {
+		screen_printf("Cancelled.\n");
+	    return;
+	    } else {
+		screen_printf("Not a valid event number\n");
+		return;
+	    }
+	}
+	usvalue=1;
+        screen_dialog(resp,31,"Enter desired priority [%d] (-1 to cancel)\n",usvalue);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (1<= t && t<11) {
+		usvalue = t;
+	    } else if (t == -1) {
+		screen_printf("Cancelled.\n");
+	    return;
+	    } else {
+		screen_printf("Not a valid priority\n");
+		return;
+	    }
+	}
+	cmdBytes[0]=(uivalue&0xff);
+	cmdBytes[1]=(uivalue&0xff00)>>8;
+	cmdBytes[2]=(uivalue&0xff0000)>>16;
+	cmdBytes[3]=(uivalue&0xff000000)>>24;
+	cmdBytes[4]=usvalue&0xff;
+    }
+    if(extraCode==PLAY_START_PRI) {
+	if (!screen_confirm("Really Start Playback?")) {
+	    return;
+	}
+    }
+    if(extraCode==PLAY_STOP_PRI) {
+	if (!screen_confirm("Really Stop Playback?")) {
+	    return;
+	}
+    }
+    if(extraCode==PLAY_USE_DISK) {
+	usvalue=0;
+	screen_printf("0. Satablade\n1. Satamini\n2. USB\n");
+        screen_dialog(resp,31,"Select playback drive [%d] (-1 to cancel)\n",usvalue);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0<= t && t<3) {
+		usvalue = t;
+	    } else if (t == -1) {
+		screen_printf("Cancelled.\n");
+		return;
+	    } else {
+		screen_printf("Not a valid drive\n");
+		return;
+	    }
+	}
+	cmdBytes[0]=(usvalue&0xff);
+    }
+	
+
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = extraCode;
+    int ind=0;
+    for(ind=0;ind<5;ind++) {
+	Curcmd[4+2*ind]=ind+2;
+	Curcmd[5+2*ind]=cmdBytes[ind];
+    }     
+    Curcmdlen = 14;     
+    set_cmd_log("%d; Playback command %d (%d %d %d %d %d)", cmdCode,extraCode,cmdBytes[0],cmdBytes[1],cmdBytes[2],cmdBytes[3],cmdBytes[4]);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+    return;
+
 }
 
 
