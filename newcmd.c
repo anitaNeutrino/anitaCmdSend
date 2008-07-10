@@ -22,56 +22,7 @@
 #include <unistd.h>
 
 #include "newcmdfunc.h"	// generated from newcmdlist.h
-
-#define DISK_TYPES 5
-
-
-typedef enum {
-    ID_FIRST =100,
-    ID_ACQD = 100,
-    ID_ARCHIVED,
-    ID_CALIBD,
-    ID_CMDD,
-    ID_EVENTD,
-    ID_GPSD,
-    ID_HKD,
-    ID_LOSD,
-    ID_PRIORITIZERD,
-    ID_SIPD,
-    ID_MONITORD,
-    ID_PLAYBACKD,
-    ID_LOGWATCHD,
-    ID_NOT_AN_ID
-} ProgramId_t;
-
-
-//Program Id Masks
-#define ACQD_ID_MASK 0x001
-#define ARCHIVED_ID_MASK 0x002
-#define CALIBD_ID_MASK 0x004
-#define CMDD_ID_MASK 0x008
-#define EVENTD_ID_MASK 0x010
-#define GPSD_ID_MASK 0x020
-#define HKD_ID_MASK 0x040
-#define LOSD_ID_MASK 0x080
-#define PRIORITIZERD_ID_MASK 0x100
-#define SIPD_ID_MASK 0x200
-#define MONITORD_ID_MASK 0x400
-#define PLAYBACKD_ID_MASK 0x800
-#define LOGWATCHD_ID_MASK 0x1000
-#define ALL_ID_MASK 0xffff
-
-
-
-//Disk Bit Masks
-#define SATABLADE_DISK_MASK 0x1
-#define SATAMINI_DISK_MASK 0x2
-#define USB_DISK_MASK 0x4
-#define NEOBRICK_DISK_MASK 0x8
-#define PMC_DISK_MASK 0x10
-
-int diskBitMasks[DISK_TYPES]={SATABLADE_DISK_MASK,SATAMINI_DISK_MASK,USB_DISK_MASK,PMC_DISK_MASK,NEOBRICK_DISK_MASK};
-
+#include "cmdUtilDef.h"
 
 WINDOW *Wuser;
 WINDOW *Wmenu;
@@ -83,6 +34,9 @@ void screen_dialog(char *response, int nbytes, char *fmt, ...);
 void screen_mesg(char *fmt, ...);
 void screen_printf(char *fmt, ...);
 void screen_beep(void);
+
+
+int diskBitMasks[DISK_TYPES]={SATABLADE_DISK_MASK,SATAMINI_DISK_MASK,USB_DISK_MASK,PMC_DISK_MASK,NEOBRICK_DISK_MASK};
 
 #define GETKEY wgetch(Wuser)
 
@@ -152,8 +106,7 @@ static short Config_det =0;
 static short switchConfig =0;
 static short Priorit_det =0;
 static short CalPulserSwitch =0;
-static short WhichUsb =0;
-static short disableBlade=0;
+static short disableSatablade=0;
 static short disableUsbInt=0;
 static short disableUsbExt=0;
 static short calPulserAtten =0;
@@ -897,7 +850,7 @@ static void
 accum_cmd(int key)
 {
     char digits[4];
-    int idx;
+    int cmdCode=0;
     int n;
 
     screen_printf( "\nEnter digits for flight cmd. Press ESC to cancel.\n");
@@ -918,21 +871,21 @@ accum_cmd(int key)
 	}
     } while (n < 3 && (key = GETKEY));
 
-    idx = atoi(digits);
-    if (idx > Csize - 1) {
-	screen_printf(" No such command '%d'\n", idx);
+    cmdCode = atoi(digits);
+    if (cmdCode > Csize - 1) {
+	screen_printf(" No such command '%d'\n", cmdCode);
 	return;
     }
     
-    //screen_printf("       got '%d'\n", idx);
+    //screen_printf("       got '%d'\n", cmdCode);
     //screen_printf("       got '%s'\n", digits);
     
-    if (Cmdarray[idx].f == NULL) {
-	screen_printf(" No such command '%d'\n", idx);
+    if (Cmdarray[cmdCode].f == NULL) {
+	screen_printf(" No such command '%d'\n", cmdCode);
 	return;
     }
-    screen_printf(" %s\n", Cmdarray[idx].name);
-    Cmdarray[idx].f(idx);
+    screen_printf(" %s\n", Cmdarray[cmdCode].name);
+    Cmdarray[cmdCode].f(cmdCode);
 }
 
 static void
@@ -999,27 +952,171 @@ expert(void)
 
 
 static void
-LOG_REQUEST_COMMAND(int idx)
+LOG_REQUEST_COMMAND(int cmdCode)
 {
     char resp[32];
-    short det;
+    short logNum=1;
+    short numLines=500;
     short t;     
+    int fileNum=0;
     screen_printf("Not implemented\n ");
+
+    for(fileNum=LOG_FIRST_LOG;fileNum<LOG_NOT_A_LOG;fileNum++) {
+	if(fileNum%2==1)
+	    screen_printf("%d -- %s\t\t",fileNum,logRequestName(fileNum));
+	else
+	    screen_printf("%d -- %s\n",fileNum,logRequestName(fileNum));
+    }
+    screen_printf("\n");
+    screen_dialog(resp, 31, "Which log? (-1 to cancel) [%d] ",logNum);
+    if (resp[0] != '\0') {
+	logNum = atoi(resp);
+	
+	if(logNum>=LOG_FIRST_LOG && logNum<LOG_NOT_A_LOG) {
+	    //Good
+	} else if (logNum == -1) {
+	    screen_printf("Cancelled\n");
+	    return;
+	} else {
+	    screen_printf("Value must be %d-%d, not %d.\n", LOG_FIRST_LOG,LOG_NOT_A_LOG,logNum);
+	    return;
+	}
+    }
+    screen_dialog(resp,31,"Max. number lines (-1 to cancel [%d]",numLines);
+    if (resp[0] != '\0') {
+	numLines = atoi(resp);
+	
+	if (numLines < 0) {
+	    screen_printf("Cancelled\n");
+	    return;
+	} 
+    }
+
+
+    unsigned char val=logNum;
+
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = val;
+    Curcmd[4] = 2;
+    val=(numLines&0xf);
+    Curcmd[5] = val;
+    Curcmd[6] = 3;
+    val=((numLines&0xf00)>>8);
+    Curcmd[7] = val;
+    Curcmd[8] = 4;
+    Curcmdlen = 8;
+
+    set_cmd_log("%d; %d lines from %s", cmdCode, numLines,logRequestName(logNum));
+    sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-CMD_DISABLE_DISK(int idx)
+CMD_DISABLE_DISK(int cmdCode)
 {
+    
     char resp[32];
     short det;
-    short t;
-     
-    screen_printf("Not implemented\n ");
+    short v;
+    screen_printf("You may be about to do something very bad\n");
+    screen_printf("Only disable or enable disks if you are really certain of what is going on\n");
+    screen_printf("0: Disable a disk    1: Enable a disk\n");
+    screen_printf("2: Set Bitmask\n");
+    screen_dialog(resp, 31,
+	"Which function (0, 1, or 2)  (-1,to cancel), [%d]",
+	diskChoice);
+    if (resp[0] != '\0') {
+	v = atoi(resp);	
+	if (0 <= v && v <= 2) {
+	    diskChoice= v;
+	} else if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-2, not %d.\n", v);
+	    return;
+	}
+    }
+    
+    diskBitMask=0;
+    if(diskChoice==0 || diskChoice==1) {
+	screen_printf("0: Satablade            1: Satamini\n");
+	screen_printf("2: USB     3: Neobrick\n");
+	screen_printf("4: PMC Drive\n");
+	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
+    
+	if(resp[0] != '\0') {
+	    v = atoi(resp);	
+	    if (0 <= v && v <= 4) {
+		diskBitMask = diskBitMasks[v];
+	    } else if (v == -1) {
+		screen_printf("Cancelled.\n");
+		return;
+	    } else {
+		screen_printf("Value must be 0-4, not %d.\n", v);
+		return;
+	    }       
+	} else return;
+    }
+    else {
+	screen_printf("0: Satablade            1: Satamini\n");
+	screen_printf("2: USB     3: Neobrick\n");
+	screen_printf("4: PMC Drive\n");
+	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
+	if(resp[0] != '\0') {
+	    v = atoi(resp);	
+	    if (0 <= v && v <= 4) {
+		diskBitMask = diskBitMasks[v];
+	    } else if (v == -1) {
+		screen_printf("Cancelled.\n");
+		return;
+	    } else {
+		screen_printf("Value must be 0-4, not %d.\n", v);
+		return;
+	    }       
+	} else return;
+
+	while(1) {
+	    screen_printf("0: Satablade            1: Satamini\n");
+	    screen_printf("2: USB     3: Neobrick\n");
+	    screen_printf("4: PMC Drive\n");
+	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
+	    if(resp[0] != '\0') {
+		v = atoi(resp);	
+		if (0 <= v && v <= 4) {
+		    diskBitMask |= diskBitMasks[v];
+		} else if (v == -1) {
+		    screen_printf("Cancelled.\n");
+		    return;
+		} else if (v == 5) {
+		    break;
+		}
+		else {
+		    screen_printf("Value must be 0-5, not %d.\n", v);
+		    return;
+		}       
+	    } else return;
+	}
+    }	    		       
+
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = diskChoice;
+    Curcmd[4] = 2;
+    Curcmd[5] = (diskBitMask&0xff);
+    Curcmd[6] = 3;
+    Curcmd[7] = ((diskBitMask&0xff00)<<8);
+    Curcmdlen = 8;
+    set_cmd_log("%d; Send event disk bit mask command %d %#x.", cmdCode, diskChoice,
+		diskBitMask);
+    sendcmd(Fd, Curcmd, Curcmdlen); 
 }
 
 static void
-TAIL_MESSAGES(int idx)
+TAIL_MESSAGES(int cmdCode)
 {
     char resp[32];
     short det;
@@ -1042,19 +1139,19 @@ TAIL_MESSAGES(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (numLines&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((numLines&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Tail last %d lines of /var/log/messages.", idx, ADU5SatPer);
+    set_cmd_log("%d; Tail last %d lines of /var/log/messages.", cmdCode, ADU5SatPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-TAIL_ANITA(int idx)
+TAIL_ANITA(int cmdCode)
 {
     char resp[32];
     short det;
@@ -1077,26 +1174,26 @@ TAIL_ANITA(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (numLines&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((numLines&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Tail last %d lines of /var/log/anita.log.", idx, ADU5SatPer);
+    set_cmd_log("%d; Tail last %d lines of /var/log/anita.log.", cmdCode, ADU5SatPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-CMD_START_NEW_RUN(int idx)
+CMD_START_NEW_RUN(int cmdCode)
 {
     if (screen_confirm("Really start new run?")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Start new run.", idx);
+	set_cmd_log("%d; Start new run.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -1104,14 +1201,14 @@ CMD_START_NEW_RUN(int idx)
 }
 
 static void
-CMD_MAKE_NEW_RUN_DIRS(int idx)
+CMD_MAKE_NEW_RUN_DIRS(int cmdCode)
 {
     if (screen_confirm("Really make new run directories?")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Make new run directories.", idx);
+	set_cmd_log("%d; Make new run directories.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -1119,14 +1216,14 @@ CMD_MAKE_NEW_RUN_DIRS(int idx)
 }
 
 static void
-CMD_SIPD_REBOOT(int idx)
+CMD_SIPD_REBOOT(int cmdCode)
 {
     if (screen_confirm("Really reboot through SIPD?")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; SIPD Reboot.", idx);
+	set_cmd_log("%d; SIPD Reboot.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -1135,14 +1232,14 @@ CMD_SIPD_REBOOT(int idx)
 
 
 static void
-CMD_SHUTDOWN_HALT(int idx)
+CMD_SHUTDOWN_HALT(int cmdCode)
 {
     if (screen_confirm("Really shutdown the computer")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Shutdown and halt computer.", idx);
+	set_cmd_log("%d; Shutdown and halt computer.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -1150,14 +1247,14 @@ CMD_SHUTDOWN_HALT(int idx)
 }
 
 static void
-CMD_REBOOT(int idx)
+CMD_REBOOT(int cmdCode)
 {
     if (screen_confirm("Really reboot the computer")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Reboot.", idx);
+	set_cmd_log("%d; Reboot.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -1166,11 +1263,12 @@ CMD_REBOOT(int idx)
 
 
 static void
-CMD_REALLY_KILL_PROGS(int idx)
+CMD_REALLY_KILL_PROGS(int cmdCode)
 {
     short det;
     int i;
     char resp[32];
+
     
     screen_printf("1. Acqd       6. GPSd\n");
     screen_printf("2. Archived   7. Hkd\n");
@@ -1238,13 +1336,13 @@ CMD_REALLY_KILL_PROGS(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (Prog_det&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((Prog_det&0xf00)>>8); 
     Curcmdlen = 6;
-    set_cmd_log("%d; Program  %d killed.", idx, Prog_det);
+    set_cmd_log("%d; Program  %d killed.", cmdCode, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -1252,7 +1350,7 @@ CMD_REALLY_KILL_PROGS(int idx)
 
 
 static void
-CMD_KILL_PROGS(int idx)
+CMD_KILL_PROGS(int cmdCode)
 {
     short det;
     int i;
@@ -1324,19 +1422,19 @@ CMD_KILL_PROGS(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (Prog_det&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((Prog_det&0xf00)>>8); 
     Curcmdlen = 6;
-    set_cmd_log("%d; Program  %d killed.", idx, Prog_det);
+    set_cmd_log("%d; Program  %d killed.", cmdCode, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-CMD_RESPAWN_PROGS(int idx)
+CMD_RESPAWN_PROGS(int cmdCode)
 {
     short det;
     int i;
@@ -1409,19 +1507,19 @@ CMD_RESPAWN_PROGS(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (Prog_det&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((Prog_det&0xf00)>>8); 
     Curcmdlen = 6;
-    screen_printf("Sent %d %d %d\n",idx,(Prog_det&0xff),((Prog_det&0xf00)>>8));
-    set_cmd_log("%d; Program  %d respawned.", idx, Prog_det);
+    screen_printf("Sent %d %d %d\n",cmdCode,(Prog_det&0xff),((Prog_det&0xf00)>>8));
+    set_cmd_log("%d; Program  %d respawned.", cmdCode, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 static void
-CMD_START_PROGS(int idx)
+CMD_START_PROGS(int cmdCode)
 {
     short det;
     int i;
@@ -1495,13 +1593,13 @@ CMD_START_PROGS(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (Prog_det&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((Prog_det&0xf00)>>8); 
     Curcmdlen = 6;
-    set_cmd_log("%d; Program  %d started.", idx, Prog_det);
+    set_cmd_log("%d; Program  %d started.", cmdCode, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
 }
@@ -1509,18 +1607,58 @@ CMD_START_PROGS(int idx)
 
 
 
-
-
 static void
-CMD_MOUNT_NEXT_SATA(int idx)
+CMD_MOUNT_NEXT_SATA(int cmdCode)
 {
-    screen_printf("Not updated");
-   if (screen_confirm("Really mount next blade drive?")) {
+    short bladeOrMini=0;
+    short whichDrive;
+    char resp[32];
+    char *driveName[2]={"satablade","satamini"};
+
+    short tempVal=0;
+    screen_dialog(resp, 31,
+		  "Satablade (0) or Satamini (1), -1 to cancel) [%d] ",
+		  bladeOrMini);
+    if (resp[0] != '\0') {
+	tempVal = atoi(resp);
+	if (0 <= tempVal && tempVal <= 1) {
+	    bladeOrMini = tempVal;
+	} else if (tempVal == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-1, not %d.\n", tempVal);
+	    return;
+	}
+    }
+    tempVal=0;
+    screen_dialog(resp, 31,
+		  "Drive number, 0 for next, -1 to cancel) [%d] ",
+		  whichDrive);
+    if (resp[0] != '\0') {
+	tempVal = atoi(resp);
+	if (0 <= tempVal && ((tempVal <= 8 && bladeOrMini==0) 
+			     || (tempVal <= 4 && bladeOrMini==1))) {
+	    whichDrive = tempVal;
+	} else if (tempVal == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	} else {
+	    screen_printf("Value must be 0-4(8), not %d.\n", tempVal);
+	    return;
+	}
+    }
+    
+   if (screen_confirm("Really mount next %s?",driveName[bladeOrMini])) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
-	Curcmdlen = 2;
+	Curcmd[1] = cmdCode;
+	Curcmd[2] = 1;
+	Curcmd[3] = bladeOrMini;
+	Curcmd[4] = 2;
+	Curcmd[5] = whichDrive;
+	Curcmdlen = 6;
 	screen_printf("\n");
-	set_cmd_log("%d; mount next blade drive", idx);
+	set_cmd_log("%d; mount next %s drive -- %d", cmdCode,driveName[bladeOrMini],whichDrive);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -1529,40 +1667,41 @@ CMD_MOUNT_NEXT_SATA(int idx)
 
 
 static void
-CMD_MOUNT_NEXT_USB(int idx)
+CMD_MOUNT_NEXT_USB(int cmdCode)
 {
+    short WhichUsb=0;
     char resp[32];
     short det;
     short v;
-     
+    
     screen_dialog(resp, 31,
-	"Which USB drive  (1 is internal, 2 is external, 3 is both, -1 to cancel) [%d] ",
-	WhichUsb);
+		  "Which USB drive  (0 for next, or 1-31, -1 to cancel) [%d] ",
+		  WhichUsb);
     if (resp[0] != '\0') {
 	v = atoi(resp);
-	if (1 <= v && v <= 3) {
+	if (0 <= v && v <= 31) {
 	    WhichUsb = v;
 	} else if (v == -1) {
 	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-3, not %d.\n", v);
+	    screen_printf("Value must be 0-31, not %d.\n", v);
 	    return;
 	}
     }
-
+    
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = WhichUsb;
     Curcmdlen = 4;
-    set_cmd_log("%d; Mount next USB drive %d.", idx, WhichUsb);
+    set_cmd_log("%d; Mount next USB drive %d.", cmdCode, WhichUsb);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-CMD_EVENT_DISKTYPE(int idx)
+CMD_EVENT_DISKTYPE(int cmdCode)
 {
     char resp[32];
     short det;
@@ -1572,7 +1711,7 @@ CMD_EVENT_DISKTYPE(int idx)
     screen_printf("0: Disable a disk    1: Enable a disk\n");
     screen_printf("2: Set Bitmask\n");
     screen_dialog(resp, 31,
-	"Which function (0,1, or 2)  (-1,to cancel), [%d]",
+	"Which function (0, 1, or 2)  (-1,to cancel), [%d]",
 	diskChoice);
     if (resp[0] != '\0') {
 	v = atoi(resp);	
@@ -1589,8 +1728,8 @@ CMD_EVENT_DISKTYPE(int idx)
     
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
-	screen_printf("0: Blade            1: Hockey Brick\n");
-	screen_printf("2: USB Internal     3: USB External\n");
+	screen_printf("0: Satablade            1: Satamini\n");
+	screen_printf("2: USB     3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
@@ -1608,8 +1747,8 @@ CMD_EVENT_DISKTYPE(int idx)
 	} else return;
     }
     else {
-	screen_printf("0: Blade            1: Hockey Brick\n");
-	screen_printf("2: USB Internal     3: USB External\n");
+	screen_printf("0: Satablade            1: Satamini\n");
+	screen_printf("2: USB     3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
@@ -1626,8 +1765,8 @@ CMD_EVENT_DISKTYPE(int idx)
 	} else return;
 
 	while(1) {
-	    screen_printf("0: Blade            1: Hockey Brick\n");
-	    screen_printf("2: USB Internal     3: USB External\n");
+	    screen_printf("0: Satablade            1: Satamini\n");
+	    screen_printf("2: USB     3: Neobrick\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
@@ -1649,7 +1788,7 @@ CMD_EVENT_DISKTYPE(int idx)
     }	    		       
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = diskChoice;
     Curcmd[4] = 2;
@@ -1657,7 +1796,7 @@ CMD_EVENT_DISKTYPE(int idx)
     Curcmd[6] = 3;
     Curcmd[7] = ((diskBitMask&0xff00)<<8);
     Curcmdlen = 8;
-    set_cmd_log("%d; Send event disk bit mask command %d %#x.", idx, diskChoice,
+    set_cmd_log("%d; Send event disk bit mask command %d %#x.", cmdCode, diskChoice,
 		diskBitMask);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
@@ -1665,7 +1804,7 @@ CMD_EVENT_DISKTYPE(int idx)
 
 
 static void
-CMD_HK_DISKTYPE(int idx)
+CMD_HK_DISKTYPE(int cmdCode)
 {
     char resp[32];
     short det;
@@ -1692,8 +1831,8 @@ CMD_HK_DISKTYPE(int idx)
     
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
-	screen_printf("0: Blade            1: Hockey Brick\n");
-	screen_printf("2: USB Internal     3: USB External\n");
+	screen_printf("0: Satablade       1: Satamini\n");
+	screen_printf("2: USB             3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
@@ -1711,8 +1850,8 @@ CMD_HK_DISKTYPE(int idx)
 	} else return;
     }
     else {
-	screen_printf("0: Blade            1: Hockey Brick\n");
-	screen_printf("2: USB Internal     3: USB External\n");
+	screen_printf("0: Satablade       1: Satamini\n");
+	screen_printf("2: USB             3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
@@ -1729,8 +1868,8 @@ CMD_HK_DISKTYPE(int idx)
 	} else return;
 
 	while(1) {
-	    screen_printf("0: Blade            1: Hockey Brick\n");
-	    screen_printf("2: USB Internal     3: USB External\n");
+	    screen_printf("0: Satablade    1: Satamini\n");
+	    screen_printf("2: USB          3: Neobrick\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
@@ -1752,7 +1891,7 @@ CMD_HK_DISKTYPE(int idx)
     }	    		       
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = diskChoice;
     Curcmd[4] = 2;
@@ -1760,116 +1899,70 @@ CMD_HK_DISKTYPE(int idx)
     Curcmd[6] = 3;
     Curcmd[7] = ((diskBitMask&0xff00)<<8);
     Curcmdlen = 8;
-    set_cmd_log("%d; Send hk disk bit mask command %d %#x.", idx, diskChoice,
+    set_cmd_log("%d; Send hk disk bit mask command %d %#x.", cmdCode, diskChoice,
 		diskBitMask);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SET_DECIMATION(int idx)
+SET_DECIMATION(int cmdCode)
 {
-    screen_printf("Not implemented\n");
     char resp[32];
     short det;
     short v;
-    screen_printf("1: Raw Data       2: Ped Subbed Raw Data\n");
-    screen_printf("3: Encoded Data   4: Ped Subbed Encoded Data\n");
+    unsigned int t=0;
+    float fv;
+    static int whichPri=1;
+    static float decimateFrac=0;
+
     screen_dialog(resp, 31,
-	"Set Storage type to (-1 to cancel) [%d] ",
-	storageType);
+		  "Which priority (0-9) to decimate (-1 to cancel) [%d] ",
+		  whichPri);
     if (resp[0] != '\0') {
 	v = atoi(resp);
-	if (1 <= v && v <= 4) {
-	    storageType = v;
-	} else if (v == -1) {
-	    screen_printf("Cancelled.\n");
-	    return;
+	if (0 <= v && v <= 9) {
+	    whichPri = v;
 	} else {
-	    screen_printf("Value must be 1-4, not %d.\n", v);
+	    screen_printf("Value must be 0-9, not %d.\n", v);
 	    return;
 	}
     }
 
+
+
+    screen_dialog(resp, 31,
+		  "Enter decimation fraction 0.000 to 1.000 (-1 to cancel) [%f]",
+		  decimateFrac);
+    if (resp[0] != '\0') {
+	fv = atof(resp);
+	if (0 <= fv && fv <= 1) {
+	    decimateFrac = fv;
+	} else {
+	    screen_printf("Value must be 0.000 to 1.000, not %f.\n", fv);
+	    return;
+	}
+    }
+    
+    short decWord=(short)(1000.*decimateFrac);
+
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
-    Curcmd[3] = storageType;
-    Curcmdlen = 4;
-    set_cmd_log("%d; Set Storage Type to %d.", idx, storageType);
-//    sendcmd(Fd, Curcmd, Curcmdlen);
+    Curcmd[3] = whichPri;
+    Curcmd[4] = 3;
+    Curcmd[5] = (decWord&0xff);
+    Curcmd[6] = 4;
+    Curcmd[7] = (decWord&0xff00)>>8;
+    Curcmdlen = 8;
+    set_cmd_log("%d; Set archived priority %d global decimation fraction to %f on.", cmdCode, whichPri,decimateFrac);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
 }
 
-static void
-SET_SPECIAL_PRI(int idx)
-{
-    screen_printf("Not implemented\n");
-    char resp[32];
-    short det;
-    short v;
-    screen_printf("1: Raw Data       2: Ped Subbed Raw Data\n");
-    screen_printf("3: Encoded Data   4: Ped Subbed Encoded Data\n");
-    screen_dialog(resp, 31,
-	"Set Storage type to (-1 to cancel) [%d] ",
-	storageType);
-    if (resp[0] != '\0') {
-	v = atoi(resp);
-	if (1 <= v && v <= 4) {
-	    storageType = v;
-	} else if (v == -1) {
-	    screen_printf("Cancelled.\n");
-	    return;
-	} else {
-	    screen_printf("Value must be 1-4, not %d.\n", v);
-	    return;
-	}
-    }
-
-    Curcmd[0] = 0;
-    Curcmd[1] = idx;
-    Curcmd[2] = 1;
-    Curcmd[3] = storageType;
-    Curcmdlen = 4;
-    set_cmd_log("%d; Set Storage Type to %d.", idx, storageType);
-//    sendcmd(Fd, Curcmd, Curcmdlen);
-}
 
 static void
-SET_SPECIAL_DECIMATE(int idx)
-{
-    screen_printf("Not implemented\n");
-    char resp[32];
-    short det;
-    short v;
-    screen_printf("1: Raw Data       2: Ped Subbed Raw Data\n");
-    screen_printf("3: Encoded Data   4: Ped Subbed Encoded Data\n");
-    screen_dialog(resp, 31,
-	"Set Storage type to (-1 to cancel) [%d] ",
-	storageType);
-    if (resp[0] != '\0') {
-	v = atoi(resp);
-	if (1 <= v && v <= 4) {
-	    storageType = v;
-	} else if (v == -1) {
-	    screen_printf("Cancelled.\n");
-	    return;
-	} else {
-	    screen_printf("Value must be 1-4, not %d.\n", v);
-	    return;
-	}
-    }
-
-    Curcmd[0] = 0;
-    Curcmd[1] = idx;
-    Curcmd[2] = 1;
-    Curcmd[3] = storageType;
-    Curcmdlen = 4;
-    set_cmd_log("%d; Set Storage Type to %d.", idx, storageType);
-//    sendcmd(Fd, Curcmd, Curcmdlen);
-}
-
-static void
-ARCHIVE_STORAGE_TYPE(int idx)
+ARCHIVE_STORAGE_TYPE(int cmdCode)
 {
     char resp[32];
     short det;
@@ -1893,22 +1986,23 @@ ARCHIVE_STORAGE_TYPE(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = storageType;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set Storage Type to %d.", idx, storageType);
+    set_cmd_log("%d; Set Storage Type to %d.", cmdCode, storageType);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 static void
-SET_PPS_PRIORITIES(int idx)
+SET_SPECIAL_PRI(int cmdCode)
 {
     char resp[32];
     short det;
     short v;
     static int pps1Pri=2;
     static int pps2Pri=2;
+    static int softPri=2;
 
     screen_dialog(resp, 31,
 		  "Priority of PPS1  (0 to 9, -1 for Prioritizerd [%d] or -10 to cancel) ",
@@ -1941,21 +2035,36 @@ SET_PPS_PRIORITIES(int idx)
     }
     
 
+    screen_dialog(resp, 31,
+		  "Priority of Soft Trig.  (0 to 9, -1 for Prioritizerd [%d] ",
+		  softPri);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (-1 <= v && v <= 9) {
+	    softPri = v;
+	} else {
+	    screen_printf("Value must be -1-9, not %d.\n", v);
+	    return;
+	}
+    }
+
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = pps1Pri;
     Curcmd[4] = 2;
     Curcmd[5] = pps2Pri;
-    Curcmdlen = 6;
-    set_cmd_log("%d; Set PPS Priorities to PPS1 %d and PPS2 %d.", idx, pps1Pri,pps2Pri);
+    Curcmd[6] = 2;
+    Curcmd[7] = softPri;
+    Curcmdlen = 8;
+    set_cmd_log("%d; Set PPS Priorities to PPS1 %d and PPS2 %d.", cmdCode, pps1Pri,pps2Pri);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SET_PPS_DECIMATE(int idx)
+SET_SPECIAL_DECIMATE(int cmdCode)
 {
     char resp[32];
     short det;
@@ -1965,7 +2074,7 @@ SET_PPS_DECIMATE(int idx)
     static float decimateFrac=0;
 
     screen_dialog(resp, 31,
-		  "Enter 1 for G12, 2 for ADU5 (-1 to cancel) [%d] ",
+		  "Enter 1 for G12, 2 for ADU5, 3 for Soft (-1 to cancel) [%d] ",
 		  whichPPS);
     if (resp[0] != '\0') {
 	v = atoi(resp);
@@ -1993,7 +2102,7 @@ SET_PPS_DECIMATE(int idx)
     short decWord=(short)(1000.*decimateFrac);
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = whichPPS;
     Curcmd[4] = 2;
@@ -2001,16 +2110,17 @@ SET_PPS_DECIMATE(int idx)
     Curcmd[6] = 3;
     Curcmd[7] = (decWord&0xff00)>>8;
     Curcmdlen = 8;
-    set_cmd_log("%d; Set PPS %d decimation fraction to %f.", idx, whichPPS,decimateFrac);
+    set_cmd_log("%d; Set Special Trigger %d decimation fraction to %f.", cmdCode, whichPPS,decimateFrac);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 static void
-ARCHIVE_DECIMATE_PRI(int idx)
+ARCHIVE_DECIMATE_PRI(int cmdCode)
 {
     char resp[32];
     short det;
     short v;
+    unsigned int t=0;
     float fv;
     static int whichPri=1;
     static float decimateFrac=0;
@@ -2028,6 +2138,21 @@ ARCHIVE_DECIMATE_PRI(int idx)
 	}
     }
 
+    static unsigned int  diskMask=0;
+    screen_dialog(resp,31,
+		  "Which diskmask [%#x] ? (-1 to cancel)",diskMask);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (v == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	}
+	
+	t = strtoul(resp,NULL,16);
+	diskMask=t&0xffff;
+    }
+
+
     screen_dialog(resp, 31,
 		  "Enter decimation fraction 0.000 to 1.000 (-1 to cancel) [%f]",
 		  decimateFrac);
@@ -2044,21 +2169,23 @@ ARCHIVE_DECIMATE_PRI(int idx)
     short decWord=(short)(1000.*decimateFrac);
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
-    Curcmd[3] = whichPri;
+    Curcmd[3] = diskMask;
     Curcmd[4] = 2;
-    Curcmd[5] = (decWord&0xff);
+    Curcmd[5] = whichPri;
     Curcmd[6] = 3;
-    Curcmd[7] = (decWord&0xff00)>>8;
-    Curcmdlen = 8;
-    set_cmd_log("%d; Set archived priority %d decimation fraction to %f.", idx, whichPri,decimateFrac);
+    Curcmd[7] = (decWord&0xff);
+    Curcmd[8] = 4;
+    Curcmd[9] = (decWord&0xff00)>>8;
+    Curcmdlen = 10;
+    set_cmd_log("%d; Set archived priority %d decimation fraction to %f on disk mask %#x.", cmdCode, whichPri,decimateFrac,diskMask);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-TELEM_TYPE(int idx)
+TELEM_TYPE(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2082,17 +2209,17 @@ TELEM_TYPE(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = telemType;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set Telemetry Type to %d.", idx, telemType);
+    set_cmd_log("%d; Set Telemetry Type to %d.", cmdCode, telemType);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-ARCHIVE_PRI_DISK(int idx)
+ARCHIVE_PRI_DISK(int cmdCode)
 {
     char resp[32];
     short pri;
@@ -2128,7 +2255,7 @@ ARCHIVE_PRI_DISK(int idx)
     }
         
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = pri;
     Curcmd[4] = 2;
@@ -2136,13 +2263,13 @@ ARCHIVE_PRI_DISK(int idx)
     Curcmd[6] = 3;
     Curcmd[7] = (eventBitMask&0xff00)>>8;
     Curcmdlen = 8;
-    set_cmd_log("%d; Set priDiskBitMask[%d] to %#x.", idx, pri,eventBitMask);
+    set_cmd_log("%d; Set priDiskBitMask[%d] to %#x.", cmdCode, pri,eventBitMask);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-ARCHIVE_ALTERNATE_USB(int idx)
+ARCHIVE_ALTERNATE_USB(int cmdCode)
 {
     char resp[32];
     short pri;
@@ -2182,19 +2309,19 @@ ARCHIVE_ALTERNATE_USB(int idx)
     }
         
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = pri;
     Curcmd[4] = 2;
     Curcmd[5] = altUsb;
     Curcmdlen = 6;
-    set_cmd_log("%d; Set alternateUsb[%d] to %d.", idx, pri,altUsb);
+    set_cmd_log("%d; Set alternateUsb[%d] to %d.", cmdCode, pri,altUsb);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SIPD_SEND_WAVE(int idx)
+RJNHIDE_SIPD_SEND_WAVE(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2217,18 +2344,18 @@ SIPD_SEND_WAVE(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = sendWave;
     Curcmdlen = 4;
-    set_cmd_log("%d; SendWavePackets sets to %d.", idx, sendWave);
+    set_cmd_log("%d; SendWavePackets sets to %d.", cmdCode, sendWave);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
 }
 
 
 static void
-ARCHIVE_PRI_ENC_TYPE(int idx)
+ARCHIVE_PRI_ENC_TYPE(int cmdCode)
 {
     char resp[32];
     short pri;
@@ -2264,7 +2391,7 @@ ARCHIVE_PRI_ENC_TYPE(int idx)
     }
         
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = pri;
     Curcmd[4] = 2;
@@ -2272,13 +2399,13 @@ ARCHIVE_PRI_ENC_TYPE(int idx)
     Curcmd[6] = 3;
     Curcmd[7] = (encType&0xff00)>>8;
     Curcmdlen = 8;
-    set_cmd_log("%d; Set priTelemEncodingType[%d] to %d.", idx, pri,encType);
+    set_cmd_log("%d; Set priTelemEncodingType[%d] to %d.", cmdCode, pri,encType);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-TELEM_PRI_ENC_TYPE(int idx)
+TELEM_PRI_ENC_TYPE(int cmdCode)
 {
     char resp[32];
     short pri;
@@ -2328,7 +2455,7 @@ TELEM_PRI_ENC_TYPE(int idx)
     }
         
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = pri;
     Curcmd[4] = 2;
@@ -2340,21 +2467,21 @@ TELEM_PRI_ENC_TYPE(int idx)
     Curcmd[10] = 5;
     Curcmd[11] = (encTypeClock&0xff00)>>8;
     Curcmdlen = 12;
-    set_cmd_log("%d; Set priDiskencodingType[%d] to %d. (clock %d)", idx, pri,encType,encTypeClock);
+    set_cmd_log("%d; Set priDiskencodingType[%d] to %d. (clock %d)", cmdCode, pri,encType,encTypeClock);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 
 static void
-TURN_GPS_ON(int idx)
+TURN_GPS_ON(int cmdCode)
 {
     if (screen_confirm("Really turn on GPS/Magnetometer")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on GPS/Magnetometer.", idx);
+	set_cmd_log("%d; Turn on GPS/Magnetometer.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2363,14 +2490,14 @@ TURN_GPS_ON(int idx)
 
 
 static void
-TURN_GPS_OFF(int idx)
+TURN_GPS_OFF(int cmdCode)
 {
     if (screen_confirm("Really turn off GPS/Magnetometer")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off GPS/Magnetometer.", idx);
+	set_cmd_log("%d; Turn off GPS/Magnetometer.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2379,7 +2506,7 @@ TURN_GPS_OFF(int idx)
 
 
 static void
-TURN_RFCM_ON(int idx)
+TURN_RFCM_ON(int cmdCode)
 {
     char resp[32];
     short det;        
@@ -2408,18 +2535,18 @@ TURN_RFCM_ON(int idx)
 
     
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = rfcmVal;
     Curcmdlen = 4;
     screen_printf("\n");
-    set_cmd_log("%d; Turn on RFCM with mask %#x.", idx,rfcmVal);
+    set_cmd_log("%d; Turn on RFCM with mask %#x.", cmdCode,rfcmVal);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-TURN_RFCM_OFF(int idx)
+TURN_RFCM_OFF(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2448,25 +2575,25 @@ TURN_RFCM_OFF(int idx)
 
     
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = rfcmVal;
     Curcmdlen = 4;
     screen_printf("\n");
-    set_cmd_log("%d; Turn off RFCM with mask %#x.", idx,rfcmVal);
+    set_cmd_log("%d; Turn off RFCM with mask %#x.", cmdCode,rfcmVal);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-TURN_CALPULSER_ON(int idx)
+TURN_CALPULSER_ON(int cmdCode)
 {
     if (screen_confirm("Really turn on CalPulser")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on CalPulser.", idx);
+	set_cmd_log("%d; Turn on CalPulser.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2475,14 +2602,14 @@ TURN_CALPULSER_ON(int idx)
 
 
 static void
-TURN_CALPULSER_OFF(int idx)
+TURN_CALPULSER_OFF(int cmdCode)
 {
     if (screen_confirm("Really turn off CalPulser")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off CalPulser.", idx);
+	set_cmd_log("%d; Turn off CalPulser.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2490,14 +2617,14 @@ TURN_CALPULSER_OFF(int idx)
 }
 
 static void
-TURN_VETO_ON(int idx)
+TURN_NADIR_ON(int cmdCode)
 {
-    if (screen_confirm("Really turn on Veto RFCMs")) {
+    if (screen_confirm("Really turn on Nadir RFCMs")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on Veto RFCMs.", idx);
+	set_cmd_log("%d; Turn on Nadir RFCMs.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2506,14 +2633,14 @@ TURN_VETO_ON(int idx)
 
 
 static void
-TURN_VETO_OFF(int idx)
+TURN_NADIR_OFF(int cmdCode)
 {
-    if (screen_confirm("Really turn off Veto RFCMs")) {
+    if (screen_confirm("Really turn off Nadir RFCMs")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off Veto RFCMs.", idx);
+	set_cmd_log("%d; Turn off Nadir RFCMs.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2522,14 +2649,14 @@ TURN_VETO_OFF(int idx)
 
 
 static void
-TURN_ALL_ON(int idx)
+TURN_ALL_ON(int cmdCode)
 {
-    if (screen_confirm("Really turn on GPS, RFCM, CalPulser and Veto")) {
+    if (screen_confirm("Really turn on GPS, RFCM, CalPulser and Nadir")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on GPS, RFCM, CalPulser, and Veto.", idx);
+	set_cmd_log("%d; Turn on GPS, RFCM, CalPulser, and Nadir.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2538,14 +2665,14 @@ TURN_ALL_ON(int idx)
 
 
 static void
-TURN_ALL_OFF(int idx)
+TURN_ALL_OFF(int cmdCode)
 {
-    if (screen_confirm("Really turn off GPS, RFCM, CalPulser and Veto")) {
+    if (screen_confirm("Really turn off GPS, RFCM, CalPulser and Nadir")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off GPS, RFCM, CalPulser and Veto.", idx);
+	set_cmd_log("%d; Turn off GPS, RFCM, CalPulser and Nadir.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2554,7 +2681,7 @@ TURN_ALL_OFF(int idx)
 
 
 static void
-SET_CALPULSER_SWITCH(int idx)
+SET_CALPULSER_SWITCH(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2577,18 +2704,18 @@ SET_CALPULSER_SWITCH(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = CalPulserSwitch;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set CalPulser Switch to? %d.", idx, CalPulserSwitch);
+    set_cmd_log("%d; Set CalPulser Switch to? %d.", cmdCode, CalPulserSwitch);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 
 static void
-SET_CALPULSER_ATTEN(int idx)
+SET_CALPULSER_ATTEN(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2616,17 +2743,17 @@ SET_CALPULSER_ATTEN(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = calPulserAtten;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set Cal Pulser Atten to %d.", idx, calPulserAtten);
+    set_cmd_log("%d; Set Cal Pulser Atten to %d.", cmdCode, calPulserAtten);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-CP_ATTEN_LOOP_PERIOD(int idx)
+CP_ATTEN_LOOP_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2649,19 +2776,19 @@ CP_ATTEN_LOOP_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (cpAttenLoopPeriod&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((cpAttenLoopPeriod&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set Attenuator loop period to %d secs.", idx, cpAttenLoopPeriod);
+    set_cmd_log("%d; Set Attenuator loop period to %d secs.", cmdCode, cpAttenLoopPeriod);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-CP_SWITCH_LOOP_PERIOD(int idx)
+CP_SWITCH_LOOP_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2684,19 +2811,19 @@ CP_SWITCH_LOOP_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (cpSwitchLoopPeriod&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((cpSwitchLoopPeriod&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set RF switch loop period to %d secs.", idx, cpSwitchLoopPeriod);
+    set_cmd_log("%d; Set RF switch loop period to %d secs.", cmdCode, cpSwitchLoopPeriod);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-CP_PULSER_OFF_PERIOD(int idx)
+CP_PULSER_OFF_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2719,19 +2846,19 @@ CP_PULSER_OFF_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (cpOffLoopPeriod&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((cpOffLoopPeriod&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set CalPulser off (between rf switch loops) period to %d secs.", idx, cpOffLoopPeriod);
+    set_cmd_log("%d; Set CalPulser off (between rf switch loops) period to %d secs.", cmdCode, cpOffLoopPeriod);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-CP_CALIB_WRITE_PERIOD(int idx)
+CP_CALIB_WRITE_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2754,19 +2881,19 @@ CP_CALIB_WRITE_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (calibWritePeriod&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((calibWritePeriod&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set Calibd data write period to %d secs.", idx, calibWritePeriod);
+    set_cmd_log("%d; Set Calibd data write period to %d secs.", cmdCode, calibWritePeriod);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SET_ADU5_PAT_PERIOD(int idx)
+SET_ADU5_PAT_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2789,19 +2916,19 @@ SET_ADU5_PAT_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (ADU5PatPer&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((ADU5PatPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set ADU5 position readout period to %d.", idx, ADU5PatPer);
+    set_cmd_log("%d; Set ADU5 position readout period to %d.", cmdCode, ADU5PatPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SET_ADU5_VTG_PERIOD(int idx)
+SET_ADU5_VTG_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2824,19 +2951,19 @@ SET_ADU5_VTG_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (ADU5VtgPer&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((ADU5VtgPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set ADU5 velocity and course readout period to %d s.", idx, ADU5VtgPer);
+    set_cmd_log("%d; Set ADU5 velocity and course readout period to %d s.", cmdCode, ADU5VtgPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SET_G12_POS_PERIOD(int idx)
+SET_G12_POS_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2859,20 +2986,20 @@ SET_G12_POS_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (G12PosPer&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((G12PosPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set G12 position readout period to %d ms.", idx, G12PosPer);
+    set_cmd_log("%d; Set G12 position readout period to %d ms.", cmdCode, G12PosPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 
 static void
-SET_ADU5_SAT_PERIOD(int idx)
+SET_ADU5_SAT_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2895,19 +3022,19 @@ SET_ADU5_SAT_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (ADU5SatPer&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((ADU5SatPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set ADU5 satellite lock readout period to %d.", idx, ADU5SatPer);
+    set_cmd_log("%d; Set ADU5 satellite lock readout period to %d.", cmdCode, ADU5SatPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SET_G12_PPS_OFFSET(int idx)
+SET_G12_PPS_OFFSET(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2947,7 +3074,7 @@ SET_G12_PPS_OFFSET(int idx)
     //    //    printf("ms %d, subms %d, sign %d -- %f\n",ms,subms,sign,temp);
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (ms&0xff);
     Curcmd[4] = 2; 
@@ -2959,12 +3086,12 @@ SET_G12_PPS_OFFSET(int idx)
     Curcmd[10] = 5;
     Curcmd[11] = (sign&0xff);
     Curcmdlen = 12;
-    set_cmd_log("%d; Set G12 PPS offset to %3.4f ms.", idx, G12Offset);
+    set_cmd_log("%d; Set G12 PPS offset to %3.4f ms.", cmdCode, G12Offset);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 static void
-SET_G12_PPS_PERIOD(int idx)
+SET_G12_PPS_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -2987,30 +3114,34 @@ SET_G12_PPS_PERIOD(int idx)
     } 
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (G12PPSPer&0xff);
     Curcmd[4] = 2; 
     Curcmd[5] = ((G12PPSPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set G12 PPS offset to %d ms.", idx, G12PPSPer);
+    set_cmd_log("%d; Set G12 PPS offset to %d ms.", cmdCode, G12PPSPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void 
-ADU5_CAL_12(int idx)
+ADU5_CAL_12(int cmdCode)
 {
     int t;
     char resp[32];
     float v12[3]={0,3.088,0.035};
     short det[3];
+    int whichAdu5=0;
     screen_printf("Are you sure you want to do this?.\n");
     screen_dialog(resp, 31,
-		  "Press -1 to cancel (later you will have to cntl-c out):  ",NULL);
+		  "Which ADU5 (1 for A, 2 for B):  ",whichAdu5);
     if (resp[0] != '\0') {
 	t=atoi(resp);
-	if(t==-1) return;
+	if(t>=1 && t<=2)
+	    whichAdu5=t;
+	else
+	    return;
     } else return;
     screen_dialog(resp,31,"Enter calibV12[0]: [%3.3f]  ",v12[0]);
     if (resp[0] != '\0') {
@@ -3028,21 +3159,23 @@ ADU5_CAL_12(int idx)
 	det[t]=((short)v12[t]*1000.);
     }
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
-    Curcmd[3] = (det[0]&0xff);
+    Curcmd[3] = whichAdu5;
     Curcmd[4] = 2;
-    Curcmd[5] = ((det[0]&0xff00)>>8);
+    Curcmd[5] = (det[0]&0xff);
     Curcmd[6] = 3;
-    Curcmd[7] = (det[1]&0xff);
+    Curcmd[7] = ((det[0]&0xff00)>>8);
     Curcmd[8] = 4;
-    Curcmd[9] = ((det[1]&0xff00)>>8);
+    Curcmd[9] = (det[1]&0xff);
     Curcmd[10] = 5;
-    Curcmd[11] = (det[2]&0xff);
+    Curcmd[11] = ((det[1]&0xff00)>>8);
     Curcmd[12] = 6;
-    Curcmd[13] = ((det[2]&0xff00)>>8);
-    Curcmdlen = 14;
-    set_cmd_log("%d; Set Adu5 Cal V12 to {%3.3f,%3.3f,%3.3f}.", idx, det[0],
+    Curcmd[13] = (det[2]&0xff);
+    Curcmd[14] = 7;
+    Curcmd[15] = ((det[2]&0xff00)>>8);
+    Curcmdlen = 16;
+    set_cmd_log("%d; Set Adu5 %d Cal V12 to {%3.3f,%3.3f,%3.3f}.", cmdCode, whichAdu5,det[0],
 		det[1],det[2]);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
@@ -3050,7 +3183,7 @@ ADU5_CAL_12(int idx)
 }
 
 static void 
-ADU5_CAL_13(int idx)
+ADU5_CAL_13(int cmdCode)
 {
     float v13[3]={-1.538,1.558,-0.001};
     int t;
@@ -3079,7 +3212,7 @@ ADU5_CAL_13(int idx)
 	det[t]=((short)v13[t]*1000.);
     }
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (det[0]&0xff);
     Curcmd[4] = 2;
@@ -3093,7 +3226,7 @@ ADU5_CAL_13(int idx)
     Curcmd[12] = 6;
     Curcmd[13] = ((det[2]&0xff00)>>8);
     Curcmdlen = 14;
-    set_cmd_log("%d; Set Adu5 Cal V13 to {%3.3f,%3.3f,%3.3f}.", idx, det[0],
+    set_cmd_log("%d; Set Adu5 Cal V13 to {%3.3f,%3.3f,%3.3f}.", cmdCode, det[0],
 		det[1],det[2]);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
@@ -3104,7 +3237,7 @@ ADU5_CAL_13(int idx)
 }
 
 static void 
-ADU5_CAL_14(int idx)
+ADU5_CAL_14(int cmdCode)
 {
     float v14[3]={1.543,1.553,-0.024};
 
@@ -3134,7 +3267,7 @@ ADU5_CAL_14(int idx)
 	det[t]=((short)v14[t]*1000.);
     }
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (det[0]&0xff);
     Curcmd[4] = 2;
@@ -3148,7 +3281,7 @@ ADU5_CAL_14(int idx)
     Curcmd[12] = 6;
     Curcmd[13] = ((det[2]&0xff00)>>8);
     Curcmdlen = 14;
-    set_cmd_log("%d; Set Adu5 Cal V14 to {%3.3f,%3.3f,%3.3f}.", idx, det[0],
+    set_cmd_log("%d; Set Adu5 Cal V14 to {%3.3f,%3.3f,%3.3f}.", cmdCode, det[0],
 		det[1],det[2]);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
@@ -3157,7 +3290,7 @@ ADU5_CAL_14(int idx)
 }
 
 static void
-SET_HK_PERIOD(int idx)
+SET_HK_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -3180,18 +3313,18 @@ SET_HK_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (HskPer&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((HskPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set Housekeeping readout period to %d (100ms units).", idx, HskPer);
+    set_cmd_log("%d; Set Housekeeping readout period to %d (100ms units).", cmdCode, HskPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 static void
-SET_HK_CAL_PERIOD(int idx)
+SET_HK_CAL_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -3214,19 +3347,19 @@ SET_HK_CAL_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (HskCalPer&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((HskCalPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set Housekeeping calibration readout period to %d.", idx, HskCalPer);
+    set_cmd_log("%d; Set Housekeeping calibration readout period to %d.", cmdCode, HskCalPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 } 
 
 
 static void
-SET_HK_TELEM_EVERY(int idx)
+SET_HK_TELEM_EVERY(int cmdCode)
 {
     char resp[32];
     short det;
@@ -3249,17 +3382,17 @@ SET_HK_TELEM_EVERY(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (HskTelemEvery&0xff);
     Curcmdlen = 4;
-    set_cmd_log("%d; Set Housekeeping telem to every %d.", idx, HskTelemEvery);
+    set_cmd_log("%d; Set Housekeeping telem to every %d.", cmdCode, HskTelemEvery);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SIPD_THROTTLE_RATE(int idx)
+RJNHIDE_SIPD_THROTTLE_RATE(int cmdCode)
 {
     char resp[32];
     short det;
@@ -3282,19 +3415,19 @@ SIPD_THROTTLE_RATE(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (sipThrottle&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((sipThrottle&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Sip throttle rate set to %d.", idx, sipThrottle);
+    set_cmd_log("%d; Sip throttle rate set to %d.", cmdCode, sipThrottle);
     sendcmd(Fd, Curcmd, Curcmdlen);
 } 
 
 
 static void
-SIPD_PRIORITY_BANDWIDTH(int idx)
+RJNHIDE_SIPD_PRIORITY_BANDWIDTH(int cmdCode)
 {
     char resp[32];
     short det;
@@ -3330,19 +3463,19 @@ SIPD_PRIORITY_BANDWIDTH(int idx)
     }
     
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = whichPri;
     Curcmd[4] = 2;
     Curcmd[5] = (bandFrac&0xff);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set sip priority %d bandwidth fraction to %f.", idx, whichPri,bandFrac);
+    set_cmd_log("%d; Set sip priority %d bandwidth fraction to %f.", cmdCode, whichPri,bandFrac);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-LOSD_PRIORITY_BANDWIDTH(int idx)
+RJN_HIDE_LOSD_PRIORITY_BANDWIDTH(int cmdCode)
 {
     char resp[32];
     short det;
@@ -3378,19 +3511,19 @@ LOSD_PRIORITY_BANDWIDTH(int idx)
     }
     
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = whichPri;
     Curcmd[4] = 2;
     Curcmd[5] = (bandFrac&0xff);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set los priority %d bandwidth fraction to %f.", idx, whichPri,bandFrac);
+    set_cmd_log("%d; Set los priority %d bandwidth fraction to %f.", cmdCode, whichPri,bandFrac);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-LOSD_SEND_DATA(int idx)
+RJN_HIDE_LOSD_SEND_DATA(int cmdCode)
 {
     char resp[32];
     short det;
@@ -3413,18 +3546,18 @@ LOSD_SEND_DATA(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = losSendData;
     Curcmdlen = 4;
-    set_cmd_log("%d;LOS Send Data set to %d.", idx, losSendData);
+    set_cmd_log("%d;LOS Send Data set to %d.", cmdCode, losSendData);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
 }
 
 
 static void
-CLEAN_DIRS(int idx)
+CLEAN_DIRS(int cmdCode)
 {
      screen_printf("Not an available command.\n");
      return;
@@ -3452,24 +3585,24 @@ CLEAN_DIRS(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = Dir_det;
     Curcmdlen = 4;
-    set_cmd_log("%d; Directory  %d cleaned.", idx, Dir_det);
+    set_cmd_log("%d; Directory  %d cleaned.", cmdCode, Dir_det);
     sendcmd(Fd, Curcmd, Curcmdlen);*/
 }
 
 
 static void
-CLEAR_RAMDISK(int idx)
+CLEAR_RAMDISK(int cmdCode)
 {
     if (screen_confirm("Really clear ramdisk")) {
 	Curcmd[0] = 0;
-	Curcmd[1] = idx;
+	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Clear RAMdisk.", idx);
+	set_cmd_log("%d; Clear RAMdisk.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -3478,7 +3611,7 @@ CLEAR_RAMDISK(int idx)
 
 
 static void
-SEND_CONFIG(int idx)
+SEND_CONFIG(int cmdCode)
 {
     short det;
     int i;
@@ -3552,19 +3685,19 @@ SEND_CONFIG(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (Config_det&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((Config_det&0xf00)>>8); 
     Curcmdlen = 6;
-    set_cmd_log("%d; Config  %d sent.", idx, Config_det);
+    set_cmd_log("%d; Config  %d sent.", cmdCode, Config_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-DEFAULT_CONFIG(int idx)
+DEFAULT_CONFIG(int cmdCode)
 {
     short det;
     int i;
@@ -3638,19 +3771,19 @@ DEFAULT_CONFIG(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (Config_det&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((Config_det&0xf00)>>8); 
     Curcmdlen = 6;
-    set_cmd_log("%d; Config  %d set to default.", idx, Config_det);
+    set_cmd_log("%d; Config  %d set to default.", cmdCode, Config_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-LAST_CONFIG(int idx)
+LAST_CONFIG(int cmdCode)
 {
     short det;
     int i;
@@ -3724,19 +3857,19 @@ LAST_CONFIG(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (Config_det&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((Config_det&0xf00)>>8); 
     Curcmdlen = 6;
-    set_cmd_log("%d; Config  %d set to last.", idx, Config_det);
+    set_cmd_log("%d; Config  %d set to last.", cmdCode, Config_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SWITCH_CONFIG(int idx)
+SWITCH_CONFIG(int cmdCode)
 {
     short det;
     int i;
@@ -3824,7 +3957,7 @@ SWITCH_CONFIG(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (Config_det&0xff);
     Curcmd[4] = 2;
@@ -3832,12 +3965,12 @@ SWITCH_CONFIG(int idx)
     Curcmd[6] = 3;
     Curcmd[7] = (switchConfig&0xff); 
     Curcmdlen = 8;
-    set_cmd_log("%d; Config  %d set to %d.", idx, Config_det,switchConfig);
+    set_cmd_log("%d; Config  %d set to %d.", cmdCode, Config_det,switchConfig);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 static void
-SAVE_CONFIG(int idx)
+SAVE_CONFIG(int cmdCode)
 {
     short det;
     int i;
@@ -3926,7 +4059,7 @@ SAVE_CONFIG(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (Config_det&0xff);
     Curcmd[4] = 2;
@@ -3934,14 +4067,14 @@ SAVE_CONFIG(int idx)
     Curcmd[6] = 3;
     Curcmd[7] = (configNum&0xff); 
     Curcmdlen = 8;
-    set_cmd_log("%d; Current coonfig %d saved as %d.", idx, Config_det,configNum);
+    set_cmd_log("%d; Current coonfig %d saved as %d.", cmdCode, Config_det,configNum);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 
 static void
-ACQD_ADU5_TRIG_FLAG(int idx)
+ACQD_ADU5_TRIG_FLAG(int cmdCode)
 {
     char resp[32];
     short det;
@@ -3963,18 +4096,18 @@ ACQD_ADU5_TRIG_FLAG(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = TrigADU5;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set SURF ADU5 Trigger Flag to %d.", idx,TrigADU5);
+    set_cmd_log("%d; Set SURF ADU5 Trigger Flag to %d.", cmdCode,TrigADU5);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 
 static void
-ACQD_G12_TRIG_FLAG(int idx)
+ACQD_G12_TRIG_FLAG(int cmdCode)
 {
     char resp[32];
     short det;
@@ -3996,18 +4129,18 @@ ACQD_G12_TRIG_FLAG(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = TrigG12;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set SURF G12 Trigger Flag to %d.", idx,TrigG12);
+    set_cmd_log("%d; Set SURF G12 Trigger Flag to %d.", cmdCode,TrigG12);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 
 static void
-ACQD_SOFT_TRIG_FLAG(int idx)
+ACQD_SOFT_TRIG_FLAG(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4029,17 +4162,17 @@ ACQD_SOFT_TRIG_FLAG(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = TrigSoft;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set SURF Software Trigger Flag to %d.", idx,TrigSoft);
+    set_cmd_log("%d; Set SURF Software Trigger Flag to %d.", cmdCode,TrigSoft);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-ACQD_SOFT_TRIG_PERIOD(int idx)
+ACQD_SOFT_TRIG_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4062,17 +4195,17 @@ ACQD_SOFT_TRIG_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = SoftTrigPer;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set Software trigger period to %d.", idx, SoftTrigPer);
+    set_cmd_log("%d; Set Software trigger period to %d.", cmdCode, SoftTrigPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-ACQD_ENABLE_CHAN_SERVO(int idx)
+ACQD_ENABLE_CHAN_SERVO(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4095,17 +4228,17 @@ ACQD_ENABLE_CHAN_SERVO(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = enableChanServo;
     Curcmdlen = 4;
-    set_cmd_log("%d; Enable Chan Servo Set to %d.", idx, enableChanServo);
+    set_cmd_log("%d; Enable Chan Servo Set to %d.", cmdCode, enableChanServo);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SET_PID_GOAL(int idx)
+SET_PID_GOAL(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4128,19 +4261,19 @@ SET_PID_GOAL(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (pidGoal&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((pidGoal&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Setting pidGoal to %d.", idx, pidGoal);
+    set_cmd_log("%d; Setting pidGoal to %d.", cmdCode, pidGoal);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-ACQD_PEDESTAL_RUN(int idx)
+ACQD_PEDESTAL_RUN(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4163,17 +4296,17 @@ ACQD_PEDESTAL_RUN(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = pedestalRun;
     Curcmdlen = 4;
-    set_cmd_log("%d; Take Pedestal Run %d.", idx, pedestalRun);
+    set_cmd_log("%d; Take Pedestal Run %d.", cmdCode, pedestalRun);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-THRESHOLD_SCAN(int idx)
+THRESHOLD_SCAN(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4196,17 +4329,17 @@ THRESHOLD_SCAN(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = thresholdRun;
     Curcmdlen = 4;
-    set_cmd_log("%d; Take Threshold Scan %d.", idx, thresholdRun);
+    set_cmd_log("%d; Take Threshold Scan %d.", cmdCode, thresholdRun);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SET_ANT_TRIG_MASK(int idx)
+SET_ANT_TRIG_MASK(int cmdCode)
 {
 
     char resp[32];
@@ -4292,7 +4425,7 @@ SET_ANT_TRIG_MASK(int idx)
     if (screen_confirm("Really Set antTrigMask to: %#010x",antTrigMask)) {
 
       Curcmd[0] = 0;
-      Curcmd[1] = idx;
+      Curcmd[1] = cmdCode;
       Curcmd[2] = 1;
       Curcmd[3] = (antTrigMask&0xff);
       Curcmd[4] = 2;
@@ -4302,7 +4435,7 @@ SET_ANT_TRIG_MASK(int idx)
       Curcmd[8] = 4;
       Curcmd[9] = ((antTrigMask&0xff000000)>>24);
       Curcmdlen = 10;
-      set_cmd_log("%d; Set antTrigMask %#x.", idx, antTrigMask);
+      set_cmd_log("%d; Set antTrigMask %#x.", cmdCode, antTrigMask);
       sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -4313,7 +4446,7 @@ SET_ANT_TRIG_MASK(int idx)
 
 
 static void
-SET_SURF_TRIG_MASK(int idx)
+SET_SURF_TRIG_MASK(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4380,7 +4513,7 @@ SET_SURF_TRIG_MASK(int idx)
 
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (surfTrigBandSurf&0xff);
     Curcmd[4] = 2;
@@ -4392,13 +4525,13 @@ SET_SURF_TRIG_MASK(int idx)
     Curcmd[10] = 5;
     Curcmd[11] = ((surfTrigBandVal2&0xff00)>>8);
     Curcmdlen = 12;
-    set_cmd_log("%d; Take SURF trig band mask %d -- %#x %#x.", idx, surfTrigBandSurf,surfTrigBandVal1,surfTrigBandVal2);
+    set_cmd_log("%d; Take SURF trig band mask %d -- %#x %#x.", cmdCode, surfTrigBandSurf,surfTrigBandVal1,surfTrigBandVal2);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SET_GLOBAL_THRESHOLD(int idx)
+SET_GLOBAL_THRESHOLD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4421,19 +4554,19 @@ SET_GLOBAL_THRESHOLD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (globalThreshold&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((globalThreshold&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Setting globalThreshold to %d.", idx, globalThreshold);
+    set_cmd_log("%d; Setting globalThreshold to %d.", cmdCode, globalThreshold);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-ACQD_REPROGRAM_TURF(int idx)
+ACQD_REPROGRAM_TURF(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4456,17 +4589,17 @@ ACQD_REPROGRAM_TURF(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = reprogramTurf;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set Reprogram Turf to %d.", idx, reprogramTurf);
+    set_cmd_log("%d; Set Reprogram Turf to %d.", cmdCode, reprogramTurf);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-BAND_SCALE_FACTOR(int idx)
+BAND_SCALE_FACTOR(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4524,7 +4657,7 @@ BAND_SCALE_FACTOR(int idx)
     //    screen_printf("scaleFactor %f\tvalue %u\n",scaleFactor,value);
        
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = whichSurf&0xff;
     Curcmd[4] = 2;
@@ -4534,14 +4667,14 @@ BAND_SCALE_FACTOR(int idx)
     Curcmd[8] = 4;
     Curcmd[9] = ((value&0xff00)>>8);
     Curcmdlen = 10;
-    set_cmd_log("%d; Set Band Scale Factor SURF %d, DAC %d, %f.", idx, whichSurf,whichDac,scaleFactor);
+    set_cmd_log("%d; Set Band Scale Factor SURF %d, DAC %d, %f.", cmdCode, whichSurf,whichDac,scaleFactor);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 
 static void
-SURFHK_PERIOD(int idx)
+SURFHK_PERIOD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4564,17 +4697,17 @@ SURFHK_PERIOD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (surfhkPeriod&0xff);
     Curcmdlen = 4;
-    set_cmd_log("%d; Setting surfhkPeriod to %d.", idx, surfhkPeriod);
+    set_cmd_log("%d; Setting surfhkPeriod to %d.", cmdCode, surfhkPeriod);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-SURFHK_TELEM_EVERY(int idx)
+SURFHK_TELEM_EVERY(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4597,17 +4730,17 @@ SURFHK_TELEM_EVERY(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (surfhkTelemEvery&0xff);
     Curcmdlen = 4;
-    set_cmd_log("%d; Setting surfhkTelemEvery to %d.", idx, surfhkTelemEvery);
+    set_cmd_log("%d; Setting surfhkTelemEvery to %d.", cmdCode, surfhkTelemEvery);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-TURFHK_TELEM_EVERY(int idx)
+TURFHK_TELEM_EVERY(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4630,18 +4763,18 @@ TURFHK_TELEM_EVERY(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (turfhkTelemEvery&0xff);
     Curcmdlen = 4;
-    set_cmd_log("%d; Setting turfhkTelemEvery to %d.", idx, turfhkTelemEvery);
+    set_cmd_log("%d; Setting turfhkTelemEvery to %d.", cmdCode, turfhkTelemEvery);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 
 static void
-NUM_PED_EVENTS(int idx)
+NUM_PED_EVENTS(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4664,19 +4797,19 @@ NUM_PED_EVENTS(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (numPedEvents&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((numPedEvents&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Setting number of pedestal events to %d.", idx, numPedEvents);
+    set_cmd_log("%d; Setting number of pedestal events to %d.", cmdCode, numPedEvents);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-THRESH_SCAN_STEP_SIZE(int idx)
+THRESH_SCAN_STEP_SIZE(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4699,17 +4832,17 @@ THRESH_SCAN_STEP_SIZE(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (threshScanStepSize&0xff);
     Curcmdlen = 4;
-    set_cmd_log("%d; Setting threshold scan step size to %d.", idx, threshScanStepSize);
+    set_cmd_log("%d; Setting threshold scan step size to %d.", cmdCode, threshScanStepSize);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-THRESH_SCAN_REPEAT(int idx)
+THRESH_SCAN_REPEAT(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4732,18 +4865,18 @@ THRESH_SCAN_REPEAT(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (threshScanPointsPerStep&0xff);
     Curcmdlen = 4;
-    set_cmd_log("%d; Setting threshold scan points per step to %d.", idx, threshScanPointsPerStep);
+    set_cmd_log("%d; Setting threshold scan points per step to %d.", cmdCode, threshScanPointsPerStep);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 
 static void
-RAMDISK_KILL_ACQD(int idx)
+RAMDISK_KILL_ACQD(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4766,17 +4899,17 @@ RAMDISK_KILL_ACQD(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = megaBytes;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set Ramdisk Acqd kill threshold to %d MB.", idx,megaBytes);
+    set_cmd_log("%d; Set Ramdisk Acqd kill threshold to %d MB.", cmdCode,megaBytes);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-RAMDISK_DUMP_DATA(int idx)
+RAMDISK_DUMP_DATA(int cmdCode)
 {
     char resp[32];
     short det;
@@ -4799,23 +4932,23 @@ RAMDISK_DUMP_DATA(int idx)
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = megaBytes;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set Ramdisk Data Dump Threshold to %d MB.", idx,megaBytes);
+    set_cmd_log("%d; Set Ramdisk Data Dump Threshold to %d MB.", cmdCode,megaBytes);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-EVENTD_MATCH_GPS(int idx)
+EVENTD_MATCH_GPS(int cmdCode)
 {
     screen_printf("Not implemented yet");
 }
 
 static void
-MONITORD_ACQD_WAIT(idx){
+MONITORD_ACQD_WAIT(cmdCode){
 
     char resp[32];
     short det;
@@ -4838,20 +4971,20 @@ MONITORD_ACQD_WAIT(idx){
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (acqdWait&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((acqdWait&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Setting maxAcqdWaitPeriod to %d seconds.", idx, acqdWait);
+    set_cmd_log("%d; Setting maxAcqdWaitPeriod to %d seconds.", cmdCode, acqdWait);
     sendcmd(Fd, Curcmd, Curcmdlen);
     
 }
 
 
 static void
-MONITORD_PERIOD(idx){
+MONITORD_PERIOD(cmdCode){
     char resp[32];
     short det;
     short t;
@@ -4873,18 +5006,18 @@ MONITORD_PERIOD(idx){
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = monPeriod;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set monitor period to  %d seconds.", idx, monPeriod);
+    set_cmd_log("%d; Set monitor period to  %d seconds.", cmdCode, monPeriod);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
 }
 
 
 static void
-USB_CHANGE_THRESH(idx){
+USB_CHANGE_THRESH(cmdCode){
     char resp[32];
     short det;
     short t;
@@ -4906,51 +5039,51 @@ USB_CHANGE_THRESH(idx){
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = usbMegaBytes;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set usb switch threshold to %d MB.", idx, usbMegaBytes);
+    set_cmd_log("%d; Set usb switch threshold to %d MB.", cmdCode, usbMegaBytes);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
 }
 
 
 static void
-SATA_CHANGE_THRESH(idx){
+SATA_CHANGE_THRESH(cmdCode){
     char resp[32];
     short det;
     short t;
-    static short bladeMegaBytes=120;
+    static short satabladeMegaBytes=120;
 
     screen_dialog(resp, 31,
-	"Set Blade switch threshold in MB (0-255, -1 to cancel) [%d] ", bladeMegaBytes);
+	"Set Satablade switch threshold in MB (0-255, -1 to cancel) [%d] ", satabladeMegaBytes);
     if (resp[0] != '\0') {
 	t = atoi(resp);
 	if (0 <= t && t <= 255) {
-	    bladeMegaBytes = t;
+	    satabladeMegaBytes = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
-	    screen_printf("Set blade switch threshold to %d MB.\n", t);
+	    screen_printf("Set satablade switch threshold to %d MB.\n", t);
 	    return;
 	}
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
-    Curcmd[3] = bladeMegaBytes;
+    Curcmd[3] = satabladeMegaBytes;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set Blade switch threshold %d MB.", idx,bladeMegaBytes);
+    set_cmd_log("%d; Set Satablade switch threshold %d MB.", cmdCode,satabladeMegaBytes);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
 }
 
 
 static void
-MAX_QUEUE_LENGTH(idx){
+MAX_QUEUE_LENGTH(cmdCode){
     
     char resp[32];
     short det;
@@ -4973,20 +5106,20 @@ MAX_QUEUE_LENGTH(idx){
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (maxQueue&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((maxQueue&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Setting maximum event queue to %d.", idx, maxQueue);
+    set_cmd_log("%d; Setting maximum event queue to %d.", cmdCode, maxQueue);
     sendcmd(Fd, Curcmd, Curcmdlen);
   
 }
 
 
 static void
-INODES_KILL_ACQD(idx){
+INODES_KILL_ACQD(cmdCode){
      
     char resp[32];
     short det;
@@ -5009,20 +5142,20 @@ INODES_KILL_ACQD(idx){
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (inodesKill&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((inodesKill&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Setting inodesKillAcqd %d.", idx, inodesKill);
+    set_cmd_log("%d; Setting inodesKillAcqd %d.", cmdCode, inodesKill);
     sendcmd(Fd, Curcmd, Curcmdlen);
   
 }
 
 
 static void
-INODES_DUMP_DATA(idx){
+INODES_DUMP_DATA(cmdCode){
      
     char resp[32];
     short det;
@@ -5045,20 +5178,20 @@ INODES_DUMP_DATA(idx){
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = (inodesDump&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((inodesDump&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Setting inodesDumpData to %d.", idx, inodesDump);
+    set_cmd_log("%d; Setting inodesDumpData to %d.", cmdCode, inodesDump);
     sendcmd(Fd, Curcmd, Curcmdlen);
   
 }
 
 
 static void
-ACQD_SET_RATE_SERVO(idx){
+ACQD_SET_RATE_SERVO(cmdCode){
     static unsigned short eventRate;
     char resp[32];
     short det;
@@ -5090,20 +5223,20 @@ ACQD_SET_RATE_SERVO(idx){
 
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = enabler;
     Curcmd[3] = (eventRate&0xff);
     Curcmd[4] = 2;
     Curcmd[5] = ((eventRate&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Setting event rate goal to %f.", idx, eventRate);
+    set_cmd_log("%d; Setting event rate goal to %f.", cmdCode, eventRate);
     sendcmd(Fd, Curcmd, Curcmdlen);
  
 }
 
 
 static void
-ACQD_SET_NICE_VALUE(idx){
+ACQD_SET_NICE_VALUE(cmdCode){
     char resp[32];
     short det;
     short t;
@@ -5126,60 +5259,134 @@ ACQD_SET_NICE_VALUE(idx){
     }
 
     Curcmd[0] = 0;
-    Curcmd[1] = idx;
+    Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = acqdNice;
     Curcmdlen = 4;
-    set_cmd_log("%d; Set Acqd nice value to %d.", idx,acqdNice-20);
+    set_cmd_log("%d; Set Acqd nice value to %d.", cmdCode,acqdNice-20);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
 
 static void
-PRIORITIZERD_COMMAND(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
+PRIORITIZERD_COMMAND(cmdCode){
+    screen_printf("Not yet Implemented in cmdSend.\n");
+
+
      return;
 }
 
 
 static void
-GPSD_EXTRA_COMMAND(idx){
+GPSD_EXTRA_COMMAND(cmdCode){
+    char resp[32];
+    short det;
+    short t;
+    unsigned char cval=0;
+    static short extraCode=0;
+    static short whichGps=0;
+    static short value=0;
+     screen_printf("130 -- GPS_SET_GGA_PERIOD\n");
+     screen_printf("131 -- GPS_SET_PAT_TELEM_EVERY\n");
+     screen_printf("132 -- GPS_SET_VTG_TELEM_EVERY\n");
+     screen_printf("133 -- GPS_SET_SAT_TELEM_EVERY\n");
+     screen_printf("134 -- GPS_SET_GGA_TELEM_EVERY\n");
+     screen_printf("135 -- GPS_SET_POS_TELEM_EVERY\n");
+     screen_dialog(resp, 31,
+		   "Select Extra Code (-1 to cancel) [%d] ", extraCode);
+     
+     if (resp[0] != '\0') {
+	 t = atoi(resp);
+	 if (129<= t && t <=135) {
+	     extraCode = t;
+	 } else if (t == -1) {
+	     screen_printf("Cancelled.\n");
+	     return;
+	 } else {
+	     screen_printf("Not a valid command code\n");
+	     return;
+	}
+    }
+     screen_dialog(resp, 31,
+		   "Select GPS 1-ADU5A, 2-ADU5B, 3-G12 (-1 to cancel) [%d] ", whichGps);
+     if (resp[0] != '\0') {
+	 t = atoi(resp);
+	 if (1<= t && t <=3) {
+	     whichGps = t;
+	 } else if (t == -1) {
+	     screen_printf("Cancelled.\n");
+	     return;
+	 } else {
+	     screen_printf("Not a vali GPS\n");
+	     return;
+	}
+     }
+     screen_dialog(resp, 31,
+		   "Enter value (-1 to cancel) [%d] ", value);
+     if (resp[0] != '\0') {
+	 t = atoi(resp);
+	 if (0<= t && t <=255) {
+	     value = t;
+	 } else if (t == -1) {
+	     screen_printf("Cancelled.\n");
+	     return;
+	 } else {
+	     screen_printf("Not a valid GPS\n");
+	     return;
+	}
+    }
+     
+     cval=value;
+     
+
+
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = extraCode;
+    Curcmd[4] = 1;
+    Curcmd[5] = whichGps;
+    Curcmd[6] = 1;
+    Curcmd[7] = cval;
+    Curcmdlen = 8;
+    set_cmd_log("%d; Extra GPS command %d %d to %d.", cmdCode,extraCode,whichGps,value);
+    sendcmd(Fd, Curcmd, Curcmdlen);
+    
+    return;
+}
+
+static void
+SIPD_CONTROL_COMMAND(cmdCode){
      screen_printf("Not yet Implemented in cmdSend.\n");
      return;
 }
 
 static void
-SIPD_CONTROL_COMMAND(idx){
-     screen_printf("Not yet Implemented in cmdSend.\n");
-     return;
-}
-
-static void
-LOSD_CONTROL_COMMAND(idx){
+LOSD_CONTROL_COMMAND(cmdCode){
     screen_printf("Not yet Implemented in cmdSend.\n");
     return;
 }
 
 static void
-ACQD_EXTRA_COMMAND(idx){
+ACQD_EXTRA_COMMAND(cmdCode){
      screen_printf("Not yet Implemented in cmdSend.\n");
      return;
 }
 
 static void
-ACQD_RATE_COMMAND(idx){
+ACQD_RATE_COMMAND(cmdCode){
      screen_printf("Not yet Implemented in cmdSend.\n");
      return;
 }
 
 static void
-GPS_PHI_MASK_COMMAND(idx){
+GPS_PHI_MASK_COMMAND(cmdCode){
      screen_printf("Not yet Implemented in cmdSend.\n");
      return;
 }
 
 static void
-PLAYBACKD_COMMAND(idx){
+PLAYBACKD_COMMAND(cmdCode){
      screen_printf("Not yet Implemented in cmdSend.\n");
      return;
 }

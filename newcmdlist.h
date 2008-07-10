@@ -41,8 +41,8 @@
 #define TURN_RFCM_OFF  153
 #define TURN_CALPULSER_ON  154
 #define TURN_CALPULSER_OFF  155
-#define TURN_VETO_ON  156
-#define TURN_VETO_OFF  157
+#define TURN_NADIR_ON  156
+#define TURN_NADIR_OFF  157
 #define TURN_ALL_ON  158
 #define TURN_ALL_OFF  159
  

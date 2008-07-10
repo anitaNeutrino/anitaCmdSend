@@ -11,8 +11,8 @@ TARGETS = cmdTui batchcmd
 
 all:	$(TARGETS)
 
-cmdTui:	newcmd.c newcmdfunc.h
-	$(CC) $(CFLAGS) -o cmdTui newcmd.c $(LIBS)
+cmdTui:	newcmdfunc.h newcmd.o cmdUtilDef.o 
+	$(CC) $(CFLAGS) -o cmdTui newcmd.o cmdUtilDef.o $(LIBS)
 
 batchcmd:	batchcmd.c
 	$(CC) $(CFLAGS) -o batchcmd batchcmd.c
@@ -24,5 +24,5 @@ install:	all
 	cp $(TARGETS) $(BINDIR)
 
 clean:
-	rm -f newcmdfunc.h cmd batchcmd
+	rm -f newcmdfunc.h cmd batchcmd *.o
 
