@@ -35,8 +35,6 @@
 #define SET_SPECIAL_PRI  148
 #define SET_SPECIAL_DECIMATE  149
  
-#define TURN_GPS_ON  150
-#define TURN_GPS_OFF  151
 #define TURN_RFCM_ON  152
 #define TURN_RFCM_OFF  153
 #define TURN_CALPULSER_ON  154

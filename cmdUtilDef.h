@@ -16,6 +16,7 @@ typedef enum {
     ID_MONITORD,
     ID_PLAYBACKD,
     ID_LOGWATCHD,
+    ID_NEOBRICKD,
     ID_NOT_AN_ID
 } ProgramId_t;
 
@@ -34,6 +35,7 @@ typedef enum {
 #define MONITORD_ID_MASK 0x400
 #define PLAYBACKD_ID_MASK 0x800
 #define LOGWATCHD_ID_MASK 0x1000
+#define NEOBRICKD_ID_MASK 0x2000
 #define ALL_ID_MASK 0xffff
 
 
@@ -110,11 +112,16 @@ typedef enum {
   GPS_PHI_MASK_SET_SOURCE_WIDTH=7
 } GpsPhiMaskCommandCode_t;
     
+
 typedef enum {
     PLAY_GET_EVENT=1,    
     PLAY_START_PRI=2,
     PLAY_STOP_PRI=3,
-    PLAY_USE_DISK=4
+    PLAY_USE_DISK=4,
+    PLAY_START_EVENT=5,
+    PLAY_START_PLAY=6,
+    PLAY_STOP_PLAY=7,
+    PLAY_SLEEP_PERIOD=8
 } PlaybackCommandCode_t;
 
 typedef enum {

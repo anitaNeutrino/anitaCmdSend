@@ -1269,18 +1269,19 @@ CMD_REALLY_KILL_PROGS(int cmdCode)
     char resp[32];
 
     
-    screen_printf("1. Acqd       6. GPSd\n");
-    screen_printf("2. Archived   7. Hkd\n");
-    screen_printf("3. Calibdd    8. LOSd\n");
-    screen_printf("4. Cmdd       9. Monitord\n");
-    screen_printf("5. Eventd     10. Prioritizerd\n");
-    screen_printf("11. SIPd\n");
-    screen_printf("12. All of the above\n");
-    screen_dialog(resp, 31, "Kill which daemon? (-1 to cancel) [%d] ",
+    screen_printf("1.  Acqd       6.  GPSd\n");
+    screen_printf("2.  Archived   7.  Hkd\n");
+    screen_printf("3.  Calibdd    8.  LOSd\n");
+    screen_printf("4.  Cmdd       9.  Monitord\n");
+    screen_printf("5.  Eventd     10. Prioritizerd\n");
+    screen_printf("11. SIPd       12. Playbackd\n");
+    screen_printf("13. LogWatchd  14. Neobrickd\n");
+    screen_printf("16. All (except SIPd and Cmdd)\n");
+    screen_dialog(resp, 31, "Kill -9 which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 12) {
+	if (1 <= det && det <= 16) {
 	  switch(det){
 	  case 1:
             Prog_det = ACQD_ID_MASK;
@@ -1292,9 +1293,7 @@ CMD_REALLY_KILL_PROGS(int cmdCode)
             Prog_det = CALIBD_ID_MASK;
 	    break;
           case 4:
-	    screen_printf("Not allowed\n");
-	    return;
-	    //            Prog_det = CMDD_ID_MASK;
+	    Prog_det = CMDD_ID_MASK;
 	    break;
           case 5:
             Prog_det = EVENTD_ID_MASK;
@@ -1316,9 +1315,17 @@ CMD_REALLY_KILL_PROGS(int cmdCode)
             break;
           case 11:
             Prog_det = SIPD_ID_MASK;
-	    screen_printf("Not allowed\n");
-	    return;
+	    break;
           case 12:
+            Prog_det = PLAYBACKD_ID_MASK;
+	    break;
+          case 13:
+            Prog_det = LOGWATCHD_ID_MASK;
+	    break;
+          case 14:
+            Prog_det = NEOBRICKD_ID_MASK;
+	    break;
+          case 16:
             Prog_det = ALL_ID_MASK;
 	    Prog_det &= ~CMDD_ID_MASK;
 	    Prog_det &= ~SIPD_ID_MASK;
@@ -1329,7 +1336,7 @@ CMD_REALLY_KILL_PROGS(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    screen_printf("Value must be 1-16, not %d.\n", det);
 	    return;
 	}
     }
@@ -1355,18 +1362,19 @@ CMD_KILL_PROGS(int cmdCode)
     int i;
     char resp[32];
     
-    screen_printf("1. Acqd       6. GPSd\n");
-    screen_printf("2. Archived   7. Hkd\n");
-    screen_printf("3. Calibdd    8. LOSd\n");
-    screen_printf("4. Cmdd       9. Monitord\n");
-    screen_printf("5. Eventd     10. Prioritizerd\n");
-    screen_printf("11. SIPd\n");
-    screen_printf("12. All of the above\n");
+    screen_printf("1.  Acqd       6.  GPSd\n");
+    screen_printf("2.  Archived   7.  Hkd\n");
+    screen_printf("3.  Calibdd    8.  LOSd\n");
+    screen_printf("4.  Cmdd       9.  Monitord\n");
+    screen_printf("5.  Eventd     10. Prioritizerd\n");
+    screen_printf("11. SIPd       12. Playbackd\n");
+    screen_printf("13. LogWatchd  14. Neobrickd\n");
+    screen_printf("16. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Kill which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 12) {
+	if (1 <= det && det <= 16) {
 	  switch(det){
 	  case 1:
             Prog_det = ACQD_ID_MASK;
@@ -1378,9 +1386,7 @@ CMD_KILL_PROGS(int cmdCode)
             Prog_det = CALIBD_ID_MASK;
 	    break;
           case 4:
-	    screen_printf("Not allowed\n");
-	    return;
-	    //            Prog_det = CMDD_ID_MASK;
+	    Prog_det = CMDD_ID_MASK;
 	    break;
           case 5:
             Prog_det = EVENTD_ID_MASK;
@@ -1401,10 +1407,18 @@ CMD_KILL_PROGS(int cmdCode)
             Prog_det = PRIORITIZERD_ID_MASK; 
             break;
           case 11:
-	       // Prog_det = SIPD_ID_MASK;
-	    screen_printf("Not allowed\n");
-	    return;
+            Prog_det = SIPD_ID_MASK;
+	    break;
           case 12:
+            Prog_det = PLAYBACKD_ID_MASK;
+	    break;
+          case 13:
+            Prog_det = LOGWATCHD_ID_MASK;
+	    break;
+          case 14:
+            Prog_det = NEOBRICKD_ID_MASK;
+	    break;
+          case 16:
             Prog_det = ALL_ID_MASK;
 	    Prog_det &= ~CMDD_ID_MASK;
 	    Prog_det &= ~SIPD_ID_MASK;
@@ -1415,10 +1429,12 @@ CMD_KILL_PROGS(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    screen_printf("Value must be 1-16, not %d.\n", det);
 	    return;
 	}
     }
+
+
 
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
@@ -1438,19 +1454,20 @@ CMD_RESPAWN_PROGS(int cmdCode)
     short det;
     int i;
     char resp[32];
-
-    screen_printf("1. Acqd       6. GPSd\n");
-    screen_printf("2. Archived   7. Hkd\n");
-    screen_printf("3. Calibdd    8. LOSd\n");
-    screen_printf("4. Cmdd       9. Monitord\n");
-    screen_printf("5. Eventd     10. Prioritizerd\n");
-    screen_printf("11. SIPd\n");
-    screen_printf("12. All of the above\n");
+    
+    screen_printf("1.  Acqd       6.  GPSd\n");
+    screen_printf("2.  Archived   7.  Hkd\n");
+    screen_printf("3.  Calibdd    8.  LOSd\n");
+    screen_printf("4.  Cmdd       9.  Monitord\n");
+    screen_printf("5.  Eventd     10. Prioritizerd\n");
+    screen_printf("11. SIPd       12. Playbackd\n");
+    screen_printf("13. LogWatchd  14. Neobrickd\n");
+    screen_printf("16. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Respawn which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 12) {
+	if (1 <= det && det <= 16) {
 	  switch(det){
 	  case 1:
             Prog_det = ACQD_ID_MASK;
@@ -1462,10 +1479,8 @@ CMD_RESPAWN_PROGS(int cmdCode)
             Prog_det = CALIBD_ID_MASK;
 	    break;
           case 4:
-	      //Prog_det = CMDD_ID_MASK;
-	      //break;
-	    screen_printf("Not allowed\n");
-	    return;
+	    Prog_det = CMDD_ID_MASK;
+	    break;
           case 5:
             Prog_det = EVENTD_ID_MASK;
 	    break;
@@ -1487,9 +1502,16 @@ CMD_RESPAWN_PROGS(int cmdCode)
           case 11:
             Prog_det = SIPD_ID_MASK;
 	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
           case 12:
+            Prog_det = PLAYBACKD_ID_MASK;
+	    break;
+          case 13:
+            Prog_det = LOGWATCHD_ID_MASK;
+	    break;
+          case 14:
+            Prog_det = NEOBRICKD_ID_MASK;
+	    break;
+          case 16:
             Prog_det = ALL_ID_MASK;
 	    Prog_det &= ~CMDD_ID_MASK;
 	    Prog_det &= ~SIPD_ID_MASK;
@@ -1500,10 +1522,11 @@ CMD_RESPAWN_PROGS(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    screen_printf("Value must be 1-16, not %d.\n", det);
 	    return;
 	}
     }
+
 
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
@@ -1523,20 +1546,20 @@ CMD_START_PROGS(int cmdCode)
     short det;
     int i;
     char resp[32];
-
-
-    screen_printf("1. Acqd       6. GPSd\n");
-    screen_printf("2. Archived   7. Hkd\n");
-    screen_printf("3. Calibdd    8. LOSd\n");
-    screen_printf("4. Cmdd       9. Monitord\n");
-    screen_printf("5. Eventd     10. Prioritizerd\n");
-    screen_printf("11. SIPd\n");
-    screen_printf("12. All of the above\n");
+    
+    screen_printf("1.  Acqd       6.  GPSd\n");
+    screen_printf("2.  Archived   7.  Hkd\n");
+    screen_printf("3.  Calibdd    8.  LOSd\n");
+    screen_printf("4.  Cmdd       9.  Monitord\n");
+    screen_printf("5.  Eventd     10. Prioritizerd\n");
+    screen_printf("11. SIPd       12. Playbackd\n");
+    screen_printf("13. LogWatchd  14. Neobrickd\n");
+    screen_printf("16. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Start which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 12) {
+	if (1 <= det && det <= 16) {
 	  switch(det){
 	  case 1:
             Prog_det = ACQD_ID_MASK;
@@ -1548,10 +1571,8 @@ CMD_START_PROGS(int cmdCode)
             Prog_det = CALIBD_ID_MASK;
 	    break;
           case 4:
-	      //Prog_det = CMDD_ID_MASK;
-	      //break;
-	    screen_printf("Not allowed\n");
-	    return;
+	    Prog_det = CMDD_ID_MASK;
+	    break;
           case 5:
             Prog_det = EVENTD_ID_MASK;
 	    break;
@@ -1573,9 +1594,16 @@ CMD_START_PROGS(int cmdCode)
           case 11:
             Prog_det = SIPD_ID_MASK;
 	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
           case 12:
+            Prog_det = PLAYBACKD_ID_MASK;
+	    break;
+          case 13:
+            Prog_det = LOGWATCHD_ID_MASK;
+	    break;
+          case 14:
+            Prog_det = NEOBRICKD_ID_MASK;
+	    break;
+          case 16:
             Prog_det = ALL_ID_MASK;
 	    Prog_det &= ~CMDD_ID_MASK;
 	    Prog_det &= ~SIPD_ID_MASK;
@@ -1586,10 +1614,12 @@ CMD_START_PROGS(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    screen_printf("Value must be 1-16, not %d.\n", det);
 	    return;
 	}
     }
+
+
 
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
@@ -3615,18 +3645,19 @@ SEND_CONFIG(int cmdCode)
     char resp[32];
 
 
-    screen_printf("1. Acqd.config      6. GPSd.config\n");
-    screen_printf("2. Archived.config   7. Hkd.config\n");
-    screen_printf("3. Calibd.config    8. LOSd.config\n");
-    screen_printf("4. Cmdd.config       9. Monitord.config\n");
-    screen_printf("5. Eventd.config     10. Prioritizerd.config\n");
-    screen_printf("11. SIPd.config\n");
-    screen_printf("12. All of the above\n");
+    screen_printf("1.  Acqd.config       6.  GPSd.config\n");
+    screen_printf("2.  Archived.config   7.  Hkd.config\n");
+    screen_printf("3.  Calibd.config   8.  LOSd.config\n");
+    screen_printf("4.  Cmdd.config       9.  Monitord.config\n");
+    screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
+    screen_printf("11. SIPd.config       12. Playbackd.config\n");
+    screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
+    screen_printf("16. All of the above\n");
     screen_dialog(resp, 31, "Which config File? (-1 to cancel) [%d] ",
 	Config_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 12) {
+	if (1 <= det && det <= 16) {
 	  switch(det){
 	  case 1:
             Config_det = ACQD_ID_MASK;
@@ -3639,9 +3670,6 @@ SEND_CONFIG(int cmdCode)
 	    break;
           case 4:
 	    Config_det = CMDD_ID_MASK;
-	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
 	    break;
           case 5:
             Config_det = EVENTD_ID_MASK;
@@ -3664,11 +3692,17 @@ SEND_CONFIG(int cmdCode)
           case 11:
             Config_det = SIPD_ID_MASK;
 	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
           case 12:
+            Config_det = PLAYBACKD_ID_MASK;
+	    break;
+          case 13:
+            Config_det = LOGWATCHD_ID_MASK;
+	    break;
+          case 14:
+            Config_det = NEOBRICKD_ID_MASK;
+	    break;	
+          case 16:
             Config_det = ALL_ID_MASK;
-
 	    break;
           default: break;
 	  }
@@ -3676,7 +3710,7 @@ SEND_CONFIG(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    screen_printf("Value must be 1-16, not %d.\n", det);
 	    return;
 	}
     }
@@ -3701,18 +3735,19 @@ DEFAULT_CONFIG(int cmdCode)
     char resp[32];
 
 
-    screen_printf("1. Acqd.config      6. GPSd.config\n");
-    screen_printf("2. Archived.config   7. Hkd.config\n");
-    screen_printf("3. Calibd.config    8. LOSd.config\n");
-    screen_printf("4. Cmdd.config       9. Monitord.config\n");
-    screen_printf("5. Eventd.config     10. Prioritizerd.config\n");
-    screen_printf("11. SIPd.config\n");
-    screen_printf("12. All of the above\n");
+    screen_printf("1.  Acqd.config       6.  GPSd.config\n");
+    screen_printf("2.  Archived.config   7.  Hkd.config\n");
+    screen_printf("3.  Calibd.config   8.  LOSd.config\n");
+    screen_printf("4.  Cmdd.config       9.  Monitord.config\n");
+    screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
+    screen_printf("11. SIPd.config       12. Playbackd.config\n");
+    screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
+    screen_printf("16. All of the above\n");
     screen_dialog(resp, 31, "Which config file to return to default? (-1 to cancel) [%d] ",
 	Config_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 12) {
+	if (1 <= det && det <= 16) {
 	  switch(det){
 	  case 1:
             Config_det = ACQD_ID_MASK;
@@ -3725,9 +3760,6 @@ DEFAULT_CONFIG(int cmdCode)
 	    break;
           case 4:
 	    Config_det = CMDD_ID_MASK;
-	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
 	    break;
           case 5:
             Config_det = EVENTD_ID_MASK;
@@ -3750,11 +3782,17 @@ DEFAULT_CONFIG(int cmdCode)
           case 11:
             Config_det = SIPD_ID_MASK;
 	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
           case 12:
+            Config_det = PLAYBACKD_ID_MASK;
+	    break;
+          case 13:
+            Config_det = LOGWATCHD_ID_MASK;
+	    break;
+          case 14:
+            Config_det = NEOBRICKD_ID_MASK;
+	    break;	
+          case 16:
             Config_det = ALL_ID_MASK;
-
 	    break;
           default: break;
 	  }
@@ -3762,10 +3800,11 @@ DEFAULT_CONFIG(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    screen_printf("Value must be 1-16, not %d.\n", det);
 	    return;
 	}
     }
+
 
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
@@ -3785,20 +3824,19 @@ LAST_CONFIG(int cmdCode)
     short det;
     int i;
     char resp[32];
-
-
-    screen_printf("1. Acqd.config      6. GPSd.config\n");
-    screen_printf("2. Archived.config   7. Hkd.config\n");
-    screen_printf("3. Calibd.config    8. LOSd.config\n");
-    screen_printf("4. Cmdd.config       9. Monitord.config\n");
-    screen_printf("5. Eventd.config     10. Prioritizerd.config\n");
-    screen_printf("11. SIPd.config\n");
-    screen_printf("12. All of the above\n");
+    screen_printf("1.  Acqd.config       6.  GPSd.config\n");
+    screen_printf("2.  Archived.config   7.  Hkd.config\n");
+    screen_printf("3.  Calibd.config     8.  LOSd.config\n");
+    screen_printf("4.  Cmdd.config       9.  Monitord.config\n");
+    screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
+    screen_printf("11. SIPd.config       12. Playbackd.config\n");
+    screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
+    screen_printf("16. All of the above\n");
     screen_dialog(resp, 31, "Which config file to return to last config? (-1 to cancel) [%d] ",
 	Config_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 12) {
+	if (1 <= det && det <= 16) {
 	  switch(det){
 	  case 1:
             Config_det = ACQD_ID_MASK;
@@ -3811,9 +3849,6 @@ LAST_CONFIG(int cmdCode)
 	    break;
           case 4:
 	    Config_det = CMDD_ID_MASK;
-	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
 	    break;
           case 5:
             Config_det = EVENTD_ID_MASK;
@@ -3836,11 +3871,17 @@ LAST_CONFIG(int cmdCode)
           case 11:
             Config_det = SIPD_ID_MASK;
 	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
           case 12:
+            Config_det = PLAYBACKD_ID_MASK;
+	    break;
+          case 13:
+            Config_det = LOGWATCHD_ID_MASK;
+	    break;
+          case 14:
+            Config_det = NEOBRICKD_ID_MASK;
+	    break;	
+          case 16:
             Config_det = ALL_ID_MASK;
-
 	    break;
           default: break;
 	  }
@@ -3848,7 +3889,7 @@ LAST_CONFIG(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    screen_printf("Value must be 1-16, not %d.\n", det);
 	    return;
 	}
     }
@@ -3873,17 +3914,19 @@ SWITCH_CONFIG(int cmdCode)
     char resp[32];
 
 
-    screen_printf("1. Acqd.config      6. GPSd.config\n");
-    screen_printf("2. Archived.config   7. Hkd.config\n");
-    screen_printf("3. Calibd.config    8. LOSd.config\n");
-    screen_printf("4. Cmdd.config       9. Monitord.config\n");
-    screen_printf("5. Eventd.config     10. Prioritizerd.config\n");
-    screen_printf("11. SIPd.config\n");
+    screen_printf("1.  Acqd.config       6.  GPSd.config\n");
+    screen_printf("2.  Archived.config   7.  Hkd.config\n");
+    screen_printf("3.  Calibd.config     8.  LOSd.config\n");
+    screen_printf("4.  Cmdd.config       9.  Monitord.config\n");
+    screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
+    screen_printf("11. SIPd.config       12. Playbackd.config\n");
+    screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
+    screen_printf("16. All of the above\n");
     screen_dialog(resp, 31, "Which config file to switch? (-1 to cancel) [%d] ",
 	Config_det);
-    if (resp[0] != '\0') {
+      if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 11) {
+	if (1 <= det && det <= 16) {
 	  switch(det){
 	  case 1:
             Config_det = ACQD_ID_MASK;
@@ -3896,9 +3939,6 @@ SWITCH_CONFIG(int cmdCode)
 	    break;
           case 4:
 	    Config_det = CMDD_ID_MASK;
-	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
 	    break;
           case 5:
             Config_det = EVENTD_ID_MASK;
@@ -3921,11 +3961,17 @@ SWITCH_CONFIG(int cmdCode)
           case 11:
             Config_det = SIPD_ID_MASK;
 	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
           case 12:
+            Config_det = PLAYBACKD_ID_MASK;
+	    break;
+          case 13:
+            Config_det = LOGWATCHD_ID_MASK;
+	    break;
+          case 14:
+            Config_det = NEOBRICKD_ID_MASK;
+	    break;	
+          case 16:
             Config_det = ALL_ID_MASK;
-
 	    break;
           default: break;
 	  }
@@ -3933,10 +3979,11 @@ SWITCH_CONFIG(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    screen_printf("Value must be 1-16, not %d.\n", det);
 	    return;
 	}
     }
+
     
     screen_dialog(resp, 31, "Which config number? (0-255, -1 to cancel) [%d] ",switchConfig);
     if (resp[0] != '\0') {
@@ -3975,17 +4022,20 @@ SAVE_CONFIG(int cmdCode)
     static int configNum;
 //    static int whichConfig;
 
-    screen_printf("1. Acqd.config      6. GPSd.config\n");
-    screen_printf("2. Archived.config   7. Hkd.config\n");
-    screen_printf("3. Calibd.config    8. LOSd.config\n");
-    screen_printf("4. Cmdd.config       9. Monitord.config\n");
-    screen_printf("5. Eventd.config     10. Prioritizerd.config\n");
-    screen_printf("11. SIPd.config\n");
+
+    screen_printf("1.  Acqd.config       6.  GPSd.config\n");
+    screen_printf("2.  Archived.config   7.  Hkd.config\n");
+    screen_printf("3.  Calibd.config     8.  LOSd.config\n");
+    screen_printf("4.  Cmdd.config       9.  Monitord.config\n");
+    screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
+    screen_printf("11. SIPd.config       12. Playbackd.config\n");
+    screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
+    screen_printf("16. All of the above\n");
     screen_dialog(resp, 31, "Which config file to switch? (-1 to cancel) [%d] ",
 	Config_det);
-    if (resp[0] != '\0') {
+      if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 11) {
+	if (1 <= det && det <= 16) {
 	  switch(det){
 	  case 1:
             Config_det = ACQD_ID_MASK;
@@ -3998,9 +4048,6 @@ SAVE_CONFIG(int cmdCode)
 	    break;
           case 4:
 	    Config_det = CMDD_ID_MASK;
-	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
 	    break;
           case 5:
             Config_det = EVENTD_ID_MASK;
@@ -4023,11 +4070,17 @@ SAVE_CONFIG(int cmdCode)
           case 11:
             Config_det = SIPD_ID_MASK;
 	    break;
-	    //	    screen_printf("Not allowed\n");
-	    //	    return;
           case 12:
+            Config_det = PLAYBACKD_ID_MASK;
+	    break;
+          case 13:
+            Config_det = LOGWATCHD_ID_MASK;
+	    break;
+          case 14:
+            Config_det = NEOBRICKD_ID_MASK;
+	    break;	
+          case 16:
             Config_det = ALL_ID_MASK;
-
 	    break;
           default: break;
 	  }
@@ -4035,7 +4088,7 @@ SAVE_CONFIG(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-12, not %d.\n", det);
+	    screen_printf("Value must be 1-16, not %d.\n", det);
 	    return;
 	}
     }
@@ -6522,15 +6575,19 @@ PLAYBACKD_COMMAND(cmdCode){
     static float fvalue=0;
     static unsigned short usvalue=0;
     static unsigned int uivalue=0;
-    screen_printf("1. PLAY_GET_EVENT\n");    
-    screen_printf("2. PLAY_START_PRI\n");
-    screen_printf("3. PLAY_STOP_PRI\n");
-    screen_printf("4. PLAY_USE_DISK\n");
+    screen_printf("1. PLAY_GET_SINGLE_EVENT\n");    
+    screen_printf("2. PLAY_START_PRIORITY\n");
+    screen_printf("3. PLAY_STOP_PRIORITY\n");
+    screen_printf("4. PLAY_START_EVENT_NUMBER\n");
+    screen_printf("5. PLAY_USE_DISK\n");
+    screen_printf("6. PLAY_START_PLAYBACK\n");
+    screen_printf("7. PLAY_STOP_PLAYBACK\n");
+    screen_printf("8. PLAY_SLEEP_PERIOD\n");
 
     screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (1<= t && t <=4) {
+	if (1<= t && t <=8) {
 	    extraCode = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
@@ -6575,12 +6632,35 @@ PLAYBACKD_COMMAND(cmdCode){
 	cmdBytes[3]=(uivalue&0xff000000)>>24;
 	cmdBytes[4]=usvalue&0xff;
     }
-    if(extraCode==PLAY_START_PRI) {
+
+    if(extraCode==PLAY_SLEEP_PERIOD) {
+	uivalue=1000;
+        screen_dialog(resp,31,"Enter sleep period in ms (i.e 1/rate) [%d] (-1 to cancel)\n",uivalue);
+	if (resp[0] != '\0') {
+	  t = atoi(resp);
+	  if (0<= t) {
+	    uivalue = t;
+	  } else if (t == -1) {
+	    screen_printf("Cancelled.\n");
+	    return;
+	  } else {
+	    screen_printf("Not a valid event number\n");
+	    return;
+	  }
+	}
+	usvalue=0;
+	cmdBytes[0]=(uivalue&0xff);
+	cmdBytes[1]=(uivalue&0xff00)>>8;
+	cmdBytes[2]=(uivalue&0xff0000)>>16;
+	cmdBytes[3]=(uivalue&0xff000000)>>24;
+	cmdBytes[4]=usvalue&0xff;
+    }
+    if(extraCode==PLAY_START_PLAY) {
 	if (!screen_confirm("Really Start Playback?")) {
 	    return;
 	}
     }
-    if(extraCode==PLAY_STOP_PRI) {
+    if(extraCode==PLAY_STOP_PLAY) {
 	if (!screen_confirm("Really Stop Playback?")) {
 	    return;
 	}
@@ -6602,6 +6682,48 @@ PLAYBACKD_COMMAND(cmdCode){
 	    }
 	}
 	cmdBytes[0]=(usvalue&0xff);
+    }
+    if(extraCode==PLAY_START_PRI) {
+	usvalue=0;
+        screen_dialog(resp,31,"Enter priority to start playing back (0-9) [%d] (-1 to cancel)\n",usvalue);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0<= t && t<9) {
+	      usvalue = t;
+	    } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	    } else {
+	      screen_printf("Not a valid drive\n");
+	      return;
+	    }
+	}
+	cmdBytes[0]=(usvalue&0xff);
+	cmdBytes[1]=0;
+	cmdBytes[2]=0;
+	cmdBytes[3]=0;
+	cmdBytes[4]=0;
+    }
+    if(extraCode==PLAY_STOP_PRI) {
+	usvalue=0;
+        screen_dialog(resp,31,"Enter priority to stop playing back (0-9) [%d] (-1 to cancel)\n",usvalue);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0<= t && t<9) {
+	      usvalue = t;
+	    } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	    } else {
+	      screen_printf("Not a valid drive\n");
+	      return;
+	    }
+	}
+	cmdBytes[0]=(usvalue&0xff);
+	cmdBytes[1]=0;
+	cmdBytes[2]=0;
+	cmdBytes[3]=0;
+	cmdBytes[4]=0;
     }
 	
 
