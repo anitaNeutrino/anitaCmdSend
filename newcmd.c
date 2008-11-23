@@ -73,8 +73,8 @@ char *menuformat[] = {
 #define LINK_TDRSS	1
 #define LINK_HF		2
 #define LINK_LOS	0
-//#define PORT		"/dev/ttyUSB0"
-#define PORT		"/dev/ttyS0"
+#define PORT		"/dev/ttyUSB0"
+//#define PORT		"/dev/ttyS0"
 //#define PORT		"/dev/ttyS2"
 #define PROMPT		": "
 #define ROUTE_COMM1	0x09
@@ -620,7 +620,7 @@ screen_mesg(char *fmt, ...)
 void
 screen_printf(char *fmt, ...)
 {
-    char s[512];
+    char s[1024];
     va_list ap;
     if (fmt != NULL) {
 	va_start(ap, fmt);
@@ -893,11 +893,11 @@ show_cmds(void)
 {
     int got = 0;
     int i,j;
-    int val[2];
+    int val[3];
     
-    int easyCmdArray[]={1,2,3,132,152,153,154,155,
-			156,157,158,159,171,172,173,
-			174,175,182,183,210,230,231,235,238,239};
+    int easyCmdArray[25]={1,2,3,132,152,153,154,155,
+			  156,157,158,159,171,172,173,
+			  174,175,182,183,210,230,231,235,238,239};
 
     for (j=0; j<25; j++) {
 	i=easyCmdArray[j];
@@ -927,7 +927,7 @@ expert(void)
 {
     int got = 0;
     int i;
-    int val[2];
+    int val[3];
     
     for (i=0; i<256; i++) {
 
