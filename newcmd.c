@@ -1200,6 +1200,21 @@ CMD_START_NEW_RUN(int cmdCode)
 }
 
 static void
+CMD_MOUNT_ARGH(int cmdCode)
+{
+    if (screen_confirm("Do you really want to try remonting the mtrons?")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = cmdCode;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Remount mtrons.", cmdCode);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
+
+static void
 CMD_MAKE_NEW_RUN_DIRS(int cmdCode)
 {
     if (screen_confirm("Really make new run directories?")) {
@@ -5323,12 +5338,15 @@ ACQD_EXTRA_COMMAND(cmdCode){
     static short enableOrDisable=0;
     static short surfNumber=0;
     static unsigned short value=0;
-    screen_printf("127. DISABLE_SURF\n");
+    //    screen_printf("127. DISABLE_SURF\n");
     screen_printf("128. SET_TURF_RATE_AVERAGE\n");
+    screen_printf("140. SET_PHOTO_SHUTTER_MASK\n");
+    screen_printf("141. SET_PPS_SOURCE\n");
+    screen_printf("142. SET_REF_CLOCK_SOURCE\n");
     screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (127<= t && t <=128) {
+	if (128== t || t==140 || t==141 || t==142) {
 	    extraCode = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
@@ -5389,6 +5407,57 @@ ACQD_EXTRA_COMMAND(cmdCode){
 	firstByte=value;
 	secondByte=0;
     }
+    if(extraCode==ACQD_SET_PHOTO_SHUTTER_MASK) {
+	value=0;
+	screen_dialog(resp, 31,
+		      "Enter decimal value 0 is all on, 7 is all off? (-1 to cancel) [%d] ",
+		      value);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0 <= t && t <= 7) {
+		value = t;
+	    } else {
+		screen_printf("Value must be 0-7, not %d.\n", t);
+		return;
+	    }
+	}
+	firstByte=value;
+	secondByte=0;
+    }
+    if(extraCode==ACQD_SET_PPS_SOURCE) {
+	value=0;
+	screen_dialog(resp, 31,
+		      "Enter 0 for ADU5, 1 for ADU5B, 2 for G12? (-1 to cancel) [%d] ",
+		      value);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0 <= t && t <= 2) {
+		value = t;
+	    } else {
+		screen_printf("Value must be 0-2, not %d.\n", t);
+		return;
+	    }
+	}
+	firstByte=value;
+	secondByte=0;
+    }
+    if(extraCode==ACQD_SET_REF_CLOCK_SOURCE) {
+	value=0;
+	screen_dialog(resp, 31,
+		      "Enter 0 for 125MHz, 1 for 33MHz? (-1 to cancel) [%d] ",
+		      value);
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0 <= t && t <= 1) {
+		value = t;
+	    } else {
+		screen_printf("Value must be 0-1, not %d.\n", t);
+		return;
+	    }
+	}
+	firstByte=value;
+	secondByte=0;
+    }
   
     
     Curcmd[0] = 0;
@@ -5397,10 +5466,8 @@ ACQD_EXTRA_COMMAND(cmdCode){
     Curcmd[3] = extraCode;
     Curcmd[4] = 2;
     Curcmd[5] = firstByte;
-    Curcmd[6] = 3;    
-    Curcmd[7] = secondByte;
-    Curcmdlen = 8;
-    set_cmd_log("%d; Extra Acqd command %d %d to %d.", cmdCode,extraCode,firstByte,secondByte);
+    Curcmdlen = 6;
+    set_cmd_log("%d; Extra Acqd command %d %d.", cmdCode,extraCode,firstByte);
     sendcmd(Fd, Curcmd, Curcmdlen);
     return;
 }
