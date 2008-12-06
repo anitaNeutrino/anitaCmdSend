@@ -3229,16 +3229,21 @@ ADU5_CAL_12(int cmdCode)
 static void 
 ADU5_CAL_13(int cmdCode)
 {
-    float v13[3]={-1.538,1.558,-0.001};
     int t;
     char resp[32];
+    float v13[3]={-1.538,1.558,-0.001};
+    //    float v13[3]={0,3.088,0.035};
     short det[3];
+    int whichAdu5=0;
     screen_printf("Are you sure you want to do this?.\n");
     screen_dialog(resp, 31,
-		  "Press -1, to cancel (later you will have to cntl-c out):  ",NULL);
+		  "Which ADU5 (1 for A, 2 for B):  ",whichAdu5);
     if (resp[0] != '\0') {
 	t=atoi(resp);
-	if(t==-1) return;
+	if(t>=1 && t<=2)
+	    whichAdu5=t;
+	else
+	    return;
     } else return;
     screen_dialog(resp,31,"Enter calibV13[0]: [%3.3f]  ",v13[0]);
     if (resp[0] != '\0') {
@@ -3258,41 +3263,46 @@ ADU5_CAL_13(int cmdCode)
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
-    Curcmd[3] = (det[0]&0xff);
+    Curcmd[3] = whichAdu5;
     Curcmd[4] = 2;
-    Curcmd[5] = ((det[0]&0xff00)>>8);
+    Curcmd[5] = (det[0]&0xff);
     Curcmd[6] = 3;
-    Curcmd[7] = (det[1]&0xff);
+    Curcmd[7] = ((det[0]&0xff00)>>8);
     Curcmd[8] = 4;
-    Curcmd[9] = ((det[1]&0xff00)>>8);
+    Curcmd[9] = (det[1]&0xff);
     Curcmd[10] = 5;
-    Curcmd[11] = (det[2]&0xff);
+    Curcmd[11] = ((det[1]&0xff00)>>8);
     Curcmd[12] = 6;
-    Curcmd[13] = ((det[2]&0xff00)>>8);
-    Curcmdlen = 14;
-    set_cmd_log("%d; Set Adu5 Cal V13 to {%3.3f,%3.3f,%3.3f}.", cmdCode, det[0],
+    Curcmd[13] = (det[2]&0xff);
+    Curcmd[14] = 7;
+    Curcmd[15] = ((det[2]&0xff00)>>8);
+    Curcmdlen = 16;
+    set_cmd_log("%d; Set Adu5 %d Cal V13 to {%3.3f,%3.3f,%3.3f}.", cmdCode, whichAdu5,det[0],
 		det[1],det[2]);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
-
-
   return;
+
+
 }
 
 static void 
 ADU5_CAL_14(int cmdCode)
 {
     float v14[3]={1.543,1.553,-0.024};
-
     int t;
     char resp[32];
     short det[3];
+    int whichAdu5=0;
     screen_printf("Are you sure you want to do this?.\n");
     screen_dialog(resp, 31,
-		  "Press -1, to cancel (later you will have to cntl-c out):  ",NULL);
+		  "Which ADU5 (1 for A, 2 for B):  ",whichAdu5);
     if (resp[0] != '\0') {
 	t=atoi(resp);
-	if(t==-1) return;
+	if(t>=1 && t<=2)
+	    whichAdu5=t;
+	else
+	    return;
     } else return;
     screen_dialog(resp,31,"Enter calibV14[0]: [%3.3f]  ",v14[0]);
     if (resp[0] != '\0') {
@@ -3312,23 +3322,26 @@ ADU5_CAL_14(int cmdCode)
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
-    Curcmd[3] = (det[0]&0xff);
+    Curcmd[3] = whichAdu5;
     Curcmd[4] = 2;
-    Curcmd[5] = ((det[0]&0xff00)>>8);
+    Curcmd[5] = (det[0]&0xff);
     Curcmd[6] = 3;
-    Curcmd[7] = (det[1]&0xff);
+    Curcmd[7] = ((det[0]&0xff00)>>8);
     Curcmd[8] = 4;
-    Curcmd[9] = ((det[1]&0xff00)>>8);
+    Curcmd[9] = (det[1]&0xff);
     Curcmd[10] = 5;
-    Curcmd[11] = (det[2]&0xff);
+    Curcmd[11] = ((det[1]&0xff00)>>8);
     Curcmd[12] = 6;
-    Curcmd[13] = ((det[2]&0xff00)>>8);
-    Curcmdlen = 14;
-    set_cmd_log("%d; Set Adu5 Cal V14 to {%3.3f,%3.3f,%3.3f}.", cmdCode, det[0],
+    Curcmd[13] = (det[2]&0xff);
+    Curcmd[14] = 7;
+    Curcmd[15] = ((det[2]&0xff00)>>8);
+    Curcmdlen = 16;
+    set_cmd_log("%d; Set Adu5 %d Cal V14 to {%3.3f,%3.3f,%3.3f}.", cmdCode, whichAdu5,det[0],
 		det[1],det[2]);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
   return;
+
 }
 
 static void
