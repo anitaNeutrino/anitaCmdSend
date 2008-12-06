@@ -3200,7 +3200,7 @@ ADU5_CAL_12(int cmdCode)
 	v12[2]=atof(resp);
     }
     for(t=0;t<3;t++) {
-	det[t]=((short)v12[t]*1000.);
+      det[t]=((short)(v12[t]*1000.));
     }
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
@@ -3258,7 +3258,7 @@ ADU5_CAL_13(int cmdCode)
 	v13[2]=atof(resp);
     }
     for(t=0;t<3;t++) {
-	det[t]=((short)v13[t]*1000.);
+      det[t]=((short)(v13[t]*1000.));
     }
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
@@ -3317,7 +3317,7 @@ ADU5_CAL_14(int cmdCode)
 	v14[2]=atof(resp);
     }
     for(t=0;t<3;t++) {
-	det[t]=((short)v14[t]*1000.);
+      det[t]=((short)(v14[t]*1000.));
     }
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
