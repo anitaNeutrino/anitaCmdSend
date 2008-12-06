@@ -3219,8 +3219,7 @@ ADU5_CAL_12(int cmdCode)
     Curcmd[14] = 7;
     Curcmd[15] = ((det[2]&0xff00)>>8);
     Curcmdlen = 16;
-    set_cmd_log("%d; Set Adu5 %d Cal V12 to {%3.3f,%3.3f,%3.3f} {%d %d %d}.", cmdCode, whichAdu5,v12[0],
-		v12[1],v12[2],det[0],det[1],det[2]);
+    set_cmd_log("%d; Set Adu5 %d Cal V12 to {%3.3f,%3.3f,%3.3f} {%d %d %d}.", cmdCode, whichAdu5,v12[0],v12[1],v12[2],det[0],det[1],det[2]);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
   return;
@@ -3277,8 +3276,8 @@ ADU5_CAL_13(int cmdCode)
     Curcmd[14] = 7;
     Curcmd[15] = ((det[2]&0xff00)>>8);
     Curcmdlen = 16;
-    set_cmd_log("%d; Set Adu5 %d Cal V13 to {%3.3f,%3.3f,%3.3f}.", cmdCode, whichAdu5,det[0],
-		det[1],det[2]);
+    set_cmd_log("%d; Set Adu5 %d Cal V13 to {%3.3f,%3.3f,%3.3f} {%d %d %d}.", cmdCode, whichAdu5,v13[0],v13[1],v13[2],det[0],det[1],det[2]);
+
     sendcmd(Fd, Curcmd, Curcmdlen);
 
   return;
@@ -3336,8 +3335,7 @@ ADU5_CAL_14(int cmdCode)
     Curcmd[14] = 7;
     Curcmd[15] = ((det[2]&0xff00)>>8);
     Curcmdlen = 16;
-    set_cmd_log("%d; Set Adu5 %d Cal V14 to {%3.3f,%3.3f,%3.3f}.", cmdCode, whichAdu5,det[0],
-		det[1],det[2]);
+    set_cmd_log("%d; Set Adu5 %d Cal V14 to {%3.3f,%3.3f,%3.3f} {%d %d %d}.", cmdCode, whichAdu5,v14[0],v14[1],v14[2],det[0],det[1],det[2]);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
   return;
