@@ -3219,8 +3219,8 @@ ADU5_CAL_12(int cmdCode)
     Curcmd[14] = 7;
     Curcmd[15] = ((det[2]&0xff00)>>8);
     Curcmdlen = 16;
-    set_cmd_log("%d; Set Adu5 %d Cal V12 to {%3.3f,%3.3f,%3.3f}.", cmdCode, whichAdu5,det[0],
-		det[1],det[2]);
+    set_cmd_log("%d; Set Adu5 %d Cal V12 to {%3.3f,%3.3f,%3.3f} {%d %d %d}.", cmdCode, whichAdu5,v12[0],
+		v12[1],v12[2],det[0],det[1],det[2]);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
   return;
