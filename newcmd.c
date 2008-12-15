@@ -102,7 +102,7 @@ static short numLines=0;
 static short Dir_det =0;
 static short Prog_det =0;
 static char Which_RFCM =0;
-static short Config_det =0;
+static unsigned short Config_det =0;
 static short switchConfig =0;
 static short Priorit_det =0;
 static short CalPulserSwitch =0;
@@ -1144,7 +1144,7 @@ TAIL_MESSAGES(int cmdCode)
     Curcmd[4] = 2; 
     Curcmd[5] = ((numLines&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Tail last %d lines of /var/log/messages.", cmdCode, ADU5SatPer);
+    set_cmd_log("%d; Tail last %d lines of /var/log/messages.", cmdCode, numLines);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -1179,7 +1179,7 @@ TAIL_ANITA(int cmdCode)
     Curcmd[4] = 2; 
     Curcmd[5] = ((numLines&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Tail last %d lines of /var/log/anita.log.", cmdCode, ADU5SatPer);
+    set_cmd_log("%d; Tail last %d lines of /var/log/anita.log.", cmdCode, numLines);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -3679,7 +3679,7 @@ SEND_CONFIG(int cmdCode)
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
     screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
     screen_printf("16. All of the above\n");
-    screen_dialog(resp, 31, "Which config File? (-1 to cancel) [%d] ",
+    screen_dialog(resp, 31, "Which config File? (-1 to cancel) [%u] ",
 	Config_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
@@ -3748,7 +3748,7 @@ SEND_CONFIG(int cmdCode)
     Curcmd[4] = 2;
     Curcmd[5] = ((Config_det&0xf00)>>8); 
     Curcmdlen = 6;
-    set_cmd_log("%d; Config  %d sent.", cmdCode, Config_det);
+    set_cmd_log("%d; Config  %u sent.", cmdCode, Config_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
