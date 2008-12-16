@@ -36,7 +36,7 @@ void screen_printf(char *fmt, ...);
 void screen_beep(void);
 
 
-int diskBitMasks[DISK_TYPES]={SATABLADE_DISK_MASK,SATAMINI_DISK_MASK,USB_DISK_MASK,PMC_DISK_MASK,NEOBRICK_DISK_MASK};
+int diskBitMasks[DISK_TYPES]={SATABLADE_DISK_MASK,SATAMINI_DISK_MASK,USB_DISK_MASK,NEOBRICK_DISK_MASK,PMC_DISK_MASK};
 
 #define GETKEY wgetch(Wuser)
 
@@ -1021,7 +1021,7 @@ CMD_DISABLE_DISK(int cmdCode)
     short v;
     screen_printf("You may be about to do something very bad\n");
     screen_printf("Only disable or enable disks if you are really certain of what is going on\n");
-    screen_printf("0: Disable a disk    1: Enable a disk\n");
+    screen_printf("0: Enable a disk    1: Disable a disk\n");
     screen_printf("2: Set Bitmask\n");
     screen_dialog(resp, 31,
 	"Which function (0, 1, or 2)  (-1,to cancel), [%d]",
@@ -1042,7 +1042,7 @@ CMD_DISABLE_DISK(int cmdCode)
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
 	screen_printf("0: Satablade            1: Satamini\n");
-	screen_printf("2: USB     3: Neobrick\n");
+	screen_printf(" 3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
@@ -1061,7 +1061,7 @@ CMD_DISABLE_DISK(int cmdCode)
     }
     else {
 	screen_printf("0: Satablade            1: Satamini\n");
-	screen_printf("2: USB     3: Neobrick\n");
+	screen_printf("3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
@@ -1079,7 +1079,7 @@ CMD_DISABLE_DISK(int cmdCode)
 
 	while(1) {
 	    screen_printf("0: Satablade            1: Satamini\n");
-	    screen_printf("2: USB     3: Neobrick\n");
+	    screen_printf("3: Neobrick\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
@@ -1682,7 +1682,7 @@ CMD_MOUNT_NEXT_SATA(int cmdCode)
     if (resp[0] != '\0') {
 	tempVal = atoi(resp);
 	if (0 <= tempVal && ((tempVal <= 8 && bladeOrMini==0) 
-			     || (tempVal <= 4 && bladeOrMini==1))) {
+			     || (tempVal <= 8 && bladeOrMini==1))) {
 	    whichDrive = tempVal;
 	} else if (tempVal == -1) {
 	    screen_printf("Cancelled.\n");
@@ -1773,7 +1773,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
 	screen_printf("0: Satablade            1: Satamini\n");
-	screen_printf("2: USB     3: Neobrick\n");
+	screen_printf("3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
@@ -1792,7 +1792,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
     }
     else {
 	screen_printf("0: Satablade            1: Satamini\n");
-	screen_printf("2: USB     3: Neobrick\n");
+	screen_printf("3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
@@ -1810,7 +1810,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
 
 	while(1) {
 	    screen_printf("0: Satablade            1: Satamini\n");
-	    screen_printf("2: USB     3: Neobrick\n");
+	    screen_printf("3: Neobrick\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
@@ -1876,7 +1876,7 @@ CMD_HK_DISKTYPE(int cmdCode)
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
 	screen_printf("0: Satablade       1: Satamini\n");
-	screen_printf("2: USB             3: Neobrick\n");
+	screen_printf("3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
@@ -1895,7 +1895,7 @@ CMD_HK_DISKTYPE(int cmdCode)
     }
     else {
 	screen_printf("0: Satablade       1: Satamini\n");
-	screen_printf("2: USB             3: Neobrick\n");
+	screen_printf("3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
@@ -1913,7 +1913,7 @@ CMD_HK_DISKTYPE(int cmdCode)
 
 	while(1) {
 	    screen_printf("0: Satablade    1: Satamini\n");
-	    screen_printf("2: USB          3: Neobrick\n");
+	    screen_printf("3: Neobrick\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
@@ -1994,9 +1994,9 @@ SET_DECIMATION(int cmdCode)
     Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
     Curcmd[3] = whichPri;
-    Curcmd[4] = 3;
+    Curcmd[4] = 2;
     Curcmd[5] = (decWord&0xff);
-    Curcmd[6] = 4;
+    Curcmd[6] = 3;
     Curcmd[7] = (decWord&0xff00)>>8;
     Curcmdlen = 8;
     set_cmd_log("%d; Set archived priority %d global decimation fraction to %f on.", cmdCode, whichPri,decimateFrac);
@@ -2099,7 +2099,7 @@ SET_SPECIAL_PRI(int cmdCode)
     Curcmd[3] = pps1Pri;
     Curcmd[4] = 2;
     Curcmd[5] = pps2Pri;
-    Curcmd[6] = 2;
+    Curcmd[6] = 3;
     Curcmd[7] = softPri;
     Curcmdlen = 8;
     set_cmd_log("%d; Set PPS Priorities to PPS1 %d and PPS2 %d.", cmdCode, pps1Pri,pps2Pri);
@@ -2115,20 +2115,36 @@ SET_SPECIAL_DECIMATE(int cmdCode)
     short v;
     float fv;
     static int whichPPS=1;
+    static int telemOrDisk=1;
     static float decimateFrac=0;
 
     screen_dialog(resp, 31,
-		  "Enter 1 for G12, 2 for ADU5, 3 for Soft (-1 to cancel) [%d] ",
+		  "Enter 1 for PPS1, 2 for PPS2, 3 for Soft (-1 to cancel) [%d] ",
 		  whichPPS);
     if (resp[0] != '\0') {
 	v = atoi(resp);
-	if (1 <= v && v <= 2) {
+	if (1 <= v && v <= 3) {
 	    whichPPS = v;
 	} else {
 	    screen_printf("Value must be 1 or 2, not %d.\n", v);
 	    return;
 	}
     }
+
+    screen_dialog(resp, 31,
+		  "Enter 1 for disk decimation, 2 for telemetry decimation (-1 to cancel) [%d] ",
+		  telemOrDisk);
+    if (resp[0] != '\0') {
+	v = atoi(resp);
+	if (1 <= v && v <= 2) {
+	    telemOrDisk = v;
+	} else {
+	    screen_printf("Value must be 1 or 2, not %d.\n", v);
+	    return;
+	}
+    }
+
+    
 
     screen_dialog(resp, 31,
 		  "Enter decimation fraction 0.000 to 1.000 (-1 to cancel) [%f]",
@@ -2148,12 +2164,14 @@ SET_SPECIAL_DECIMATE(int cmdCode)
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
-    Curcmd[3] = whichPPS;
+    Curcmd[3] = telemOrDisk;
     Curcmd[4] = 2;
-    Curcmd[5] = (decWord&0xff);
+    Curcmd[5] = whichPPS;
     Curcmd[6] = 3;
-    Curcmd[7] = (decWord&0xff00)>>8;
-    Curcmdlen = 8;
+    Curcmd[7] = (decWord&0xff);
+    Curcmd[8] = 4;
+    Curcmd[9] = (decWord&0xff00)>>8;
+    Curcmdlen = 10;
     set_cmd_log("%d; Set Special Trigger %d decimation fraction to %f.", cmdCode, whichPPS,decimateFrac);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
@@ -5027,12 +5045,14 @@ ACQD_SET_RATE_SERVO(cmdCode){
 
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
-    Curcmd[2] = enabler;
-    Curcmd[3] = (eventRate&0xff);
+    Curcmd[2] = 1;
+    Curcmd[3] = enabler;
     Curcmd[4] = 2;
-    Curcmd[5] = ((eventRate&0xff00)>>8);
-    Curcmdlen = 6;
-    set_cmd_log("%d; Setting event rate goal to %f.", cmdCode, eventRate);
+    Curcmd[5] = (eventRate&0xff);
+    Curcmd[6] = 3;
+    Curcmd[7] = ((eventRate&0xff00)>>8);
+    Curcmdlen = 8;
+    set_cmd_log("%d; Setting event rate goal to %d %f.", cmdCode, enabler,eventRate);
     sendcmd(Fd, Curcmd, Curcmdlen);
  
 }
@@ -5152,7 +5172,7 @@ GPSD_EXTRA_COMMAND(cmdCode){
     Curcmd[6] = 3;
     Curcmd[7] = cval;
     Curcmdlen = 8;
-    set_cmd_log("%d; Extra GPS command %d %d to %d.", cmdCode,extraCode,whichGps,value);
+    set_cmd_log("%d; Extra GPS command %d %d to %d.", cmdCode,extraCode,whichGps,cval);
     sendcmd(Fd, Curcmd, Curcmdlen);
     
     return;

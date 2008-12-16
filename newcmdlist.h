@@ -21,7 +21,7 @@
 #define CMD_START_PROGS  133
 #define CMD_MOUNT_ARGH 134
 #define CMD_DISABLE_DISK 135
-#define CMD_MOUNT_NEXT_USB  136
+//#define CMD_MOUNT_NEXT_USB  136
 #define CMD_MOUNT_NEXT_SATA  137 //Switch for blade v mini
 #define CMD_EVENT_DISKTYPE  138
 #define CMD_HK_DISKTYPE  139
@@ -72,7 +72,7 @@
 
   
 
-#define CLEAN_DIRS  200
+//#define CLEAN_DIRS  200
 #define CLEAR_RAMDISK  201
    
 #define SEND_CONFIG  210
@@ -85,7 +85,7 @@
 #define RAMDISK_DUMP_DATA  221
 #define MONITORD_ACQD_WAIT  222
 #define MONITORD_PERIOD  223
-#define USB_CHANGE_THRESH  224
+//#define USB_CHANGE_THRESH  224
 #define SATA_CHANGE_THRESH  225
 #define MAX_QUEUE_LENGTH  226 
 #define INODES_KILL_ACQD  227 
