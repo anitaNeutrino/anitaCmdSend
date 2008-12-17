@@ -4241,7 +4241,7 @@ ACQD_SOFT_TRIG_FLAG(int cmdCode)
     short t;
      
     screen_dialog(resp, 31,
-	"Set SURF Trigger on Software Flag, 0 disable, 1 enable, -1 to cancel) [%d] ", TrigSoft);
+	"Set Trigger on Software Flag, 0 disable, 1 enable, -1 to cancel) [%d] ", TrigSoft);
     if (resp[0] != '\0') {
 	t = atoi(resp);
 	if (0 == t || t == 1) {
@@ -4273,7 +4273,7 @@ ACQD_SOFT_TRIG_PERIOD(int cmdCode)
     short t;
      
     screen_dialog(resp, 31,
-	"Set SURFsoftware trigger period (in seconds) to  (0-255, -1 to cancel) [%d] ",
+	"Set software trigger period (in seconds) to  (0-255, -1 to cancel) [%d] ",
 	SoftTrigPer);
     if (resp[0] != '\0') {
 	t = atoi(resp);
@@ -4681,14 +4681,14 @@ RAMDISK_KILL_ACQD(int cmdCode)
 	"Ramdisk Acqd Kill Threshold in MB (-1 to cancel) [%d] ", megaBytes);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (0 <= t && t <= 200) {
+	if (0 <= t && t <= 255) {
 	    megaBytes = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
 	    screen_printf("Set Acqd Kill threshold to %d.\n", t);
-	    return;
+	    //	    return;
 	}
     }
 
@@ -4714,14 +4714,14 @@ RAMDISK_DUMP_DATA(int cmdCode)
 	"Ramdisk Dump Data Threshold in MB (-1 to cancel) [%d] ", megaBytes);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (0 <= t && t <= 200) {
+	if (0 <= t && t <= 255) {
 	    megaBytes = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
 	    screen_printf("Set Ramdisk Data Dump Threshold to %d MB.\n", t);
-	    return;
+	    //	    return;
 	}
     }
 
@@ -4875,10 +4875,27 @@ SATA_CHANGE_THRESH(cmdCode){
     char resp[32];
     short det;
     short t;
+    short val=0;
     static short satabladeMegaBytes=120;
+    char *driveName[2]={"satablade","satamini"};
+    screen_dialog(resp, 31,
+		  "Blades(0) or Minis (1) (-1 to cancel) [%d] ",
+		  val);
+    if (resp[0] != '\0') {
+	t = atoi(resp);
+	if (0 <= t && t<=1) {
+	  val = t;
+	} else if (t == -1) {
+	  screen_printf("Cancelled.\n");
+	  return;
+	} else {
+	  screen_printf("Value must be 0 or 1, not %d.\n", t);
+	  return;
+	}
+    }
 
     screen_dialog(resp, 31,
-	"Set Satablade switch threshold in MB (0-255, -1 to cancel) [%d] ", satabladeMegaBytes);
+		  "Set %s switch threshold in MB (0-255, -1 to cancel) [%d] ", driveName[val],satabladeMegaBytes);
     if (resp[0] != '\0') {
 	t = atoi(resp);
 	if (0 <= t && t <= 255) {
@@ -4888,16 +4905,18 @@ SATA_CHANGE_THRESH(cmdCode){
 	    return;
 	} else {
 	    screen_printf("Set satablade switch threshold to %d MB.\n", t);
-	    return;
+	    //	    return;
 	}
     }
 
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
-    Curcmd[3] = satabladeMegaBytes;
-    Curcmdlen = 4;
-    set_cmd_log("%d; Set Satablade switch threshold %d MB.", cmdCode,satabladeMegaBytes);
+    Curcmd[3] = val;
+    Curcmd[4] = 2;
+    Curcmd[5] = satabladeMegaBytes;
+    Curcmdlen = 6;
+    set_cmd_log("%d; Set %s switch threshold %d MB.", cmdCode,driveName[val],satabladeMegaBytes);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
 }
@@ -4922,7 +4941,7 @@ MAX_QUEUE_LENGTH(cmdCode){
 	    return;
 	} else {
 	    screen_printf("Value must be 0-65535, not %d.\n", t);
-	    return;
+	    //	    return;
 	}
     }
 
@@ -4952,13 +4971,13 @@ INODES_KILL_ACQD(cmdCode){
     if (resp[0] != '\0') {
 	t = atoi(resp);
 	if (0 <= t ) {
-	    acqdWait = t;
+	    inodesKill = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
 	    return;
 	} else {
 	    screen_printf("Value must be 0-65535, not %d.\n", t);
-	    return;
+	    //	    return;
 	}
     }
 
@@ -4994,7 +5013,7 @@ INODES_DUMP_DATA(cmdCode){
 	    return;
 	} else {
 	    screen_printf("Value must be 0-65535, not %d.\n", t);
-	    return;
+	    //	    return;
 	}
     }
 
@@ -5038,7 +5057,7 @@ ACQD_SET_RATE_SERVO(cmdCode){
 	    enabler=0;
 	    rate=0;
 	    eventRate=0;
-	    return;
+	    //	    return;
 	}
     }
 
@@ -5532,7 +5551,7 @@ ACQD_RATE_COMMAND(cmdCode){
      screen_printf("4. SET_PHI_MASK\n");
      screen_printf("5. SET_SURF_BAND_TRIG_MASK\n");
      screen_printf("6. SET_CHAN_PID_GOAL_SCALE\n");
-     screen_printf("7. SET_RATE_SERVO\n");
+     //     screen_printf("7. SET_RATE_SERVO\n");
      screen_printf("8. ENABLE_DYNAMIC_PHI_MASK\n");
      screen_printf("9. ENABLE_DYNAMIC_ANT_MASK\n");
      screen_printf("10. SET_DYNAMIC_PHI_MASK_OVER\n");  
