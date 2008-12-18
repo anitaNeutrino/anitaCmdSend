@@ -5125,6 +5125,7 @@ GPSD_EXTRA_COMMAND(cmdCode){
     short det;
     short t;
     unsigned char cval=0;
+    float fval=0;
     static short extraCode=0;
     static short whichGps=0;
     static short value=0;
@@ -5134,12 +5135,17 @@ GPSD_EXTRA_COMMAND(cmdCode){
      screen_printf("133 -- GPS_SET_SAT_TELEM_EVERY\n");
      screen_printf("134 -- GPS_SET_GGA_TELEM_EVERY\n");
      screen_printf("135 -- GPS_SET_POS_TELEM_EVERY\n");
+     screen_printf("136 -- GPS_SET_INI_RESET_FLAG\n");
+     screen_printf("137 -- GPS_SET_ELEVATION_MASK\n");
+     screen_printf("138 -- GPS_SET_CYC_PHASE_ERROR\n");
+     screen_printf("139 -- GPS_SET_MXB_BASELINE_ERROR\n");
+     screen_printf("140 -- GPS_SET_MXM_PHASE_ERROR\n");
      screen_dialog(resp, 31,
 		   "Select Extra Code (-1 to cancel) [%d] ", extraCode);
      
      if (resp[0] != '\0') {
 	 t = atoi(resp);
-	 if (129<= t && t <=135) {
+	 if (130<= t && t <=140) {
 	     extraCode = t;
 	 } else if (t == -1) {
 	     screen_printf("Cancelled.\n");
@@ -5163,22 +5169,43 @@ GPSD_EXTRA_COMMAND(cmdCode){
 	     return;
 	}
      }
-     screen_dialog(resp, 31,
+     if(extraCode<138) {
+       screen_dialog(resp, 31,
 		   "Enter value (-1 to cancel) [%d] ", value);
-     if (resp[0] != '\0') {
+       if (resp[0] != '\0') {
 	 t = atoi(resp);
 	 if (0<= t && t <=255) {
-	     value = t;
+	   value = t;
 	 } else if (t == -1) {
-	     screen_printf("Cancelled.\n");
-	     return;
+	   screen_printf("Cancelled.\n");
+	   return;
 	 } else {
-	     screen_printf("Not a valid GPS\n");
-	     return;
-	}
-    }
-     
-     cval=value;
+	   screen_printf("Not a valid GPS\n");
+	   return;
+	 }
+       }
+       cval=value;
+     }
+     else {
+       screen_dialog(resp, 31,
+		   "Enter value (-1 to cancel [%f] ", fval);
+       if (resp[0] != '\0') {
+	 fval = atof(resp);
+	 if(fval<0) {
+	   screen_printf("Cancelled\n");
+	   return;
+	 }
+       }
+       
+       if(extraCode==GPS_SET_MXM_PHASE_ERROR) {
+	 cval=500*fval;
+       }
+       else {
+	 cval=1000*fval;
+       }
+     }
+
+
      
 
 
