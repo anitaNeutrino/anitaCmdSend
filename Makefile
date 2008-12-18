@@ -5,14 +5,14 @@ BINDIR = /home/anita/bin	# install destination for most programs
 
 CC = gcc
 CFLAGS = -g
-LIBS = -L/usr/local/lib -lncurses
+LIBS = -L/usr/local/lib -lncurses -lm
 
 TARGETS = cmdTui batchcmd
 
 all:	$(TARGETS)
 
 cmdTui:	newcmdfunc.h newcmd.o cmdUtilDef.o 
-	$(CC) $(CFLAGS) -o cmdTui newcmd.o cmdUtilDef.o $(LIBS)
+	$(CC) $(CFLAGS) newcmd.o cmdUtilDef.o $(LIBS) -o cmdTui 
 
 batchcmd:	batchcmd.c
 	$(CC) $(CFLAGS) -o batchcmd batchcmd.c

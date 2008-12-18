@@ -11,6 +11,8 @@
 #include <string.h>	/* strlen, strerror */
 #include <stdlib.h>	/* malloc */
 #include <curses.h>
+#include <math.h>
+
 #include <signal.h>
 
 #include <fcntl.h>
@@ -5197,11 +5199,11 @@ GPSD_EXTRA_COMMAND(cmdCode){
 	 }
        }
        
-       if(extraCode==GPS_SET_MXM_PHASE_ERROR) {
-	 cval=500*fval;
+       if(extraCode==GPS_SET_CYC_PHASE_ERROR) {
+	 cval=round((float)(500*fval));
        }
        else {
-	 cval=1000*fval;
+	 cval=round((float)(1000*fval));
        }
      }
 
