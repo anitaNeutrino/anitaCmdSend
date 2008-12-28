@@ -3184,7 +3184,7 @@ SET_G12_PPS_PERIOD(int cmdCode)
     Curcmd[4] = 2; 
     Curcmd[5] = ((G12PPSPer&0xff00)>>8);
     Curcmdlen = 6;
-    set_cmd_log("%d; Set G12 PPS offset to %d ms.", cmdCode, G12PPSPer);
+    set_cmd_log("%d; Set G12 PPS period to %d ms.", cmdCode, G12PPSPer);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -5628,7 +5628,7 @@ ACQD_RATE_COMMAND(cmdCode){
 
      }
      if(extraCode==ACQD_RATE_SET_PID_GOALS) {
-	 screen_dialog(resp,31,"Enter low band goal (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter low band goal in kHz (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (0<= t && t <=65535) {
@@ -5643,7 +5643,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 }
 	 cmdBytes[0]=usvalue&0xff;
 	 cmdBytes[1]=(usvalue&0xff00)>>8;
-	 screen_dialog(resp,31,"Enter mid band goal (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter mid band goal in kHz (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (0<= t && t <=65535) {
@@ -5658,7 +5658,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 }
 	 cmdBytes[2]=usvalue&0xff;
 	 cmdBytes[3]=(usvalue&0xff00)>>8;
-	 screen_dialog(resp,31,"Enter high band goal (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter high band goal in kHz (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (0<= t && t <=65535) {
@@ -5673,7 +5673,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 }
 	 cmdBytes[4]=usvalue&0xff;
 	 cmdBytes[5]=(usvalue&0xff00)>>8;
-	 screen_dialog(resp,31,"Enter full band goal (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter full band goal in kHz (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (0<= t && t <=65535) {
