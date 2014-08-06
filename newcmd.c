@@ -2608,7 +2608,6 @@ TURN_RFCM_ON(int cmdCode)
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
-
 static void
 TURN_RFCM_OFF(int cmdCode)
 {
@@ -2650,14 +2649,29 @@ TURN_RFCM_OFF(int cmdCode)
 
 
 static void
-TURN_CALPULSER_ON(int cmdCode)
+TURN_AMPLITES_ON(int cmdCode)
 {
-    if (screen_confirm("Really turn on CalPulser")) {
+    if (screen_confirm("Really turn on Amplites")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on CalPulser.", cmdCode);
+	set_cmd_log("%d; Turn on Amplites.", cmdCode);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
+
+static void
+TURN_AMPLITES_OFF(int cmdCode)
+{
+    if (screen_confirm("Really turn off Amplites")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = cmdCode;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Turn off Amplites.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2666,14 +2680,14 @@ TURN_CALPULSER_ON(int cmdCode)
 
 
 static void
-TURN_CALPULSER_OFF(int cmdCode)
+TURN_BZ_AMPAS_ON(int cmdCode)
 {
-    if (screen_confirm("Really turn off CalPulser")) {
+    if (screen_confirm("Really turn on BZ Ampas")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off CalPulser.", cmdCode);
+	set_cmd_log("%d; Turn on BZ Ampas.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2681,14 +2695,89 @@ TURN_CALPULSER_OFF(int cmdCode)
 }
 
 static void
-TURN_NADIR_ON(int cmdCode)
+TURN_BZ_AMPAS_OFF(int cmdCode)
 {
-    if (screen_confirm("Really turn on Nadir RFCMs")) {
+    if (screen_confirm("Really turn off BZ Ampas")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on Nadir RFCMs.", cmdCode);
+	set_cmd_log("%d; Turn off BZ Ampas.", cmdCode);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
+
+static void
+TURN_NTU_AMPAS_ON(int cmdCode)
+{
+    if (screen_confirm("Really turn on NTU Ampas")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = cmdCode;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Turn on NTU Ampas.", cmdCode);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
+
+static void
+TURN_NTU_AMPAS_OFF(int cmdCode)
+{
+    if (screen_confirm("Really turn off NTU Ampas")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = cmdCode;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Turn off NTU Ampas.", cmdCode);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
+
+static void
+TURN_SHORT_BOARDS_ON(int cmdCode)
+{
+    if (screen_confirm("Really turn on Shorts")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = cmdCode;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Turn on Shorts.", cmdCode);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
+
+static void
+TURN_SHORT_BOARDS_OFF(int cmdCode)
+{
+    if (screen_confirm("Really turn off Shorts")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = cmdCode;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Turn off Shorts.", cmdCode);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
+
+static void
+TURN_NTU_SSD_5V_ON(int cmdCode)
+{
+    if (screen_confirm("Really turn on NTU SSD 5V")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = cmdCode;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Turn on NTU SSD 5V.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2697,14 +2786,45 @@ TURN_NADIR_ON(int cmdCode)
 
 
 static void
-TURN_NADIR_OFF(int cmdCode)
+TURN_NTU_SSD_5V_OFF(int cmdCode)
 {
-    if (screen_confirm("Really turn off Nadir RFCMs")) {
+    if (screen_confirm("Really turn off NTU SSD 5V")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off Nadir RFCMs.", cmdCode);
+	set_cmd_log("%d; Turn off NTU SSD 5V.", cmdCode);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
+
+static void
+TURN_NTU_SSD_12V_ON(int cmdCode)
+{
+    if (screen_confirm("Really turn on NTU SSD 12V")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = cmdCode;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Turn on NTU SSD 12V.", cmdCode);
+	sendcmd(Fd, Curcmd, Curcmdlen);
+    } else {
+	screen_printf("\nCancelled\n");
+    }
+}
+
+
+static void
+TURN_NTU_SSD_12V_OFF(int cmdCode)
+{
+    if (screen_confirm("Really turn off NTU SSD 12V")) {
+	Curcmd[0] = 0;
+	Curcmd[1] = cmdCode;
+	Curcmdlen = 2;
+	screen_printf("\n");
+	set_cmd_log("%d; Turn off NTU SSD 12V.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2715,12 +2835,12 @@ TURN_NADIR_OFF(int cmdCode)
 static void
 TURN_ALL_ON(int cmdCode)
 {
-    if (screen_confirm("Really turn on GPS, RFCM, CalPulser and Nadir")) {
+    if (screen_confirm("Really turn on Amplites, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on GPS, RFCM, CalPulser, and Nadir.", cmdCode);
+	set_cmd_log("%d; Turn on Amplites, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2731,12 +2851,12 @@ TURN_ALL_ON(int cmdCode)
 static void
 TURN_ALL_OFF(int cmdCode)
 {
-    if (screen_confirm("Really turn off GPS, RFCM, CalPulser and Nadir")) {
+    if (screen_confirm("Really turn off Amplites, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off GPS, RFCM, CalPulser and Nadir.", cmdCode);
+	set_cmd_log("%d; Turn off Amplites, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
