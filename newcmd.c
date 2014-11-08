@@ -67,7 +67,7 @@ static void clear_screen(void);
 static void generic_exit_routine(void);
 
 char *menuformat[] = {
-"%c=set_timeout  %c=new_cmd %c=quit  %c=link %c=route %c=show_cmds",
+"%c=set_timeout %c=quit  %c=link %c=route %c=show_cmds",
 };
 
 #define CMDLEN		25	/* max length of command buffer */
@@ -75,8 +75,8 @@ char *menuformat[] = {
 #define LINK_TDRSS	1
 #define LINK_HF		2
 #define LINK_LOS	0
-#define PORT		"/dev/ttyUSB0"
-//#define PORT		"/dev/ttyS0"
+//#define PORT		"/dev/ttyUSB0"
+#define PORT		"/dev/ttyS0"
 //#define PORT		"/dev/ttyS2"
 #define PROMPT		": "
 #define ROUTE_COMM1	0x09
@@ -355,7 +355,7 @@ initdisp()
 	    exit(1);
 	}
     }
-    sprintf(progmenu[0], menuformat[0] , TIMEOUT, NEWCMD, QUIT,
+    sprintf(progmenu[0], menuformat[0] , TIMEOUT, QUIT,
 	LINKSEL, RTSEL, SHOWCMD, EXPERT);
 
     menu(progmenu, NMENULINES);
