@@ -36,7 +36,8 @@ void screen_dialog(char *response, int nbytes, char *fmt, ...);
 void screen_mesg(char *fmt, ...);
 void screen_printf(char *fmt, ...);
 void screen_beep(void);
-
+void write_cmd_json_file(char *fmt, ...);
+void get_next_cmd_count();
 
 int diskBitMasks[DISK_TYPES]={SATABLADE_DISK_MASK,SATAMINI_DISK_MASK,USB_DISK_MASK,NEOBRICK_DISK_MASK,PMC_DISK_MASK};
 
@@ -70,6 +71,10 @@ char *menuformat[] = {
 "%c=set_timeout %c=quit  %c=link %c=route %c=show_cmds",
 };
 
+#define IBUFSIZE 32
+unsigned char ibuf[IBUFSIZE];
+
+
 #define CMDLEN		25	/* max length of command buffer */
 #define LINK_LOS	0
 #define LINK_TDRSS	1
@@ -91,6 +96,7 @@ int serial_end(void);
 int serial_init(void);
 void wait_for_ack(void);
 
+unsigned int curCmdNumber;
 unsigned char Curcmd[32];
 int Curcmdlen = 0;
 unsigned char Curlink = LINK_TDRSS;
@@ -170,10 +176,13 @@ static int Direct = 0;		/* nonzero for direct connection to flight */
 
 #define LOGSTRSIZE 2048
 static char Logstr[LOGSTRSIZE];
+static char Jsonstr[LOGSTRSIZE];
 static char Logfilename[LOGSTRSIZE];
 static FILE *Logfp;
 
 #define PIDFILENAME "/tmp/cmd.pid"
+#define CMD_COUNT_FILE "/home/anita/cmdSend/cmdCount.txt"
+#define JSON_LOG_DIR "/home/anita/cmdSend/jsonLog"
 int check_pidfile();
 int make_pidfile();
 
@@ -759,7 +768,8 @@ sendcmd(int fd, unsigned char *s, int len)
 	write (fd, buf, n);
 	wait_for_ack();
     }
-
+    ///RJN hack for creating a more useful cmd output
+    write_cmd_json_file(Logstr);
     cmd_log();
 
 #ifdef PRINT_EXTRA_STUFF
@@ -792,13 +802,11 @@ void
 wait_for_ack(void)
 {
     fd_set f;
-#define IBUFSIZE 32
-    unsigned char ibuf[IBUFSIZE];
     int n;
     int ret;
     struct timeval t;
 
-    screen_printf("Awaiting NSBF response: ");
+    screen_printf("Awaiting CSBF response: ");
 
     t.tv_sec = Timeout;
     t.tv_usec = 0L;
@@ -811,7 +819,7 @@ wait_for_ack(void)
 	return;
     } else if (ret == 0 || !FD_ISSET(Fd, &f)) {
 	screen_printf("no response after %ld seconds\n", Timeout);
-	log_out("NSBF response; no response after %ld seconds", Timeout);
+	log_out("CSBF response; no response after %ld seconds", Timeout);
 	return;
     }
     sleep(1);
@@ -819,28 +827,28 @@ wait_for_ack(void)
     if (n > 0) {
 	if (ibuf[0] != 0xFA || ibuf[1] != 0xF3) {
 	    screen_printf("malformed response!\n%x\t\n",ibuf[0],ibuf[1]);
-	    log_out("NSBF response; malformed response!");
+	    log_out("CSBF response; malformed response!");
 	    return;
 	}
 
 	if (ibuf[2] == 0x00) {
 	    screen_printf("OK\n");
-	    log_out("NSBF response; OK");
+	    log_out("CSBF response; OK");
 	} else if (ibuf[2] == 0x0A) {
 	    screen_printf("GSE operator disabled science commands.\n");
-	    log_out("NSBF response; GSE operator disabled science commands.");
+	    log_out("CSBF response; GSE operator disabled science commands.");
 	} else if (ibuf[2] == 0x0B) {
 	    screen_printf("routing address does not match selected link.\n");
-	    log_out( "NSBF response; routing address does not match link.");
+	    log_out( "CSBF response; routing address does not match link.");
 	} else if (ibuf[2] == 0x0C) {
 	    screen_printf("selected link not enabled.\n");
-	    log_out("NSBF response; selected link not enabled.");
+	    log_out("CSBF response; selected link not enabled.");
 	} else if (ibuf[2] == 0x0D) {
 	    screen_printf("miscellaneous error.\n");
-	    log_out("NSBF response; miscellaneous error.");
+	    log_out("CSBF response; miscellaneous error.");
 	} else {
 	    screen_printf("unknown error code (0x%02x)", ibuf[2]);
-	    log_out("NSBF response; unknown error code (0x%02x)", ibuf[2]);
+	    log_out("CSBF response; unknown error code (0x%02x)", ibuf[2]);
 	}
     } else {
 	screen_printf("strange...no response read\n");
@@ -897,11 +905,11 @@ show_cmds(void)
     int i,j;
     int val[3];
     
-    int easyCmdArray[25]={1,2,3,132,152,153,154,155,
-			  156,157,158,159,171,172,173,
+    int easyCmdArray[31]={1,2,3,132,150, 151, 152,153,154,155,
+			  156,157,158,159,160, 161, 162, 163, 171,172,173,
 			  174,175,182,183,210,230,231,235,238,239};
 
-    for (j=0; j<25; j++) {
+    for (j=0; j<31; j++) {
 	i=easyCmdArray[j];
 
 	if (Cmdarray[i].f != NULL) {
@@ -6520,7 +6528,7 @@ PLAYBACKD_COMMAND(cmdCode){
     screen_printf("1. PLAY_GET_SINGLE_EVENT\n");    
     screen_printf("2. PLAY_START_PRIORITY\n");
     screen_printf("3. PLAY_STOP_PRIORITY\n");
-    screen_printf("4. PLAY_START_EVENT_NUMBER\n");
+    //    screen_printf("4. PLAY_START_EVENT_NUMBER\n");
     screen_printf("5. PLAY_USE_DISK\n");
     screen_printf("6. PLAY_START_PLAYBACK\n");
     screen_printf("7. PLAY_STOP_PLAYBACK\n");
@@ -6695,13 +6703,14 @@ clr_cmd_log(void)
 void
 set_cmd_log(char *fmt, ...)
 {
-    va_list ap;
-    if (fmt != NULL) {
-	va_start(ap, fmt);
-	sprintf(Logstr, "CMD ");
-	vsnprintf(Logstr+4, LOGSTRSIZE-4, fmt, ap);
-	va_end(ap);
-    }
+  get_next_cmd_count();
+  va_list ap;
+  if (fmt != NULL) {
+    va_start(ap, fmt);
+    sprintf(Logstr, "CMD ");
+    vsnprintf(Logstr+4, LOGSTRSIZE-4, fmt, ap);
+    va_end(ap);
+  }
 }
 
 void
@@ -6794,4 +6803,67 @@ make_pidfile()
     fprintf(fp, "%d\n", getpid());
     fclose(fp);
     return 0;
+}
+
+void get_next_cmd_count()
+{
+  FILE *fp = fopen(CMD_COUNT_FILE,"r");
+  if (fp == NULL) {
+    curCmdNumber=0;
+  }
+  else {
+    fscanf(fp,"%u",&curCmdNumber);
+  fclose(fp);
+
+  }
+  curCmdNumber++;
+  fp = fopen(CMD_COUNT_FILE,"w");
+  if (fp == NULL) {
+  }
+  else {
+    fprintf(fp,"%u\n",curCmdNumber);
+    fclose(fp);
+  }
+
+  
+}
+
+void write_cmd_json_file(char *fmt, ...)
+{
+  char fileName[FILENAME_MAX];
+  sprintf(fileName,"%s/cmd_%u.json",JSON_LOG_DIR,curCmdNumber);
+  FILE *fp = fopen(fileName,"w");
+  int i=0;
+  time_t t;
+  
+  /* output the date */
+  t = time(NULL);
+
+  fprintf(fp,"{\n");
+  fprintf(fp,"\"cmdNumber\": %u,\n",curCmdNumber );
+  fprintf(fp,"\"time\": %u,\n",(unsigned int)t );
+  fprintf(fp,"\"cmdLink\": %d,\n",(int)Curlink );
+  fprintf(fp,"\"cmdRoute\": %d,\n",(int)Curroute);
+
+  if (fmt != NULL) {
+    fprintf(fp,"\"cmdLog\": \"");
+    va_list ap;
+    /* output the message */
+    va_start(ap, fmt);
+    vfprintf(fp, fmt, ap);
+    fprintf(fp, "\",\n");
+    fflush(fp);
+    va_end(ap);
+  }
+
+
+  fprintf(fp,"\"response\": [%d,%d,%d],\n",(int)ibuf[0],(int)ibuf[1],(int)ibuf[2]);
+  fprintf(fp,"\"cmd\":[");
+  for(i=0;i<Curcmdlen;i++) {
+    if(i>0) fprintf(fp,",");
+    fprintf(fp,"%d",(int)Curcmd[i]);
+  }
+  fprintf(fp,"]\n");
+  fprintf(fp,"}\n");
+  fclose(fp);
 }
