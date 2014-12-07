@@ -2,6 +2,18 @@
 #include "cmdUtilDef.h"
 
 
+char *journalOptionName(JournalctlOptionCommand_t opt)
+{
+    switch(opt) {
+	case JOURNALCTL_OPT_COMM: return "Command Name";
+	case JOURNALCTL_OPT_PRIORITY: return "Priority";
+	case JOURNALCTL_OPT_SYSLOG_FACILITY: return "Syslog Facility";
+	case JOURNALCTL_NO_OPT: return "No Option";
+	default: "Unknown";
+    }
+}
+	    
+
 char *logRequestName(LogRequestCommand_t req) 
 {
     switch(req) {	

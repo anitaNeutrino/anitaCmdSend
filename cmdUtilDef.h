@@ -177,7 +177,12 @@ typedef enum {
     LOG_NOT_A_LOG
 } LogRequestCommand_t;
 
-
+typedef enum {
+    JOURNALCTL_OPT_COMM=0,
+    JOURNALCTL_OPT_PRIORITY=1,
+    JOURNALCTL_OPT_SYSLOG_FACILITY=2,
+    JOURNALCTL_NO_OPT=3
+} JournalctlOptionCommand_t;
 
 typedef enum {
   GPS_SET_GGA_PERIOD = 130,
@@ -202,7 +207,7 @@ typedef enum {
 
 #define DISK_TYPES 5
 
-
+char *journalOptionName(JournalctlOptionCommand_t opt);
 char *logRequestName(LogRequestCommand_t req);
 
 

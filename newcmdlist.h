@@ -11,6 +11,7 @@
 #define CMD_START_NEW_RUN  3
 //#define CMD_MAKE_NEW_RUN_DIRS  4 -- Should never be called
 #define LOG_REQUEST_COMMAND  10
+#define JOURNALCTL_COMMAND  11
 
 #define CMD_REALLY_KILL_PROGS  127
 #define CMD_SIPD_REBOOT  128

@@ -905,7 +905,7 @@ show_cmds(void)
     int i,j;
     int val[3];
     
-    int easyCmdArray[31]={1,2,3,132,150, 151, 152,153,154,155,
+    int easyCmdArray[32]={1,2,3,11,132,150, 151, 152,153,154,155,
 			  156,157,158,159,160, 161, 162, 163, 171,172,173,
 			  174,175,182,183,210,230,231,235,238,239};
 
@@ -1009,7 +1009,7 @@ LOG_REQUEST_COMMAND(int cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = val;
     Curcmd[4] = 2;
-    val=(numLines&0xf);
+    val=(numLines&0xff);
     Curcmd[5] = val;
     Curcmd[6] = 3;
     val=((numLines&0xf00)>>8);
@@ -1018,6 +1018,176 @@ LOG_REQUEST_COMMAND(int cmdCode)
     Curcmdlen = 8;
 
     set_cmd_log("%d; %d lines from %s", cmdCode, numLines,logRequestName(logNum));
+    sendcmd(Fd, Curcmd, Curcmdlen);
+}
+
+
+static void
+JOURNALCTL_COMMAND(int cmdCode)
+{
+    char resp[32];
+    short jcOpt=1;
+    short jcArg=0;
+    short numLines=500;
+    short t;     
+    short det;
+    int journalOpt=0;
+
+    for(journalOpt=JOURNALCTL_OPT_COMM;journalOpt<=JOURNALCTL_NO_OPT;journalOpt++) {
+	if(journalOpt%2==0)
+	    screen_printf("%d -- %s\t\t",journalOpt,journalOptionName(journalOpt));
+	else
+	    screen_printf("%d -- %s\n",journalOpt,journalOptionName(journalOpt));
+    }
+    screen_printf("\n");
+    screen_dialog(resp, 31, "Which journalctl option? (-1 to cancel) [%d] ",jcOpt);
+    if (resp[0] != '\0') {
+	jcOpt = atoi(resp);
+	
+	if(jcOpt>=JOURNALCTL_OPT_COMM && jcOpt<=JOURNALCTL_NO_OPT) {
+	    //Good
+	} else if (jcOpt == -1) {
+	    screen_printf("Cancelled\n");
+	    return;
+	} else {
+	    screen_printf("Value must be %d-%d, not %d.\n", JOURNALCTL_OPT_COMM,JOURNALCTL_NO_OPT,jcOpt);
+	    return;
+	}
+    }
+    screen_dialog(resp,31,"Max. number lines (-1 to cancel [%d]",numLines);
+    if (resp[0] != '\0') {
+	numLines = atoi(resp);
+	
+	if (numLines < 0) {
+	    screen_printf("Cancelled\n");
+	    return;
+	} 
+    }
+
+    
+
+    if(jcOpt==JOURNALCTL_OPT_COMM) {
+
+	screen_printf("1.  Acqd       6.  GPSd\n");
+	screen_printf("2.  Archived   7.  Hkd\n");
+	screen_printf("3.  Calibdd    8.  LOSd\n");
+	screen_printf("4.  Cmdd       9.  Monitord\n");
+	screen_printf("5.  Eventd     10. Prioritizerd\n");
+	screen_printf("11. SIPd       12. Playbackd\n");
+	screen_printf("13. LogWatchd  14. Neobrickd\n");
+	screen_dialog(resp, 31, "Which Process Name? (-1 to cancel) [%d] ",
+		      jcArg);
+	if (resp[0] != '\0') {
+	    det = atoi(resp);
+	    if (1 <= det && det <= 16) {
+		switch(det){
+		    case 1:
+			jcArg = ID_ACQD;
+			break;
+		    case 2:
+			jcArg = ID_ARCHIVED;
+			break;
+		    case 3:
+			jcArg = ID_CALIBD;
+			break;
+		    case 4:
+			jcArg = ID_CMDD;
+			break;
+		    case 5:
+			jcArg = ID_EVENTD;
+			break;
+		    case 6:
+			jcArg = ID_GPSD;
+			break; 
+		    case 7:
+			jcArg = ID_HKD;
+			break; 
+		    case 8:
+			jcArg = ID_LOSD;
+			break;
+		    case 9:
+			jcArg = ID_MONITORD;
+			break;
+		    case 10:
+			jcArg = ID_PRIORITIZERD; 
+			break;
+		    case 11:
+			jcArg = ID_SIPD;
+			break;
+		    case 12:
+			jcArg = ID_PLAYBACKD;
+			break;
+		    case 13:
+			jcArg = ID_LOGWATCHD;
+			break;
+		    case 14:
+			jcArg = ID_NEOBRICKD;
+			break;
+		    default: break;
+		}
+	    } else if (det == -1) {
+		screen_printf("Cancelled\n");
+		return;
+	    } else {
+		screen_printf("Value must be 1-16, not %d.\n", det);
+		return;
+	    }
+	}
+    }
+    else if(jcOpt==JOURNALCTL_OPT_SYSLOG_FACILITY) {
+	screen_dialog(resp, 31, "Which SYSLOG Facility? (-1 to cancel) [%d] ",
+		      jcArg);
+	if (resp[0] != '\0') {
+	    det=atoi(resp);
+	    if(det>=0 && det<=255) {
+		jcArg=det;
+	    } else if (det == -1) {
+		screen_printf("Cancelled\n");
+		return;
+	    } else {
+		screen_printf("Value must be 0-255, not %d.\n", det);
+		return;
+	    }
+	}
+    }
+    else if(jcOpt==JOURNALCTL_OPT_PRIORITY) {
+	screen_dialog(resp, 31, "Which SYSLOG Priority? (-1 to cancel) [%d] ",
+		      jcArg);
+	if (resp[0] != '\0') {
+	    det=atoi(resp);
+	    if(det>=1 && det<=7) {
+		jcArg=det;
+	    } else if (det == -1) {
+		screen_printf("Cancelled\n");
+		return;
+	    } else {
+		screen_printf("Value must be 1-7, not %d.\n", det);
+		return;
+	    }
+	}
+    }
+
+    unsigned char val=jcOpt;
+
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = val;
+    Curcmd[4] = 2;
+    val=(numLines&0xff);
+    Curcmd[5] = val;
+    Curcmd[6] = 3;
+    val=((numLines&0xf00)>>8);
+    Curcmd[7] = val;
+    Curcmd[8] = 4;
+    val=(jcArg&0xff);
+    Curcmd[9] = val;
+    Curcmd[10] = 5;
+    val=((jcArg&0xff00)>>8);
+    Curcmd[11] = val;
+    Curcmdlen = 12;
+
+    set_cmd_log("%d; %d lines from %s", cmdCode, numLines,journalOptionName(jcOpt));
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
