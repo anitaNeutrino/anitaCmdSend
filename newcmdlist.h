@@ -23,7 +23,7 @@
 #define CMD_MOUNT_ARGH 134
 #define CMD_DISABLE_DISK 135
 //#define CMD_MOUNT_NEXT_USB  136
-#define CMD_MOUNT_NEXT_SATA  137 //Switch for blade v mini
+//#define CMD_MOUNT_NEXT_SATA  137 //Switch for blade v mini
 #define CMD_EVENT_DISKTYPE  138
 #define CMD_HK_DISKTYPE  139
 
@@ -75,6 +75,7 @@
 #define SET_G12_PPS_PERIOD  182
 #define SET_G12_PPS_OFFSET  183
 #define ADU5_CAL_12  184
+
 #define ADU5_CAL_13  185
 #define ADU5_CAL_14  186
 #define SET_ADU5_VTG_PERIOD  187
