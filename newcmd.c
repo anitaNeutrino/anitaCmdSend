@@ -39,7 +39,7 @@ void screen_beep(void);
 void write_cmd_json_file(char *fmt, ...);
 void get_next_cmd_count();
 
-int diskBitMasks[DISK_TYPES]={SATABLADE_DISK_MASK,SATAMINI_DISK_MASK,USB_DISK_MASK,NEOBRICK_DISK_MASK,PMC_DISK_MASK};
+int diskBitMasks[DISK_TYPES]={HELIUM1_DISK_MASK,HELIUM2_DISK_MASK,USB_DISK_MASK,NTU_DISK_MASK,PMC_DISK_MASK};
 
 #define GETKEY wgetch(Wuser)
 
@@ -114,7 +114,7 @@ static unsigned short Config_det =0;
 static short switchConfig =0;
 static short Priorit_det =0;
 static short CalPulserSwitch =0;
-static short disableSatablade=0;
+static short disableHelium1=0;
 static short disableUsbInt=0;
 static short disableUsbExt=0;
 static short calPulserAtten =0;
@@ -1121,7 +1121,7 @@ JOURNALCTL_COMMAND(int cmdCode)
 			jcArg = ID_LOGWATCHD;
 			break;
 		    case 14:
-			jcArg = ID_NEOBRICKD;
+			jcArg = ID_NTUD;
 			break;
 		    default: break;
 		}
@@ -1221,7 +1221,7 @@ CMD_DISABLE_DISK(int cmdCode)
     
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
-	screen_printf("0: Satablade            1: Satamini\n");
+	screen_printf("0: Helium1            1: Helium2\n");
 	screen_printf(" 3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
@@ -1240,7 +1240,7 @@ CMD_DISABLE_DISK(int cmdCode)
 	} else return;
     }
     else {
-	screen_printf("0: Satablade            1: Satamini\n");
+	screen_printf("0: Helium1            1: Helium2\n");
 	screen_printf("3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
@@ -1258,7 +1258,7 @@ CMD_DISABLE_DISK(int cmdCode)
 	} else return;
 
 	while(1) {
-	    screen_printf("0: Satablade            1: Satamini\n");
+	    screen_printf("0: Helium1            1: Helium2\n");
 	    screen_printf("3: Neobrick\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
@@ -1518,7 +1518,7 @@ CMD_REALLY_KILL_PROGS(int cmdCode)
             Prog_det = LOGWATCHD_ID_MASK;
 	    break;
           case 14:
-            Prog_det = NEOBRICKD_ID_MASK;
+            Prog_det = NTUD_ID_MASK;
 	    break;
           case 16:
             Prog_det = ALL_ID_MASK;
@@ -1611,7 +1611,7 @@ CMD_KILL_PROGS(int cmdCode)
             Prog_det = LOGWATCHD_ID_MASK;
 	    break;
           case 14:
-            Prog_det = NEOBRICKD_ID_MASK;
+            Prog_det = NTUD_ID_MASK;
 	    break;
           case 16:
             Prog_det = ALL_ID_MASK;
@@ -1704,7 +1704,7 @@ CMD_RESPAWN_PROGS(int cmdCode)
             Prog_det = LOGWATCHD_ID_MASK;
 	    break;
           case 14:
-            Prog_det = NEOBRICKD_ID_MASK;
+            Prog_det = NTUD_ID_MASK;
 	    break;
           case 16:
             Prog_det = ALL_ID_MASK;
@@ -1796,7 +1796,7 @@ CMD_START_PROGS(int cmdCode)
             Prog_det = LOGWATCHD_ID_MASK;
 	    break;
           case 14:
-            Prog_det = NEOBRICKD_ID_MASK;
+            Prog_det = NTUD_ID_MASK;
 	    break;
           case 16:
             Prog_det = ALL_ID_MASK;
@@ -1841,7 +1841,7 @@ CMD_MOUNT_NEXT_SATA(int cmdCode)
 
     short tempVal=0;
     screen_dialog(resp, 31,
-		  "Satablade (0) or Satamini (1), -1 to cancel) [%d] ",
+		  "Helium1 (0) or Helium2 (1), -1 to cancel) [%d] ",
 		  bladeOrMini);
     if (resp[0] != '\0') {
 	tempVal = atoi(resp);
@@ -1952,7 +1952,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
     
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
-	screen_printf("0: Satablade            1: Satamini\n");
+	screen_printf("0: Helium1            1: Helium2\n");
 	screen_printf("3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
@@ -1971,7 +1971,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
 	} else return;
     }
     else {
-	screen_printf("0: Satablade            1: Satamini\n");
+	screen_printf("0: Helium1            1: Helium2\n");
 	screen_printf("3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
@@ -1989,7 +1989,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
 	} else return;
 
 	while(1) {
-	    screen_printf("0: Satablade            1: Satamini\n");
+	    screen_printf("0: Helium1            1: Helium2\n");
 	    screen_printf("3: Neobrick\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
@@ -2055,7 +2055,7 @@ CMD_HK_DISKTYPE(int cmdCode)
     
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
-	screen_printf("0: Satablade       1: Satamini\n");
+	screen_printf("0: Helium1       1: Helium2\n");
 	screen_printf("3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
@@ -2074,7 +2074,7 @@ CMD_HK_DISKTYPE(int cmdCode)
 	} else return;
     }
     else {
-	screen_printf("0: Satablade       1: Satamini\n");
+	screen_printf("0: Helium1       1: Helium2\n");
 	screen_printf("3: Neobrick\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
@@ -2092,7 +2092,7 @@ CMD_HK_DISKTYPE(int cmdCode)
 	} else return;
 
 	while(1) {
-	    screen_printf("0: Satablade    1: Satamini\n");
+	    screen_printf("0: Helium1    1: Helium2\n");
 	    screen_printf("3: Neobrick\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
@@ -3719,7 +3719,7 @@ SEND_CONFIG(int cmdCode)
             Config_det = LOGWATCHD_ID_MASK;
 	    break;
           case 14:
-            Config_det = NEOBRICKD_ID_MASK;
+            Config_det = NTUD_ID_MASK;
 	    break;	
           case 16:
             Config_det = ALL_ID_MASK;
@@ -3809,7 +3809,7 @@ DEFAULT_CONFIG(int cmdCode)
             Config_det = LOGWATCHD_ID_MASK;
 	    break;
           case 14:
-            Config_det = NEOBRICKD_ID_MASK;
+            Config_det = NTUD_ID_MASK;
 	    break;	
           case 16:
             Config_det = ALL_ID_MASK;
@@ -3898,7 +3898,7 @@ LAST_CONFIG(int cmdCode)
             Config_det = LOGWATCHD_ID_MASK;
 	    break;
           case 14:
-            Config_det = NEOBRICKD_ID_MASK;
+            Config_det = NTUD_ID_MASK;
 	    break;	
           case 16:
             Config_det = ALL_ID_MASK;
@@ -3988,7 +3988,7 @@ SWITCH_CONFIG(int cmdCode)
             Config_det = LOGWATCHD_ID_MASK;
 	    break;
           case 14:
-            Config_det = NEOBRICKD_ID_MASK;
+            Config_det = NTUD_ID_MASK;
 	    break;	
           case 16:
             Config_det = ALL_ID_MASK;
@@ -4097,7 +4097,7 @@ SAVE_CONFIG(int cmdCode)
             Config_det = LOGWATCHD_ID_MASK;
 	    break;
           case 14:
-            Config_det = NEOBRICKD_ID_MASK;
+            Config_det = NTUD_ID_MASK;
 	    break;	
           case 16:
             Config_det = ALL_ID_MASK;
@@ -5551,7 +5551,7 @@ ACQD_RATE_COMMAND(cmdCode){
      screen_printf("1. ENABLE_CHAN_SERVO\n");
      screen_printf("2. SET_PID_GOALS\n");
      screen_printf("3. SET_ANT_TRIG_MASK\n");
-     screen_printf("4. SET_PHI_MASK\n");
+     screen_printf("4. SET_PHI_MASK_VPOL\n");
      screen_printf("5. SET_SURF_BAND_TRIG_MASK\n");
      screen_printf("6. SET_CHAN_PID_GOAL_SCALE\n");
      //     screen_printf("7. SET_RATE_SERVO\n");
@@ -5562,13 +5562,15 @@ ACQD_RATE_COMMAND(cmdCode){
      screen_printf("12. SET_DYNAMIC_ANT_MASK_OVER\n"); 
      screen_printf("13. SET_DYNAMIC_ANT_MASK_UNDER\n");
      screen_printf("14. SET_GLOBAL_THRESHOLD\n");
-     screen_printf("16. SET_NADIR_PID_GOALS\n");
+     //     screen_printf("16. SET_NADIR_PID_GOALS\n");
      screen_printf("17. SET_PID_PGAIN\n");
      screen_printf("18. SET_PID_IGAIN\n");
      screen_printf("19. SET_PID_DGAIN\n");
      screen_printf("20. SET_PID_IMAX\n");
      screen_printf("21. SET_PID_IMIN\n");
      screen_printf("22. SET_PID_AVERAGE\n");
+     screen_printf("23. SET_PHI_MASK_HPOL\n");
+
      screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
      if (resp[0] != '\0') {
 	 t = atoi(resp);
@@ -5602,7 +5604,7 @@ ACQD_RATE_COMMAND(cmdCode){
 
      }
      if(extraCode==ACQD_RATE_SET_PID_GOALS) {
-	 screen_dialog(resp,31,"Enter low band goal in kHz (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter top ring rate in kHz (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (0<= t && t <=65535) {
@@ -5617,7 +5619,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 }
 	 cmdBytes[0]=usvalue&0xff;
 	 cmdBytes[1]=(usvalue&0xff00)>>8;
-	 screen_dialog(resp,31,"Enter mid band goal in kHz (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter middle ring rate in kHz (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (0<= t && t <=65535) {
@@ -5632,7 +5634,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 }
 	 cmdBytes[2]=usvalue&0xff;
 	 cmdBytes[3]=(usvalue&0xff00)>>8;
-	 screen_dialog(resp,31,"Enter high band goal in kHz (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter bottom ring rate in kHz (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (0<= t && t <=65535) {
@@ -5645,21 +5647,8 @@ ACQD_RATE_COMMAND(cmdCode){
 		 return;
 	     }
 	 }
-	 cmdBytes[4]=usvalue&0xff;
+	 cmdBytes[4]=usvalue;
 	 cmdBytes[5]=(usvalue&0xff00)>>8;
-	 screen_dialog(resp,31,"Enter full band goal in kHz (-1 to cancel)\n",usvalue);
-	 if (resp[0] != '\0') {
-	     t = atoi(resp);
-	     if (0<= t && t <=65535) {
-		 usvalue = t;
-	     } else if (t == -1) {
-		 screen_printf("Cancelled.\n");
-		 return;
-	     } else {
-		 screen_printf("Not a valid option\n");
-		 return;
-	     }
-	 }
 	 cmdBytes[6]=usvalue&0xff;
 	 cmdBytes[7]=(usvalue&0xff00)>>8;
 	     	 
@@ -5819,6 +5808,84 @@ ACQD_RATE_COMMAND(cmdCode){
       
 
 	 if (screen_confirm("Really Set phiTrigMask to: %#010x",phiTrigMask)) {
+	     cmdBytes[0]=(phiTrigMask&0xff);
+	     cmdBytes[1]=((phiTrigMask&0xff00)>>8);
+
+	 } else {
+	     screen_printf("\nCancelled\n");
+	     return;
+	 }
+
+
+     }
+     if(extraCode==ACQD_RATE_SET_PHI_MASK_HPOL) {
+	 unsigned long t;
+	 unsigned long test;
+	 int fred; 
+	 int phiAdd=-1;
+	 int allOn=0;
+	 phiTrigMask=0;
+	 
+	 screen_dialog(resp, 31,"Add First Phi Sector to mask  (0 for all on)( -1 to cancel) [%d] ", phiAdd);
+	 
+	 if (resp[0] != '\0') {	     
+	     phiAdd=atoi(resp);
+	     if(phiAdd==0){
+		 allOn=1;
+	     }
+	     else if(phiAdd>=1 && phiAdd<=16) {		 
+	     }	     
+	     else if(phiAdd==-1) {
+		 screen_printf("Cancelled.\n");
+		 return;
+	     }
+	     else {
+		 screen_printf("Not a valid phi sector");
+		 return;
+	     }
+	 }
+	 else { 
+	     screen_printf("Cancelled.\n");
+	     return;
+	 }
+	 
+	 test=(1<<(phiAdd-1));
+	 if(allOn==1){
+	     test=0;
+	 }
+	 phiTrigMask|=test;
+	 
+	 while(1) {
+	     phiAdd=-1;
+	     screen_dialog(resp, 31, 
+			   "Add next phi sector to mask  ( -1 to cancel, 0 to finish) [%d]",phiAdd);
+	     
+	     if (resp[0] != '\0') {
+		 phiAdd=atoi(resp);
+		 if(phiAdd==0) break;
+		 if(phiAdd>=1 && phiAdd<=16) {
+		     
+		 }
+		 else {
+		     screen_printf("Not a valid phi sector");
+		   continue;
+		 }
+		 if(phiAdd==-1) {
+		   screen_printf("Cancelled.\n");
+		   return;
+		 }
+	     }
+	     else { 
+		 screen_printf("Cancelled.\n");
+		 return;
+	     }
+	     test=(1<<(phiAdd-1));
+	     phiTrigMask|=test;
+	 }
+   
+      
+
+	 if (screen_confirm("Really Set phiTrigMaskH to: %#010x",phiTrigMask)) {
 	     cmdBytes[0]=(phiTrigMask&0xff);
 	     cmdBytes[1]=((phiTrigMask&0xff00)>>8);
 
@@ -6787,7 +6854,7 @@ PLAYBACKD_COMMAND(cmdCode){
     }
     if(extraCode==PLAY_USE_DISK) {
 	usvalue=0;
-	screen_printf("0. Satablade\n1. Satamini\n2. USB\n");
+	screen_printf("0. Helium1\n1. Helium2\n2. USB\n");
         screen_dialog(resp,31,"Select playback drive [%d] (-1 to cancel)\n",usvalue);
 	if (resp[0] != '\0') {
 	    t = atoi(resp);

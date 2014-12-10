@@ -16,7 +16,8 @@ typedef enum {
     ID_MONITORD,
     ID_PLAYBACKD,
     ID_LOGWATCHD,
-    ID_NEOBRICKD,
+    ID_NTUD,
+    ID_OPENPORTD,
     ID_NOT_AN_ID
 } ProgramId_t;
 
@@ -35,7 +36,8 @@ typedef enum {
 #define MONITORD_ID_MASK 0x400
 #define PLAYBACKD_ID_MASK 0x800
 #define LOGWATCHD_ID_MASK 0x1000
-#define NEOBRICKD_ID_MASK 0x2000
+#define NTUD_ID_MASK 0x2000
+#define OPENPORTD_ID_MASK 0x4000
 #define ALL_ID_MASK 0xffff
 
 
@@ -62,7 +64,8 @@ typedef enum {
   ACQD_SET_PID_DGAIN=19,
   ACQD_SET_PID_IMAX=20,
   ACQD_SET_PID_IMIN=21,
-  ACQD_SET_PID_AVERAGE=22
+  ACQD_SET_PID_AVERAGE=22,
+  ACQD_RATE_SET_PHI_MASK_HPOL=23
 } AcqdRateCommandCode_t;
 
 typedef enum {
@@ -147,7 +150,7 @@ typedef enum {
   LOG_REQUEST_MESSAGES = 1,
   LOG_REQUEST_ANITA = 2,
   LOG_REQUEST_SECURITY = 3,
-  LOG_REQUEST_NEOBRICK = 4,
+  LOG_REQUEST_NTU = 4,
   LOG_REQUEST_BOOT = 5, 
   LOG_REQUEST_PROC_CPUINFO = 6,
   LOG_REQUEST_PROC_DEVICES = 7,
@@ -199,10 +202,10 @@ typedef enum {
 } GpsExtraCommand_t;
 
 //Disk Bit Masks
-#define SATABLADE_DISK_MASK 0x1
-#define SATAMINI_DISK_MASK 0x2
+#define HELIUM1_DISK_MASK 0x1
+#define HELIUM2_DISK_MASK 0x2
 #define USB_DISK_MASK 0x4
-#define NEOBRICK_DISK_MASK 0x8
+#define NTU_DISK_MASK 0x8
 #define PMC_DISK_MASK 0x10
 
 #define DISK_TYPES 5
