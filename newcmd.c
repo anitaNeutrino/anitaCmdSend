@@ -5096,8 +5096,8 @@ PRIORITIZERD_COMMAND(cmdCode){
   float ft;
   unsigned char cmdBytes[8]={0};
 
-
-  unsigned short priMaxQueueLength = 0;
+  unsigned short extraCode = 0;
+  unsigned short priMaxQueueLength = 5000;
   unsigned char priorityBin = 1;
   float lowBinEdge = 0;
   float highBinEdge = 0;
@@ -5194,7 +5194,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     }
   }
   if(extraCode==PRI_PANIC_QUEUE_LENGTH){
-    screen_dialog(resp,31,"Enter maximum Prioritizerd queue length before writing all events as priority 7 (0->65535) (-1 to cancel)\n",enableOrDisable);
+    screen_dialog(resp,31,"Enter maximum Prioritizerd queue length before writing all events as priority 7 (0->65535) (-1 to cancel)\n",priMaxQueueLength);
     if (resp[0] != '\0') {
       t = atoi(resp);
       if (0<= t && t <=65535) {
