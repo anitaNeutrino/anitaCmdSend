@@ -5088,10 +5088,518 @@ ACQD_SET_NICE_VALUE(cmdCode){
 
 static void
 PRIORITIZERD_COMMAND(cmdCode){
-    screen_printf("Not yet Implemented in cmdSend.\n");
+  screen_printf("Enter Prioritizerd command (1-16)\n");
+
+  char resp[32];
+  short det;
+  int t;
+  float ft;
+  unsigned char cmdBytes[8]={0};
 
 
-     return;
+  unsigned short priMaxQueueLength = 0;
+  unsigned char priorityBin = 1;
+  float lowBinEdge = 0;
+  float highBinEdge = 0;
+  unsigned short priSlopeImageHilbert = 0;
+
+
+  screen_printf("1. PRI_PANIC_QUEUE_LENGTH\n"); 
+  screen_printf("2. PRI_PARAMS_LOW_BIN_EDGE\n");
+  screen_printf("3. PRI_PARAMS_HIGH_BIN_EDGE\n");
+  screen_printf("4. PRI_SLOPE_IMAGE_HILBERT\n");
+  screen_printf("5. PRI_INTERCEPT_IMAGE_HILBERT\n");
+  screen_printf("6. PRI_BIN_TO_BIN_THRESH\n");
+  screen_printf("7. PRI_ABS_MAG_THRESH\n");
+  screen_printf("8. PRI_THETA_ANGLE_DEMOTION_LOW\n");
+  screen_printf("9. PRI_THETA_ANGLE_DEMOTION_HIGH\n");
+  screen_printf("10. PRI_THETA_ANGLE_DEMOTION_PRIORITY\n");
+  screen_printf("11. PRI_POWER_SPECTRUM_PERIOD\n");
+  screen_printf("12. PRI_ANT_PHI_POS\n");
+  screen_printf("13. PRI_ANT_R_POS\n");
+  screen_printf("14. PRI_ANT_Z_POS\n");
+  screen_printf("15. PRI_POS_SATUATION\n");
+  screen_printf("16. PRI_NEG_SATUATION\n");
+
+  /* switch(command) { */
+  /* case PRI_PANIC_QUEUE_LENGTH: */
+  /*   configModifyInt("Prioritizerd.config","prioritizerd","panicQueueLength",value,&rawtime); */
+  /*   break; */
+  /* case PRI_PARAMS_LOW_BIN_EDGE: */
+  /*   priorityParamsLowBinEdge[value]=value2/100.; */
+  /*   configModifyFloatArray("Prioritizerd.config","prioritizerd","priorityParamsLowBinEdge",priorityParamsLowBinEdge,10,&rawtime); */
+  /*   break; */
+  /* case PRI_PARAMS_HIGH_BIN_EDGE: */
+  /*   priorityParamsHighBinEdge[value]=value2/100.; */
+  /*   configModifyFloatArray("Prioritizerd.config","prioritizerd","priorityParamsHighBinEdge",priorityParamsHighBinEdge,10,&rawtime); */
+  /*   break; */
+  /* case PRI_SLOPE_IMAGE_HILBERT: */
+  /*   configModifyFloat("Prioritizerd.config","prioritizerd","slopeOfImagePeakVsHilbertPeak",(float)value2,&rawtime); */
+  /*   break;	     */
+  /* case PRI_INTERCEPT_IMAGE_HILBERT: */
+  /*   configModifyFloat("Prioritizerd.config","prioritizerd","interceptOfImagePeakVsHilbertPeak",(float)value2,&rawtime); */
+  /*   break; */
+  /* case PRI_BIN_TO_BIN_THRESH: */
+  /*   configModifyFloat("Prioritizerd.config","prioritizerd","binToBinDifferenceThresh_dB",value2/10.,&rawtime); */
+  /*   break;	     */
+  /* case PRI_ABS_MAG_THRESH: */
+  /*   configModifyFloat("Prioritizerd.config","prioritizerd","absMagnitudeThresh_dBm",value2/10.,&rawtime); */
+  /*   break;	     */
+  /* case PRI_THETA_ANGLE_DEMOTION_LOW: */
+  /*   configModifyFloat("Prioritizerd.config","prioritizerd","thetaAngleLowForDemotion",value2-90,&rawtime); */
+  /*   break;	     */
+  /* case PRI_THETA_ANGLE_DEMOTION_HIGH: */
+  /*   configModifyFloat("Prioritizerd.config","prioritizerd","thetaAngleHighForDemotion",value2,&rawtime); */
+  /*   break;	    	     */
+  /* case PRI_THETA_ANGLE_DEMOTION_PRIORITY: */
+  /*   configModifyInt("Prioritizerd.config","prioritizerd","thetaAnglePriorityDemotion",value,&rawtime); */
+  /*   break;	     */
+  /* case PRI_POWER_SPECTRUM_PERIOD: */
+  /*   configModifyInt("Prioritizerd.config","prioritizerd","writePowSpecPeriodSeconds",value2,&rawtime); */
+  /*   break;	     */
+  /* case PRI_ANT_PHI_POS: */
+  /*   phiArrayDeg[value]=value2/100.; */
+  /*   configModifyFloatArray("Prioritizerd.config","antennalocations","phiArrayDeg",phiArrayDeg,48,&rawtime); */
+  /*   break;	     */
+  /* case PRI_ANT_R_POS: */
+  /*   rArray[value]=value2/1000.; */
+  /*   configModifyFloatArray("Prioritizerd.config","antennalocations","rArray",rArray,48,&rawtime); */
+  /*   break;	    	     */
+  /* case PRI_ANT_Z_POS: */
+  /*   zArray[value]=-1*value2/10000; */
+  /*   configModifyFloatArray("Prioritizerd.config","antennalocations","zArray",zArray,48,&rawtime); */
+  /*   break;	    	    	    	     */
+  /* case PRI_POS_SATUATION: */
+  /*   configModifyInt("Prioritizerd.config","prioritizerd","positiveSaturation",value2,&rawtime); */
+  /*   break;	    	  	     */
+  /* case PRI_NEG_SATUATION: */
+  /*   configModifyInt("Prioritizerd.config","prioritizerd","negativeSaturation",-1*value2,&rawtime); */
+  /*   break;	    	    */
+  /* default: */
+  /*   return -1; */
+  /* }	     */
+  /* return rawtime; */
+
+  screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
+  if (resp[0] != '\0') {
+    t = atoi(resp);
+    if (1<= t && t <=16) {
+      extraCode = t;
+    } else if (t == -1) {
+      screen_printf("Cancelled.\n");
+      return;
+    } else {
+      screen_printf("Not a valid command\n");
+      return;
+    }
+  }
+  if(extraCode==PRI_PANIC_QUEUE_LENGTH){
+    screen_dialog(resp,31,"Enter maximum Prioritizerd queue length before writing all events as priority 7 (0->65535) (-1 to cancel)\n",enableOrDisable);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0<= t && t <=65535) {
+	priMaxQueueLength = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    cmdBytes[0]=priMaxLength & 0xff;
+    cmdBytes[1]=(priMaxLength & 0xff00)>>8;
+  }
+  if(extraCode==PRI_PARAMS_LOW_BIN_EDGE) {
+    screen_dialog(resp, 31,
+		  "Select Priority Bin to modify (0->9) (-1 to cancel) [%d] ",
+		  priorityBin);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0 <= t && t <= 9) {
+	priorityBin = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Value must be 0-9, not %d.\n", t);
+	return;
+      }
+    }
+    screen_dialog(resp, 31,
+		  "Enter Low Bin Edge Value (-1 to cancel) [%f] ",
+		  lowBinEdge);
+    if (resp[0] != '\0') {
+      t = atof(resp);
+      if (0 <= t && t <= 100) {
+	lowBinEdge = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Value must be 0-100, not %f.\n", t);
+	return;
+      }
+    }
+    cmdBytes[0]=priorityBin;
+    cmdBytes[1]=0;
+    unsigned short convertedVal = (unsigned short)(lowBinEdge*100);
+    cmdBytes[2]=(convertedVal & 0xff);
+    cmdBytes[3]=(convertedVal & 0xff00) >> 8;
+  }
+  if(extraCode==PRI_PARAMS_HIGH_BIN_EDGE) {
+    screen_dialog(resp, 31,
+		  "Select priority bin to modify (0->9) (-1 to cancel) [%d] ",
+		  priorityBin);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0 <= t && t <= 9) {
+	priorityBin = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Value must be 0-9, not %d.\n", t);
+	return;
+      }
+    }
+    screen_dialog(resp, 31,
+		  "Enter high bin edge value (-1 to cancel) [%f] ",
+		  lowBinEdge);
+    if (resp[0] != '\0') {
+      t = atof(resp);
+      if (0 <= t && t <= 100) {
+	highBinEdge = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Value must be 0-100, not %f.\n", t);
+	return;
+      }
+    }
+    cmdBytes[0]=priorityBin;
+    cmdBytes[1]=0;
+    unsigned short convertedVal = (unsigned short)(highBinEdge*100);
+    cmdBytes[2]=(convertedVal & 0xff);
+    cmdBytes[3]=(convertedVal & 0xff00) >> 8;
+  }
+  if(extraCode==PRI_SLOPE_IMAGE_HILBERT){
+    screen_dialog(resp,31,"Enter Prioritizerd slope for image peak and hilbert peak parameter space (0->65535) (-1 to cancel) [%hu]\n",priSlopeImageHilbert);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0<= t && t <=65535) {
+	priSlopeImageHilbert = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    cmdBytes[2]=priSlopeImageHilbert & 0xff;
+    cmdBytes[3]=(priSlopeImageHilbert & 0xff00)>>8;
+  }
+  unsigned short priInterceptImageHilbert = 0;
+  if(extraCode==PRI_INTERCEPT_IMAGE_HILBERT){
+    screen_dialog(resp,31,"Enter Prioritizerd intercept for image peak and hilbert peak parameter space (0->65535) (-1 to cancel)[%hu]\n",priInterceptImageHilbert);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0<= t && t <=65535) {
+	priInterceptImageHilbert = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    cmdBytes[2]=priInterceptImageHilbert & 0xff;
+    cmdBytes[3]=(priInterceptImageHilbert & 0xff00)>>8;
+  }
+  float priBinToBinThresh = 4;
+  if(extraCode==PRI_BIN_TO_BIN_THRESH){
+    screen_dialog(resp,31,"Enter Prioritizerd bin-to-bin threshold for CW cut (-1 to cancel) [%f]\n", priBinToBinThresh);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0<= t && t <=6553) {
+	priBinToBinThresh = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    unsigned short convertedVal = (unsigned short)(priBinToBinThresh*10);
+    cmdBytes[2]=convertedVal & 0xff;
+    cmdBytes[3]=(convertedVal & 0xff00)>>8;
+  }
+  float priAbsMagThresh = 6553;
+  if(extraCode==PRI_ABS_MAG_THRESH){
+    screen_dialog(resp,31,"Enter Prioritizerd absolute threshold (dBm) for CW cut (-1 to cancel) [%f]\n", priAbsMagThresh);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0<= t && t <=6553) {
+	priAbsMagThresh = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    unsigned short convertedVal = (unsigned short)(priAbsMagThresh*10);
+    cmdBytes[2]=convertedVal & 0xff;
+    cmdBytes[3]=(convertedVal & 0xff00)>>8;
+  }
+  unsigned short thetaAngleDemotionLow = -30;
+  if(extraCode==PRI_THETA_ANGLE_DEMOTION_LOW){
+    screen_dialog(resp,31,"Enter low theta angle for priority demotion (-90 - 90) (-100 to cancel) [%hu]\n", thetaAngleDemotionLow);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (-90<= t && t <=90) {
+	thetaAngleDemotionLow = t;
+      } else if (t == -100) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    unsigned short convertedVal = (unsigned short)(thetaAngleDemotionLow + 90);
+    cmdBytes[2]=convertedVal & 0xff;
+    cmdBytes[3]=(convertedVal & 0xff00)>>8;
+  }
+  unsigned short thetaAngleDemotionHigh = 10;
+  if(extraCode==PRI_THETA_ANGLE_DEMOTION_HIGH){
+    screen_dialog(resp,31,"Enter high theta angle for priority demotion (-90 - 90) (-100 to cancel) [%hu]\n", thetaAngleDemotionHigh);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (-90<= t && t <=90) {
+	thetaAngleDemotionHigh = t;
+      } else if (t == -100) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    unsigned short convertedVal = (unsigned short)(thetaAngleDemotionLow);
+    cmdBytes[2]=convertedVal & 0xff;
+    cmdBytes[3]=(convertedVal & 0xff00)>>8;
+  }
+  unsigned char thetaAngleDemotionPriority = 1;
+  if(extraCode==PRI_THETA_ANGLE_DEMOTION_PRIORITY){
+    screen_dialog(resp,31,"Enter priority demotion value, number added to priority if outside the set theta range (0-6)  (-1 to cancel) [%hu]\n", thetaAngleDemotionPriority);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0<= t && t <=6) {
+	thetaAngleDemotionPriority = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    cmdBytes[0]=thetaAngleDemotionPriority;
+  }
+  unsigned short priPowerSpectrumPeriod = 60;
+  if(extraCode==PRI_POWER_SPECTRUM_PERIOD){
+    screen_dialog(resp,31,"Enter number of seconds to make average power spectrum over before writing to disk (-1 to cancel) [%hu]\n", priPowerSpectrumPeriod);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0<= t && t <=65535) {
+	priPowerSpectrumPeriod = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    cmdBytes[2]=(priPowerSpectrumPeriod & 0xff);
+    cmdBytes[3]=(priPowerSpectrumPeriod & 0xff00)>>8;
+  }
+  float priAntPhiPos = 0;
+  unsigned char ant = 0;
+  if(extraCode==PRI_ANT_PHI_POS) {
+    screen_dialog(resp, 31,
+		  "Select antenna index to modify position (0->47) (-1 to cancel) [%f] ",
+		  priAntPhiPos);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0 <= t && t <= 47) {
+	ant = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Value must be 0-47, not %f.\n", t);
+	return;
+      }
+    }
+    screen_dialog(resp, 31,
+		  "Enter antenna phi position (degrees) (-1 to cancel) [%f] ",
+		  lowBinEdge);
+    if (resp[0] != '\0') {
+      t = atof(resp);
+      if (0 <= t && t <= 360) {
+	priAntPhiPos = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Value must be 0-360, not %f.\n", t);
+	return;
+      }
+    }
+    cmdBytes[0]=ant;
+    cmdBytes[1]=0;
+    unsigned short convertedVal = (unsigned short)(priAntPhiPos*100.);
+    cmdBytes[2]=(convertedVal & 0xff);
+    cmdBytes[3]=(convertedVal & 0xff00) >> 8;
+  }
+  float priAntRPos = 0;
+  if(extraCode==PRI_ANT_R_POS) {
+    screen_dialog(resp, 31,
+		  "Select antenna index to modify position (0->47) (-1 to cancel) [%f] ",
+		  priAntRPos);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0 <= t && t <= 47) {
+	ant = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Value must be 0-47, not %f.\n", t);
+	return;
+      }
+    }
+    screen_dialog(resp, 31,
+		  "Enter antenna r position (meters) (-1 to cancel) [%f] ",
+		  lowBinEdge);
+    if (resp[0] != '\0') {
+      t = atof(resp);
+      if (0 <= t && t <= 100) {
+	priAntRPos = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Value must be 0-100, not %f.\n", t);
+	return;
+      }
+    }
+    cmdBytes[0]=ant;
+    cmdBytes[1]=0;
+    unsigned short convertedVal = (unsigned short)(priAntRPos*100.);
+    cmdBytes[2]=(convertedVal & 0xff);
+    cmdBytes[3]=(convertedVal & 0xff00) >> 8;
+  }
+  float priAntZPos = 0;
+  if(extraCode==PRI_ANT_Z_POS) {
+    screen_dialog(resp, 31,
+		  "Select antenna index to modify position (0->47) (-1 to cancel) [%f] ",
+		  priAntRPos);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0 <= t && t <= 47) {
+	ant = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Value must be 0-47, not %f.\n", t);
+	return;
+      }
+    }
+    screen_dialog(resp, 31,
+		  "Enter antenna z position (meters) (-100 to cancel) [%f] ",
+		  lowBinEdge);
+    if (resp[0] != '\0') {
+      t = atof(resp);
+      if (-100 < t && t <= 100) {
+	priAntRPos = t;
+      } else if (t == -100) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Value must be -100 - 100, not %f.\n", t);
+	return;
+      }
+    }
+    cmdBytes[0]=ant;
+    cmdBytes[1]=0;
+    unsigned short convertedVal = (unsigned short)(-1*priAntZPos*100.);
+    cmdBytes[2]=(convertedVal & 0xff);
+    cmdBytes[3]=(convertedVal & 0xff00) >> 8;
+  }
+  unsigned short priPosSaturation = 1000;
+  if(extraCode==PRI_POS_SATUATION){
+    screen_dialog(resp,31,"Enter ADC counts for positive saturation, goes in priority 9 (0->2000) (-1 to cancel) [%hu]\n",priPosSaturation);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0<= t && t <=2000) {
+	priPosSaturation = t;
+      } else if (t == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    cmdBytes[2]=priPosSaturation & 0xff;
+    cmdBytes[3]=(priPosSaturation & 0xff00)>>8;
+  }
+  short priNegSaturation = -1000;
+  if(extraCode==PRI_POS_SATUATION){
+    screen_dialog(resp,31,"Enter ADC counts for negative saturation, goes in priority 9 (0->-2000) (+1 to cancel) [%hu]\n",priPosSaturation);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0>= t && t >=-2000) {
+	priPosSaturation = t;
+      } else if (t == 1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    unsigned short convertedVal = -1*priNegSaturation;
+    cmdBytes[2]= convertedVal & 0xff;
+    cmdBytes[3]=(convertedVal & 0xff00)>>8;
+  }
+
+
+  Curcmd[0] = 0;
+  Curcmd[1] = cmdCode;
+  Curcmd[2] = 1;
+  Curcmd[3] = extraCode;
+  int ind=0;
+  for(ind=0;ind<8;ind++) {
+    Curcmd[4+2*ind]=ind+2;
+    Curcmd[5+2*ind]=cmdBytes[ind];
+  }
+  Curcmdlen = 20;     
+  set_cmd_log("%d; Prioritizerd command %d (%d %d %d %d %d %d %d %d)", cmdCode,extraCode,cmdBytes[0],cmdBytes[1],cmdBytes[2],cmdBytes[3],cmdBytes[4],cmdBytes[5],cmdBytes[6],cmdBytes[7]);
+  sendcmd(Fd, Curcmd, Curcmdlen);
+
+  return;
+
+
 }
 
 
