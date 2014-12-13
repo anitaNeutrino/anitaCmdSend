@@ -5207,8 +5207,8 @@ PRIORITIZERD_COMMAND(cmdCode){
 	return;
       }
     }
-    cmdBytes[0]=priMaxLength & 0xff;
-    cmdBytes[1]=(priMaxLength & 0xff00)>>8;
+    cmdBytes[0]=priMaxQueueLength & 0xff;
+    cmdBytes[1]=(priMaxQueueLength & 0xff00)>>8;
   }
   if(extraCode==PRI_PARAMS_LOW_BIN_EDGE) {
     screen_dialog(resp, 31,
