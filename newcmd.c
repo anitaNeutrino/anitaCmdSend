@@ -5564,7 +5564,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     cmdBytes[3]=(priPosSaturation & 0xff00)>>8;
   }
   short priNegSaturation = -1000;
-  if(extraCode==PRI_POS_SATUATION){
+  if(extraCode==PRI_NEG_SATUATION){
     screen_dialog(resp,31,"Enter ADC counts for negative saturation, goes in priority 9 (0->-2000) (+1 to cancel) [%hu]\n",priPosSaturation);
     if (resp[0] != '\0') {
       t = atoi(resp);
