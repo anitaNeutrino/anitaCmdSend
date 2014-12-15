@@ -1109,7 +1109,7 @@ JOURNALCTL_COMMAND(int cmdCode)
 			jcArg = ID_MONITORD;
 			break;
 		    case 10:
-			jcArg = ID_PRIORITIZED; 
+			jcArg = ID_PRIORITIZERD; 
 			break;
 		    case 11:
 			jcArg = ID_SIPD;
