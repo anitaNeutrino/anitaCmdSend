@@ -5194,7 +5194,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     }
   }
   if(extraCode==PRI_PANIC_QUEUE_LENGTH){
-    screen_dialog(resp,31,"Enter maximum Prioritizerd queue length before writing all events as priority 7 (0->65535) (-1 to cancel)\n",priMaxQueueLength);
+    screen_dialog(resp,31,"Enter maximum Prioritizerd queue length before writing all events as priority 7 (0-65535) (-1 to cancel)\n",priMaxQueueLength);
     if (resp[0] != '\0') {
       t = atoi(resp);
       if (0<= t && t <=65535) {
@@ -5212,7 +5212,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
   if(extraCode==PRI_PARAMS_LOW_BIN_EDGE) {
     screen_dialog(resp, 31,
-		  "Select Priority Bin to modify (0->9) (-1 to cancel) [%d] ",
+		  "Select Priority Bin to modify (0-9) (-1 to cancel) [%d] ",
 		  priorityBin);
     if (resp[0] != '\0') {
       t = atoi(resp);
@@ -5230,26 +5230,26 @@ PRIORITIZERD_COMMAND(cmdCode){
 		  "Enter Low Bin Edge Value (-1 to cancel) [%f] ",
 		  lowBinEdge);
     if (resp[0] != '\0') {
-      t = atof(resp);
-      if (0 <= t && t <= 100) {
-	lowBinEdge = t;
-      } else if (t == -1) {
+      ft = atof(resp);
+      if (0 <= ft && ft <= 6553) {
+	lowBinEdge = ft;
+      } else if (ft == -1) {
 	screen_printf("Cancelled.\n");
 	return;
       } else {
-	screen_printf("Value must be 0-100, not %f.\n", t);
+	screen_printf("Value must be 0-6553, not %f.\n", ft);
 	return;
       }
     }
     cmdBytes[0]=priorityBin;
     cmdBytes[1]=0;
-    unsigned short convertedVal = (unsigned short)(lowBinEdge*100);
+    unsigned short convertedVal = (unsigned short)(lowBinEdge*100.0);
     cmdBytes[2]=(convertedVal & 0xff);
     cmdBytes[3]=(convertedVal & 0xff00) >> 8;
   }
   if(extraCode==PRI_PARAMS_HIGH_BIN_EDGE) {
     screen_dialog(resp, 31,
-		  "Select priority bin to modify (0->9) (-1 to cancel) [%d] ",
+		  "Select priority bin to modify (0-9) (-1 to cancel) [%d] ",
 		  priorityBin);
     if (resp[0] != '\0') {
       t = atoi(resp);
@@ -5267,25 +5267,25 @@ PRIORITIZERD_COMMAND(cmdCode){
 		  "Enter high bin edge value (-1 to cancel) [%f] ",
 		  lowBinEdge);
     if (resp[0] != '\0') {
-      t = atof(resp);
-      if (0 <= t && t <= 100) {
-	highBinEdge = t;
-      } else if (t == -1) {
+      ft = atof(resp);
+      if (0 <= ft && ft <= 6553) {
+	highBinEdge = ft;
+      } else if (ft == -1) {
 	screen_printf("Cancelled.\n");
 	return;
       } else {
-	screen_printf("Value must be 0-100, not %f.\n", t);
+	screen_printf("Value must be 0-6553, not %f.\n", ft);
 	return;
       }
     }
     cmdBytes[0]=priorityBin;
     cmdBytes[1]=0;
-    unsigned short convertedVal = (unsigned short)(highBinEdge*100);
+    unsigned short convertedVal = (unsigned short)(highBinEdge*100.0);
     cmdBytes[2]=(convertedVal & 0xff);
     cmdBytes[3]=(convertedVal & 0xff00) >> 8;
   }
   if(extraCode==PRI_SLOPE_IMAGE_HILBERT){
-    screen_dialog(resp,31,"Enter Prioritizerd slope for image peak and hilbert peak parameter space (0->65535) (-1 to cancel) [%hu]\n",priSlopeImageHilbert);
+    screen_dialog(resp,31,"Enter Prioritizerd slope for image peak and hilbert peak parameter space (0-65535) (-1 to cancel) [%hu]\n",priSlopeImageHilbert);
     if (resp[0] != '\0') {
       t = atoi(resp);
       if (0<= t && t <=65535) {
@@ -5303,7 +5303,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
   unsigned short priInterceptImageHilbert = 0;
   if(extraCode==PRI_INTERCEPT_IMAGE_HILBERT){
-    screen_dialog(resp,31,"Enter Prioritizerd intercept for image peak and hilbert peak parameter space (0->65535) (-1 to cancel)[%hu]\n",priInterceptImageHilbert);
+    screen_dialog(resp,31,"Enter Prioritizerd intercept for image peak and hilbert peak parameter space (0-65535) (-1 to cancel)[%hu]\n",priInterceptImageHilbert);
     if (resp[0] != '\0') {
       t = atoi(resp);
       if (0<= t && t <=65535) {
@@ -5319,7 +5319,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     cmdBytes[2]=priInterceptImageHilbert & 0xff;
     cmdBytes[3]=(priInterceptImageHilbert & 0xff00)>>8;
   }
-  float priBinToBinThresh = 4;
+  float priBinToBinThresh = 10;
   if(extraCode==PRI_BIN_TO_BIN_THRESH){
     screen_dialog(resp,31,"Enter Prioritizerd bin-to-bin threshold for CW cut (-1 to cancel) [%f]\n", priBinToBinThresh);
     if (resp[0] != '\0') {
@@ -5417,7 +5417,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp,31,"Enter number of seconds to make average power spectrum over before writing to disk (-1 to cancel) [%hu]\n", priPowerSpectrumPeriod);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0<= t && t <=65535) {
+      if (0 < t && t <=65535) {
 	priPowerSpectrumPeriod = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5434,8 +5434,8 @@ PRIORITIZERD_COMMAND(cmdCode){
   unsigned char ant = 0;
   if(extraCode==PRI_ANT_PHI_POS) {
     screen_dialog(resp, 31,
-		  "Select antenna index to modify position (0->47) (-1 to cancel) [%f] ",
-		  priAntPhiPos);
+		  "Select antenna index to modify position (0-47) (-1 to cancel) [%hhu] ",
+		  ant);
     if (resp[0] != '\0') {
       t = atoi(resp);
       if (0 <= t && t <= 47) {
@@ -5452,28 +5452,28 @@ PRIORITIZERD_COMMAND(cmdCode){
 		  "Enter antenna phi position (degrees) (-1 to cancel) [%f] ",
 		  lowBinEdge);
     if (resp[0] != '\0') {
-      t = atof(resp);
-      if (0 <= t && t <= 360) {
-	priAntPhiPos = t;
-      } else if (t == -1) {
+      ft = atof(resp);
+      if (0 <= ft && ft < 360) {
+	priAntPhiPos = ft;
+      } else if (ft == -1) {
 	screen_printf("Cancelled.\n");
 	return;
       } else {
-	screen_printf("Value must be 0-360, not %f.\n", t);
+	screen_printf("Value must be 0-360, not %f.\n", ft);
 	return;
       }
     }
     cmdBytes[0]=ant;
     cmdBytes[1]=0;
-    unsigned short convertedVal = (unsigned short)(priAntPhiPos*100.);
+    unsigned short convertedVal = (unsigned short)(nearbyint(priAntPhiPos*100.0));
     cmdBytes[2]=(convertedVal & 0xff);
     cmdBytes[3]=(convertedVal & 0xff00) >> 8;
   }
   float priAntRPos = 0;
   if(extraCode==PRI_ANT_R_POS) {
     screen_dialog(resp, 31,
-		  "Select antenna index to modify position (0->47) (-1 to cancel) [%f] ",
-		  priAntRPos);
+		  "Select antenna index to modify position (0-47) (-1 to cancel) [%hhu] ",
+		  ant);
     if (resp[0] != '\0') {
       t = atoi(resp);
       if (0 <= t && t <= 47) {
@@ -5490,28 +5490,28 @@ PRIORITIZERD_COMMAND(cmdCode){
 		  "Enter antenna r position (meters) (-1 to cancel) [%f] ",
 		  lowBinEdge);
     if (resp[0] != '\0') {
-      t = atof(resp);
-      if (0 <= t && t <= 100) {
-	priAntRPos = t;
-      } else if (t == -1) {
+      ft = atof(resp);
+      if (0 <= ft && ft <= 100) {
+	priAntRPos = ft;
+      } else if (ft == -1) {
 	screen_printf("Cancelled.\n");
 	return;
       } else {
-	screen_printf("Value must be 0-100, not %f.\n", t);
+	screen_printf("Value must be 0-100, not %f.\n", ft);
 	return;
       }
     }
     cmdBytes[0]=ant;
     cmdBytes[1]=0;
-    unsigned short convertedVal = (unsigned short)(priAntRPos*100.);
+    unsigned short convertedVal = (unsigned short)(nearbyint(priAntRPos*1000.0));
     cmdBytes[2]=(convertedVal & 0xff);
     cmdBytes[3]=(convertedVal & 0xff00) >> 8;
   }
   float priAntZPos = 0;
   if(extraCode==PRI_ANT_Z_POS) {
     screen_dialog(resp, 31,
-		  "Select antenna index to modify position (0->47) (-1 to cancel) [%f] ",
-		  priAntRPos);
+		  "Select antenna index to modify position (0-47) (-1 to cancel) [%hhu] ",
+		  ant);
     if (resp[0] != '\0') {
       t = atoi(resp);
       if (0 <= t && t <= 47) {
@@ -5525,29 +5525,30 @@ PRIORITIZERD_COMMAND(cmdCode){
       }
     }
     screen_dialog(resp, 31,
-		  "Enter antenna z position (meters) (-100 to cancel) [%f] ",
+		  "Enter antenna z position (meters) (+1 to cancel) [%f] ",
 		  lowBinEdge);
     if (resp[0] != '\0') {
-      t = atof(resp);
-      if (-100 < t && t <= 100) {
-	priAntRPos = t;
-      } else if (t == -100) {
+      ft = atof(resp);
+      if (-6.5536 <= ft && ft <= 0) {
+	priAntZPos = ft;
+      } else if (ft == +1) {
 	screen_printf("Cancelled.\n");
 	return;
       } else {
-	screen_printf("Value must be -100 - 100, not %f.\n", t);
+	screen_printf("Value must be -6.5536 - 0, not %f.\n", ft);
 	return;
       }
     }
     cmdBytes[0]=ant;
     cmdBytes[1]=0;
-    unsigned short convertedVal = (unsigned short)(-1*priAntZPos*100.);
+    unsigned short convertedVal = (unsigned short)(nearbyint(-1.0*priAntZPos*10000.0));
+    screen_printf("priAntZPos = %f, convertedVal = %hu\n", priAntZPos, convertedVal);
     cmdBytes[2]=(convertedVal & 0xff);
     cmdBytes[3]=(convertedVal & 0xff00) >> 8;
   }
   unsigned short priPosSaturation = 1000;
   if(extraCode==PRI_POS_SATUATION){
-    screen_dialog(resp,31,"Enter ADC counts for positive saturation, goes in priority 9 (0->2000) (-1 to cancel) [%hu]\n",priPosSaturation);
+    screen_dialog(resp,31,"Enter ADC counts for positive saturation, goes in priority 9 (0 - 2000) (-1 to cancel) [%hu]\n",priPosSaturation);
     if (resp[0] != '\0') {
       t = atoi(resp);
       if (0<= t && t <=2000) {
@@ -5565,7 +5566,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
   short priNegSaturation = -1000;
   if(extraCode==PRI_NEG_SATUATION){
-    screen_dialog(resp,31,"Enter ADC counts for negative saturation, goes in priority 9 (0->-2000) (+1 to cancel) [%hu]\n",priNegSaturation);
+    screen_dialog(resp,31,"Enter ADC counts for negative saturation, goes in priority 9 (0 - -2000) (+1 to cancel) [%hu]\n",priNegSaturation);
     if (resp[0] != '\0') {
       t = atoi(resp);
       if (0>= t && t >=-2000) {
