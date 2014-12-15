@@ -1109,7 +1109,7 @@ JOURNALCTL_COMMAND(int cmdCode)
 			jcArg = ID_MONITORD;
 			break;
 		    case 10:
-			jcArg = ID_PRIORITIZERD; 
+			jcArg = ID_PRIORITIZED; 
 			break;
 		    case 11:
 			jcArg = ID_SIPD;
@@ -5391,7 +5391,7 @@ PRIORITIZERD_COMMAND(cmdCode){
 	return;
       }
     }
-    unsigned short convertedVal = (unsigned short)(thetaAngleDemotionLow);
+    unsigned short convertedVal = (unsigned short)(thetaAngleDemotionHigh);
     cmdBytes[2]=convertedVal & 0xff;
     cmdBytes[3]=(convertedVal & 0xff00)>>8;
   }
