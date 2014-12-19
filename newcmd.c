@@ -6083,7 +6083,7 @@ ACQD_RATE_COMMAND(cmdCode){
      screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
      if (resp[0] != '\0') {
 	 t = atoi(resp);
-	if (1<= t && t <=22) {
+	if (1<= t && t <=23) {
 	    extraCode = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
@@ -6257,12 +6257,23 @@ ACQD_RATE_COMMAND(cmdCode){
 	 int allOn=0;
 	 phiTrigMask=0;
 	 
-	 screen_dialog(resp, 31,"Add First Phi Sector to mask  (0 for all on)( -1 to cancel) [%d] ", phiAdd);
+	 screen_dialog(resp, 31,"Add First Phi Sector to mask  (0 for all on/off)( -1 to cancel) [%d] ", phiAdd);
 	 
 	 if (resp[0] != '\0') {	     
 	     phiAdd=atoi(resp);
 	     if(phiAdd==0){
-		 allOn=1;
+	       screen_dialog(resp, 31, "1 for enable all, 0 for disable all (-1 to cancel) [%d]", allOn);
+	       allOn = atoi(resp);
+	       if(allOn == 0 || allOn == 1){
+	       }
+	       else if(allOn==-1){
+		 screen_printf("Cancelled.\n");
+		 return;
+	       }
+	       else{
+		 screen_printf("Not a valid option, must be 0 or 1");
+		 return;
+	       }	       
 	     }
 	     else if(phiAdd>=1 && phiAdd<=16) {		 
 	     }	     
@@ -6282,7 +6293,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 
 	 test=(1<<(phiAdd-1));
 	 if(allOn==1){
-	     test=0;
+	     test=0xffff;
 	 }
 	 phiTrigMask|=test;
 	 
@@ -6340,7 +6351,18 @@ ACQD_RATE_COMMAND(cmdCode){
 	 if (resp[0] != '\0') {	     
 	     phiAdd=atoi(resp);
 	     if(phiAdd==0){
-		 allOn=1;
+	       screen_dialog(resp, 31, "1 for enable all, 0 for disable all (-1 to cancel) [%d]", allOn);
+	       allOn = atoi(resp);
+	       if(allOn == 0 || allOn == 1){
+	       }
+	       else if(allOn==-1){
+		 screen_printf("Cancelled.\n");
+		 return;
+	       }
+	       else{
+		 screen_printf("Not a valid option, must be 0 or 1");
+		 return;
+	       }
 	     }
 	     else if(phiAdd>=1 && phiAdd<=16) {		 
 	     }	     
@@ -6360,7 +6382,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 
 	 test=(1<<(phiAdd-1));
 	 if(allOn==1){
-	     test=0;
+	     test=0xffff;
 	 }
 	 phiTrigMask|=test;
 	 
@@ -6583,10 +6605,10 @@ ACQD_RATE_COMMAND(cmdCode){
 	 cmdBytes[0]=usvalue;
 
 	 usvalue=20;
-	 screen_dialog(resp,31,"Set L3 phi threshold window (1-60) (-1 to cancel) [%d]\n",usvalue);
+	 screen_dialog(resp,31,"Set L3 phi threshold window (1-255) (-1 to cancel) [%d]\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (1<= t && t <=60) {
+	     if (1<= t && t <=255) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
@@ -6617,10 +6639,10 @@ ACQD_RATE_COMMAND(cmdCode){
 	 cmdBytes[0]=usvalue;
 
 	 usvalue=40;
-	 screen_dialog(resp,31,"Set L3 phi threshold window (1-60) (-1 to cancel) [%d]\n",usvalue);
+	 screen_dialog(resp,31,"Set L3 phi threshold window (1-255) (-1 to cancel) [%d]\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (1<= t && t <=60) {
+	     if (1<= t && t <=255) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
@@ -6673,7 +6695,7 @@ ACQD_RATE_COMMAND(cmdCode){
      if(extraCode==ACQD_RATE_SET_DYNAMIC_ANT_MASK_UNDER) {
 
 	 uivalue=100000;
-	 screen_dialog(resp,31,"Set L1 ant over threshold rate (Hz) (-1 to cancel) [%d]\n",usvalue);
+	 screen_dialog(resp,31,"Set L1 ant under threshold rate (Hz) (-1 to cancel) [%d]\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (1<= t ) {
