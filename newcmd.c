@@ -1074,7 +1074,7 @@ JOURNALCTL_COMMAND(int cmdCode)
 	screen_printf("4.  Cmdd       9.  Monitord\n");
 	screen_printf("5.  Eventd     10. Prioritizerd\n");
 	screen_printf("11. SIPd       12. Playbackd\n");
-	screen_printf("13. LogWatchd  14. Neobrickd\n");
+	screen_printf("13. LogWatchd  14. Ntud\n");
 	screen_dialog(resp, 31, "Which Process Name? (-1 to cancel) [%d] ",
 		      jcArg);
 	if (resp[0] != '\0') {
@@ -1222,7 +1222,7 @@ CMD_DISABLE_DISK(int cmdCode)
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
 	screen_printf("0: Helium1            1: Helium2\n");
-	screen_printf(" 3: Neobrick\n");
+	screen_printf(" 3: Ntu\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
@@ -1241,7 +1241,7 @@ CMD_DISABLE_DISK(int cmdCode)
     }
     else {
 	screen_printf("0: Helium1            1: Helium2\n");
-	screen_printf("3: Neobrick\n");
+	screen_printf("3: Ntu\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
@@ -1259,7 +1259,7 @@ CMD_DISABLE_DISK(int cmdCode)
 
 	while(1) {
 	    screen_printf("0: Helium1            1: Helium2\n");
-	    screen_printf("3: Neobrick\n");
+	    screen_printf("3: Ntu\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
@@ -1470,7 +1470,7 @@ CMD_REALLY_KILL_PROGS(int cmdCode)
     screen_printf("4.  Cmdd       9.  Monitord\n");
     screen_printf("5.  Eventd     10. Prioritizerd\n");
     screen_printf("11. SIPd       12. Playbackd\n");
-    screen_printf("13. LogWatchd  14. Neobrickd\n");
+    screen_printf("13. LogWatchd  14. Ntud\n");
     screen_printf("16. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Kill -9 which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
@@ -1563,7 +1563,7 @@ CMD_KILL_PROGS(int cmdCode)
     screen_printf("4.  Cmdd       9.  Monitord\n");
     screen_printf("5.  Eventd     10. Prioritizerd\n");
     screen_printf("11. SIPd       12. Playbackd\n");
-    screen_printf("13. LogWatchd  14. Neobrickd\n");
+    screen_printf("13. LogWatchd  14. Ntud\n");
     screen_printf("16. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Kill which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
@@ -1656,7 +1656,7 @@ CMD_RESPAWN_PROGS(int cmdCode)
     screen_printf("4.  Cmdd       9.  Monitord\n");
     screen_printf("5.  Eventd     10. Prioritizerd\n");
     screen_printf("11. SIPd       12. Playbackd\n");
-    screen_printf("13. LogWatchd  14. Neobrickd\n");
+    screen_printf("13. LogWatchd  14. Ntud\n");
     screen_printf("16. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Respawn which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
@@ -1748,7 +1748,7 @@ CMD_START_PROGS(int cmdCode)
     screen_printf("4.  Cmdd       9.  Monitord\n");
     screen_printf("5.  Eventd     10. Prioritizerd\n");
     screen_printf("11. SIPd       12. Playbackd\n");
-    screen_printf("13. LogWatchd  14. Neobrickd\n");
+    screen_printf("13. LogWatchd  14. Ntud\n");
     screen_printf("16. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Start which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
@@ -1953,7 +1953,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
 	screen_printf("0: Helium1            1: Helium2\n");
-	screen_printf("3: Neobrick\n");
+	screen_printf("3: Ntu\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
@@ -1972,7 +1972,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
     }
     else {
 	screen_printf("0: Helium1            1: Helium2\n");
-	screen_printf("3: Neobrick\n");
+	screen_printf("3: Ntu\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
@@ -1990,7 +1990,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
 
 	while(1) {
 	    screen_printf("0: Helium1            1: Helium2\n");
-	    screen_printf("3: Neobrick\n");
+	    screen_printf("3: Ntu\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
@@ -2056,7 +2056,7 @@ CMD_HK_DISKTYPE(int cmdCode)
     diskBitMask=0;
     if(diskChoice==0 || diskChoice==1) {
 	screen_printf("0: Helium1       1: Helium2\n");
-	screen_printf("3: Neobrick\n");
+	screen_printf("3: Ntu\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
@@ -2075,7 +2075,7 @@ CMD_HK_DISKTYPE(int cmdCode)
     }
     else {
 	screen_printf("0: Helium1       1: Helium2\n");
-	screen_printf("3: Neobrick\n");
+	screen_printf("3: Ntu\n");
 	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
@@ -2093,7 +2093,7 @@ CMD_HK_DISKTYPE(int cmdCode)
 
 	while(1) {
 	    screen_printf("0: Helium1    1: Helium2\n");
-	    screen_printf("3: Neobrick\n");
+	    screen_printf("3: Ntu\n");
 	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
@@ -3671,7 +3671,7 @@ SEND_CONFIG(int cmdCode)
     screen_printf("4.  Cmdd.config       9.  Monitord.config\n");
     screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
-    screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
+    screen_printf("13. LogWatchd.config  14. Ntud.config\n");
     screen_printf("16. All of the above\n");
     screen_dialog(resp, 31, "Which config File? (-1 to cancel) [%u] ",
 	Config_det);
@@ -3761,7 +3761,7 @@ DEFAULT_CONFIG(int cmdCode)
     screen_printf("4.  Cmdd.config       9.  Monitord.config\n");
     screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
-    screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
+    screen_printf("13. LogWatchd.config  14. Ntud.config\n");
     screen_printf("16. All of the above\n");
     screen_dialog(resp, 31, "Which config file to return to default? (-1 to cancel) [%d] ",
 	Config_det);
@@ -3850,7 +3850,7 @@ LAST_CONFIG(int cmdCode)
     screen_printf("4.  Cmdd.config       9.  Monitord.config\n");
     screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
-    screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
+    screen_printf("13. LogWatchd.config  14. Ntud.config\n");
     screen_printf("16. All of the above\n");
     screen_dialog(resp, 31, "Which config file to return to last config? (-1 to cancel) [%d] ",
 	Config_det);
@@ -3940,7 +3940,7 @@ SWITCH_CONFIG(int cmdCode)
     screen_printf("4.  Cmdd.config       9.  Monitord.config\n");
     screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
-    screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
+    screen_printf("13. LogWatchd.config  14. Ntud.config\n");
     screen_printf("16. All of the above\n");
     screen_dialog(resp, 31, "Which config file to switch? (-1 to cancel) [%d] ",
 	Config_det);
@@ -4049,7 +4049,7 @@ SAVE_CONFIG(int cmdCode)
     screen_printf("4.  Cmdd.config       9.  Monitord.config\n");
     screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
-    screen_printf("13. LogWatchd.config  14. Neobrickd.config\n");
+    screen_printf("13. LogWatchd.config  14. Ntud.config\n");
     screen_printf("16. All of the above\n");
     screen_dialog(resp, 31, "Which config file to switch? (-1 to cancel) [%d] ",
 	Config_det);
