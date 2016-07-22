@@ -20,7 +20,7 @@ char *logRequestName(LogRequestCommand_t req)
 	case LOG_REQUEST_MESSAGES: return "/var/log/messages";
 	case LOG_REQUEST_ANITA: return "/var/log/anita.log";
 	case LOG_REQUEST_SECURITY: return "/var/log/security";
-	case LOG_REQUEST_NEOBRICK: return "/var/log/neobrick";
+	case LOG_REQUEST_NTU: return "/var/log/ntu";
 	case LOG_REQUEST_BOOT: return "/var/log/boot.log";	    
 	case LOG_REQUEST_PROC_CPUINFO: return "/proc/cpuinfo";
 	case LOG_REQUEST_PROC_DEVICES: return "/proc/devices";

@@ -7,7 +7,7 @@ CC = gcc
 CFLAGS = -g
 LIBS = -L/usr/local/lib -lncurses -lm
 
-TARGETS = cmdTui batchcmd kickLOSd
+TARGETS = cmdTui batchcmd
 
 all:	$(TARGETS)
 
