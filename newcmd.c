@@ -81,7 +81,7 @@ unsigned char ibuf[IBUFSIZE];
 #define LINK_HF		2
 #define LINK_LOS	0
 //#define PORT		"/dev/ttyUSB0"
-#define PORT		"/dev/ttyS0"
+#define PORT		"/dev/ttyXR1"
 //#define PORT		"/dev/ttyS2"
 #define PROMPT		": "
 #define ROUTE_COMM1	0x09
@@ -812,7 +812,7 @@ wait_for_ack(void)
     t.tv_usec = 0L;
     FD_ZERO(&f);
     FD_SET(Fd, &f);
-    ret = select(Fd+1, &f, NULL, NULL, &t);
+    ret = select(1, &f, NULL, NULL, &t);
     if (ret == -1) {
 	screen_printf("select() error (%s)\n", strerror(errno));
 	log_out("select() error (%s)", strerror(errno));
@@ -820,7 +820,7 @@ wait_for_ack(void)
     } else if (ret == 0 || !FD_ISSET(Fd, &f)) {
 	screen_printf("no response after %ld seconds\n", Timeout);
 	log_out("CSBF response; no response after %ld seconds", Timeout);
-	return;
+	return; 
     }
     sleep(1);
     n = read(Fd, ibuf, IBUFSIZE);
