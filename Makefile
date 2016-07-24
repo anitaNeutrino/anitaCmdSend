@@ -4,7 +4,7 @@
 BINDIR = /home/anita/bin	# install destination for most programs
 
 CC = gcc
-CFLAGS = -g
+CFLAGS = -g -m32
 LIBS = -L/usr/local/lib -lncurses -lm
 
 TARGETS = cmdTui batchcmd
