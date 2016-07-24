@@ -27,5 +27,5 @@ install:	all
 	cp $(TARGETS) $(BINDIR)
 
 clean:
-	rm -f newcmdfunc.h cmd batchcmd *.o
+	rm -f newcmdfunc.h $(TARGETS) *.o 
 

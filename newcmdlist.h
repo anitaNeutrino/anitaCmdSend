@@ -130,6 +130,9 @@
 #define PRIORITIZERD_COMMAND 253  
 #define PLAYBACKD_COMMAND 254  
 
+#define RTLD_COMMAND 28 
+#define TUFFD_COMMAND 255 
+
 
 #endif /* _CMDLIST_H */
 

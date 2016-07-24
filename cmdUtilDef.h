@@ -18,6 +18,8 @@ typedef enum {
     ID_LOGWATCHD,
     ID_NTUD,
     ID_OPENPORTD,
+    ID_RTLD, 
+    ID_TUFFD,
     ID_NOT_AN_ID
 } ProgramId_t;
 
@@ -38,7 +40,9 @@ typedef enum {
 #define LOGWATCHD_ID_MASK 0x1000
 #define NTUD_ID_MASK 0x2000
 #define OPENPORTD_ID_MASK 0x4000
-#define ALL_ID_MASK 0xffff
+#define RTLD_ID_MASK 0x8000
+#define TUFFD_ID_MASK 0x10000
+#define ALL_ID_MASK 0xfffff
 
 
 
@@ -189,6 +193,28 @@ typedef enum {
   GPS_SET_MXB_BASELINE_ERROR = 139,
   GPS_SET_MXM_PHASE_ERROR = 140
 } GpsExtraCommand_t;
+
+#define NBITS_FOR_RTL_INDEX 3
+typedef enum
+{
+  RTL_SET_TELEM_EVERY = 1, 
+  RTL_SET_START_FREQUENCY=2, 
+  RTL_SET_END_FREQUENCY=3, 
+  RTL_SET_GAIN = 4, 
+  RTL_SET_FREQUENCY_STEP =5
+} RTLdCommandCode_t; 
+
+typedef enum
+{
+  TUFF_SET_NOTCH = 1, 
+  TUFF_SEND_RAW = 2, 
+  TUFF_SET_SLEEP_AMOUNT =3, 
+  TUFF_SET_READ_TEMPERATURE =4 , 
+  TUFF_SET_TELEM_EVERY = 5, 
+  TUFF_SET_TELEM_AFTER_CHANGE = 6 
+  
+} TuffCommandCode_t; 
+
 
 //Disk Bit Masks
 #define HELIUM1_DISK_MASK 0x1

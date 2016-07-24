@@ -108,9 +108,9 @@ long Timeout = 10L;
 static short numLines=0;
 
 static short Dir_det =0;
-static short Prog_det =0;
+static unsigned int Prog_det =0;
 static char Which_RFCM =0;
-static unsigned short Config_det =0;
+static unsigned int Config_det =0;
 static short switchConfig =0;
 static short Priorit_det =0;
 static short CalPulserSwitch =0;
@@ -220,7 +220,7 @@ main(int argc, char *argv[])
 		}
 		break;
 	    case 'g':
-		snprintf(logname, LOGSTRSIZE, optarg);
+      snprintf(logname, LOGSTRSIZE, optarg);
 		break;
 	    default:
 	    case '?':
@@ -259,8 +259,8 @@ main(int argc, char *argv[])
 	if (make_pidfile()) {
 	    char junk[1];
 	    fprintf(stderr,
-	    	"Can't make PID file '%s' (%s). Press <ret> to continue.\n",
-		PIDFILENAME);
+	    	"Can't make PID file '%s' (%d). Press <ret> to continue.\n",
+		PIDFILENAME, pid);
 
 	    fgets(junk, 1, stdin);
 	}
@@ -1075,11 +1075,13 @@ JOURNALCTL_COMMAND(int cmdCode)
 	screen_printf("5.  Eventd     10. Prioritizerd\n");
 	screen_printf("11. SIPd       12. Playbackd\n");
 	screen_printf("13. LogWatchd  14. Ntud\n");
+	screen_printf("15. Openportd  16. RTLd\n");
+	screen_printf("17. Tuffd\n");
 	screen_dialog(resp, 31, "Which Process Name? (-1 to cancel) [%d] ",
 		      jcArg);
 	if (resp[0] != '\0') {
 	    det = atoi(resp);
-	    if (1 <= det && det <= 16) {
+	    if (1 <= det && det <= 17) {
 		switch(det){
 		    case 1:
 			jcArg = ID_ACQD;
@@ -1123,13 +1125,23 @@ JOURNALCTL_COMMAND(int cmdCode)
 		    case 14:
 			jcArg = ID_NTUD;
 			break;
+		    case 15:
+			jcArg = ID_OPENPORTD;
+			break;
+		    case 16:
+			jcArg = ID_RTLD;
+			break;
+                    case 17:
+			jcArg = ID_TUFFD;
+			break;
+	
 		    default: break;
 		}
 	    } else if (det == -1) {
 		screen_printf("Cancelled\n");
 		return;
 	    } else {
-		screen_printf("Value must be 1-16, not %d.\n", det);
+		screen_printf("Value must be 1-17, not %d.\n", det);
 		return;
 	    }
 	}
@@ -1471,12 +1483,14 @@ CMD_REALLY_KILL_PROGS(int cmdCode)
     screen_printf("5.  Eventd     10. Prioritizerd\n");
     screen_printf("11. SIPd       12. Playbackd\n");
     screen_printf("13. LogWatchd  14. Ntud\n");
-    screen_printf("16. All (except SIPd and Cmdd)\n");
+    screen_printf("15. Openportd  16. RTLd\n");
+    screen_printf("17. Tuffd  \n");
+    screen_printf("19. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Kill -9 which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 16) {
+	if (1 <= det && det <= 19) {
 	  switch(det){
 	  case 1:
             Prog_det = ACQD_ID_MASK;
@@ -1520,10 +1534,19 @@ CMD_REALLY_KILL_PROGS(int cmdCode)
           case 14:
             Prog_det = NTUD_ID_MASK;
 	    break;
+          case 15:
+            Prog_det = OPENPORTD_ID_MASK;
+	    break;
           case 16:
+            Prog_det = RTLD_ID_MASK;
+	    break;
+          case 17:
+            Prog_det = TUFFD_ID_MASK;
+	    break;
+          case 19:
             Prog_det = ALL_ID_MASK;
-	    Prog_det &= ~CMDD_ID_MASK;
-	    Prog_det &= ~SIPD_ID_MASK;
+            Prog_det &= ~CMDD_ID_MASK;
+            Prog_det &= ~SIPD_ID_MASK;
 	    break;
           default: break;
 	  }
@@ -1531,7 +1554,7 @@ CMD_REALLY_KILL_PROGS(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-16, not %d.\n", det);
+	    screen_printf("Value must be 1-19, not %d.\n", det);
 	    return;
 	}
     }
@@ -1541,8 +1564,10 @@ CMD_REALLY_KILL_PROGS(int cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = (Prog_det&0xff);
     Curcmd[4] = 2;
-    Curcmd[5] = ((Prog_det&0xf00)>>8); 
-    Curcmdlen = 6;
+    Curcmd[5] = ((Prog_det&0xff00)>>8); 
+    Curcmd[6] = 3; 
+    Curcmd[7] = ((Prog_det&0xff0000)>>16); 
+    Curcmdlen = 8;
     set_cmd_log("%d; Program  %d killed.", cmdCode, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
@@ -1564,12 +1589,14 @@ CMD_KILL_PROGS(int cmdCode)
     screen_printf("5.  Eventd     10. Prioritizerd\n");
     screen_printf("11. SIPd       12. Playbackd\n");
     screen_printf("13. LogWatchd  14. Ntud\n");
-    screen_printf("16. All (except SIPd and Cmdd)\n");
+    screen_printf("15. Openportd  16. RTLd\n");
+    screen_printf("17. Tuffd  \n");
+    screen_printf("19. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Kill which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 16) {
+	if (1 <= det && det <= 19) {
 	  switch(det){
 	  case 1:
             Prog_det = ACQD_ID_MASK;
@@ -1613,7 +1640,16 @@ CMD_KILL_PROGS(int cmdCode)
           case 14:
             Prog_det = NTUD_ID_MASK;
 	    break;
+          case 15:
+            Prog_det = OPENPORTD_ID_MASK; 
+	    break;
           case 16:
+            Prog_det = RTLD_ID_MASK; 
+	    break;
+          case 17:
+            Prog_det = TUFFD_ID_MASK; 
+	    break;
+          case 19:
             Prog_det = ALL_ID_MASK;
 	    Prog_det &= ~CMDD_ID_MASK;
 	    Prog_det &= ~SIPD_ID_MASK;
@@ -1624,7 +1660,7 @@ CMD_KILL_PROGS(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-16, not %d.\n", det);
+	    screen_printf("Value must be 1-19, not %d.\n", det);
 	    return;
 	}
     }
@@ -1636,8 +1672,10 @@ CMD_KILL_PROGS(int cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = (Prog_det&0xff);
     Curcmd[4] = 2;
-    Curcmd[5] = ((Prog_det&0xf00)>>8); 
-    Curcmdlen = 6;
+    Curcmd[5] = ((Prog_det&0xff00)>>8); 
+    Curcmd[6] = 3;
+    Curcmd[7] = ((Prog_det&0xff0000)>>16); 
+    Curcmdlen = 8;
     set_cmd_log("%d; Program  %d killed.", cmdCode, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
@@ -1657,12 +1695,14 @@ CMD_RESPAWN_PROGS(int cmdCode)
     screen_printf("5.  Eventd     10. Prioritizerd\n");
     screen_printf("11. SIPd       12. Playbackd\n");
     screen_printf("13. LogWatchd  14. Ntud\n");
-    screen_printf("16. All (except SIPd and Cmdd)\n");
+    screen_printf("15. Openportd  16. RTLd\n");
+    screen_printf("17. Tuffd \n");
+    screen_printf("19. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Respawn which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 16) {
+	if (1 <= det && det <= 19) {
 	  switch(det){
 	  case 1:
             Prog_det = ACQD_ID_MASK;
@@ -1706,7 +1746,16 @@ CMD_RESPAWN_PROGS(int cmdCode)
           case 14:
             Prog_det = NTUD_ID_MASK;
 	    break;
+          case 15:
+            Prog_det = OPENPORTD_ID_MASK;
+	    break;
           case 16:
+            Prog_det = RTLD_ID_MASK;
+	    break;
+          case 17:
+            Prog_det = TUFFD_ID_MASK;
+	    break;
+          case 19:
             Prog_det = ALL_ID_MASK;
 	    Prog_det &= ~CMDD_ID_MASK;
 	    Prog_det &= ~SIPD_ID_MASK;
@@ -1717,7 +1766,7 @@ CMD_RESPAWN_PROGS(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-16, not %d.\n", det);
+	    screen_printf("Value must be 1-19, not %d.\n", det);
 	    return;
 	}
     }
@@ -1728,8 +1777,10 @@ CMD_RESPAWN_PROGS(int cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = (Prog_det&0xff);
     Curcmd[4] = 2;
-    Curcmd[5] = ((Prog_det&0xf00)>>8); 
-    Curcmdlen = 6;
+    Curcmd[5] = ((Prog_det&0xff00)>>8); 
+    Curcmd[6] = 3;
+    Curcmd[7] = ((Prog_det&0xff0000)>>16); 
+    Curcmdlen = 8;
     screen_printf("Sent %d %d %d\n",cmdCode,(Prog_det&0xff),((Prog_det&0xf00)>>8));
     set_cmd_log("%d; Program  %d respawned.", cmdCode, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
@@ -1749,12 +1800,14 @@ CMD_START_PROGS(int cmdCode)
     screen_printf("5.  Eventd     10. Prioritizerd\n");
     screen_printf("11. SIPd       12. Playbackd\n");
     screen_printf("13. LogWatchd  14. Ntud\n");
-    screen_printf("16. All (except SIPd and Cmdd)\n");
+    screen_printf("15. Openportd  16. RTLd\n");
+    screen_printf("17. Tuffd  \n");
+    screen_printf("19. All (except SIPd and Cmdd)\n");
     screen_dialog(resp, 31, "Start which daemon? (-1 to cancel) [%d] ",
 	Prog_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 16) {
+	if (1 <= det && det <= 19) {
 	  switch(det){
 	  case 1:
             Prog_det = ACQD_ID_MASK;
@@ -1798,7 +1851,16 @@ CMD_START_PROGS(int cmdCode)
           case 14:
             Prog_det = NTUD_ID_MASK;
 	    break;
+          case 15:
+            Prog_det = OPENPORTD_ID_MASK;
+	    break;
           case 16:
+            Prog_det = RTLD_ID_MASK;
+	    break;
+          case 17:
+            Prog_det = TUFFD_ID_MASK;
+	    break;
+          case 19:
             Prog_det = ALL_ID_MASK;
 	    Prog_det &= ~CMDD_ID_MASK;
 	    Prog_det &= ~SIPD_ID_MASK;
@@ -1809,7 +1871,7 @@ CMD_START_PROGS(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-16, not %d.\n", det);
+	    screen_printf("Value must be 1-19, not %d.\n", det);
 	    return;
 	}
     }
@@ -1821,8 +1883,10 @@ CMD_START_PROGS(int cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = (Prog_det&0xff);
     Curcmd[4] = 2;
-    Curcmd[5] = ((Prog_det&0xf00)>>8); 
-    Curcmdlen = 6;
+    Curcmd[5] = ((Prog_det&0xff00)>>8); 
+    Curcmd[6] = 3;
+    Curcmd[7] = ((Prog_det&0xff0000)>>16); 
+    Curcmdlen = 8;
     set_cmd_log("%d; Program  %d started.", cmdCode, Prog_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 
@@ -3672,12 +3736,14 @@ SEND_CONFIG(int cmdCode)
     screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
     screen_printf("13. LogWatchd.config  14. Ntud.config\n");
-    screen_printf("16. All of the above\n");
+    screen_printf("15. Openportd.config  16. RTLd.config\n");
+    screen_printf("17. Tuffd.config \n");
+    screen_printf("19. All of the above\n");
     screen_dialog(resp, 31, "Which config File? (-1 to cancel) [%u] ",
 	Config_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 16) {
+	if (1 <= det && det <= 19) {
 	  switch(det){
 	  case 1:
             Config_det = ACQD_ID_MASK;
@@ -3721,7 +3787,16 @@ SEND_CONFIG(int cmdCode)
           case 14:
             Config_det = NTUD_ID_MASK;
 	    break;	
+          case 15:
+            Config_det = OPENPORTD_ID_MASK;
+	    break;	
           case 16:
+            Config_det = RTLD_ID_MASK;
+	    break;	
+          case 17:
+            Config_det = TUFFD_ID_MASK;
+	    break;	
+          case 19:
             Config_det = ALL_ID_MASK;
 	    break;
           default: break;
@@ -3730,7 +3805,7 @@ SEND_CONFIG(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-16, not %d.\n", det);
+	    screen_printf("Value must be 1-19, not %d.\n", det);
 	    return;
 	}
     }
@@ -3740,8 +3815,10 @@ SEND_CONFIG(int cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = (Config_det&0xff);
     Curcmd[4] = 2;
-    Curcmd[5] = ((Config_det&0xf00)>>8); 
-    Curcmdlen = 6;
+    Curcmd[5] = ((Config_det&0xff00)>>8); 
+    Curcmd[6] = 3;
+    Curcmd[7] = ((Config_det&0xff0000)>>16); 
+    Curcmdlen = 8;
     set_cmd_log("%d; Config  %u sent.", cmdCode, Config_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
@@ -3762,12 +3839,14 @@ DEFAULT_CONFIG(int cmdCode)
     screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
     screen_printf("13. LogWatchd.config  14. Ntud.config\n");
-    screen_printf("16. All of the above\n");
+    screen_printf("15. Openportd.config  16. RTLd.config\n");
+    screen_printf("17. Tuffd.config \n");
+    screen_printf("19. All of the above\n");
     screen_dialog(resp, 31, "Which config file to return to default? (-1 to cancel) [%d] ",
 	Config_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 16) {
+	if (1 <= det && det <= 19) {
 	  switch(det){
 	  case 1:
             Config_det = ACQD_ID_MASK;
@@ -3811,7 +3890,16 @@ DEFAULT_CONFIG(int cmdCode)
           case 14:
             Config_det = NTUD_ID_MASK;
 	    break;	
+          case 15:
+            Config_det = OPENPORTD_ID_MASK;
+	    break;	
           case 16:
+            Config_det = RTLD_ID_MASK;
+	    break;	
+          case 17:
+            Config_det = TUFFD_ID_MASK;
+	    break;	
+          case 19:
             Config_det = ALL_ID_MASK;
 	    break;
           default: break;
@@ -3820,7 +3908,7 @@ DEFAULT_CONFIG(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-16, not %d.\n", det);
+	    screen_printf("Value must be 1-19, not %d.\n", det);
 	    return;
 	}
     }
@@ -3831,7 +3919,9 @@ DEFAULT_CONFIG(int cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = (Config_det&0xff);
     Curcmd[4] = 2;
-    Curcmd[5] = ((Config_det&0xf00)>>8); 
+    Curcmd[5] = ((Config_det&0xff00)>>8); 
+    Curcmd[6] = 3;
+    Curcmd[7] = ((Config_det&0xff0000)>>16); 
     Curcmdlen = 6;
     set_cmd_log("%d; Config  %d set to default.", cmdCode, Config_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
@@ -3851,12 +3941,14 @@ LAST_CONFIG(int cmdCode)
     screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
     screen_printf("13. LogWatchd.config  14. Ntud.config\n");
-    screen_printf("16. All of the above\n");
+    screen_printf("15. Openportd.config  16. RTLd.config\n");
+    screen_printf("17. Tuffd.config \n");
+    screen_printf("19. All of the above\n");
     screen_dialog(resp, 31, "Which config file to return to last config? (-1 to cancel) [%d] ",
 	Config_det);
     if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 16) {
+	if (1 <= det && det <= 19) {
 	  switch(det){
 	  case 1:
             Config_det = ACQD_ID_MASK;
@@ -3900,7 +3992,17 @@ LAST_CONFIG(int cmdCode)
           case 14:
             Config_det = NTUD_ID_MASK;
 	    break;	
+          case 15:
+            Config_det = OPENPORTD_ID_MASK;
+	    break;	
           case 16:
+            Config_det = RTLD_ID_MASK;
+	    break;	
+          case 17:
+            Config_det = TUFFD_ID_MASK;
+	    break;	
+ 
+          case 19:
             Config_det = ALL_ID_MASK;
 	    break;
           default: break;
@@ -3909,7 +4011,7 @@ LAST_CONFIG(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-16, not %d.\n", det);
+	    screen_printf("Value must be 1-19, not %d.\n", det);
 	    return;
 	}
     }
@@ -3919,8 +4021,10 @@ LAST_CONFIG(int cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = (Config_det&0xff);
     Curcmd[4] = 2;
-    Curcmd[5] = ((Config_det&0xf00)>>8); 
-    Curcmdlen = 6;
+    Curcmd[5] = ((Config_det&0xff00)>>8); 
+    Curcmd[6] = 3;
+    Curcmd[7] = ((Config_det&0xff0000)>>16); 
+    Curcmdlen = 8;
     set_cmd_log("%d; Config  %d set to last.", cmdCode, Config_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
@@ -3941,12 +4045,14 @@ SWITCH_CONFIG(int cmdCode)
     screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
     screen_printf("13. LogWatchd.config  14. Ntud.config\n");
-    screen_printf("16. All of the above\n");
+    screen_printf("15. Openportd.config  16. RTLd.config\n");
+    screen_printf("17. Tuffd.config \n");
+    screen_printf("19. All of the above\n");
     screen_dialog(resp, 31, "Which config file to switch? (-1 to cancel) [%d] ",
 	Config_det);
       if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 16) {
+	if (1 <= det && det <= 19) {
 	  switch(det){
 	  case 1:
             Config_det = ACQD_ID_MASK;
@@ -3990,7 +4096,17 @@ SWITCH_CONFIG(int cmdCode)
           case 14:
             Config_det = NTUD_ID_MASK;
 	    break;	
+          case 15:
+            Config_det = OPENPORTD_ID_MASK;
+	    break;	
           case 16:
+            Config_det = RTLD_ID_MASK;
+	    break;	
+          case 17:
+            Config_det = TUFFD_ID_MASK;
+	    break;	
+ 
+          case 19:
             Config_det = ALL_ID_MASK;
 	    break;
           default: break;
@@ -3999,7 +4115,7 @@ SWITCH_CONFIG(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-16, not %d.\n", det);
+	    screen_printf("Value must be 1-19, not %d.\n", det);
 	    return;
 	}
     }
@@ -4025,10 +4141,12 @@ SWITCH_CONFIG(int cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = (Config_det&0xff);
     Curcmd[4] = 2;
-    Curcmd[5] = ((Config_det&0xf00)>>8); 
+    Curcmd[5] = ((Config_det&0xff00)>>8); 
     Curcmd[6] = 3;
-    Curcmd[7] = (switchConfig&0xff); 
-    Curcmdlen = 8;
+    Curcmd[7] = ((Config_det&0xff0000)>>16); 
+    Curcmd[8] = 4;
+    Curcmd[9] = (switchConfig&0xff); 
+    Curcmdlen = 10;
     set_cmd_log("%d; Config  %d set to %d.", cmdCode, Config_det,switchConfig);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
@@ -4050,12 +4168,14 @@ SAVE_CONFIG(int cmdCode)
     screen_printf("5.  Eventd.config     10. Prioritizerd.config\n");
     screen_printf("11. SIPd.config       12. Playbackd.config\n");
     screen_printf("13. LogWatchd.config  14. Ntud.config\n");
-    screen_printf("16. All of the above\n");
+    screen_printf("15. Openportd.config  16. RTLd.config\n");
+    screen_printf("17. Tuffd.config \n");
+    screen_printf("19. All of the above\n");
     screen_dialog(resp, 31, "Which config file to switch? (-1 to cancel) [%d] ",
 	Config_det);
       if (resp[0] != '\0') {
 	det = atoi(resp);
-	if (1 <= det && det <= 16) {
+	if (1 <= det && det <= 19) {
 	  switch(det){
 	  case 1:
             Config_det = ACQD_ID_MASK;
@@ -4099,7 +4219,16 @@ SAVE_CONFIG(int cmdCode)
           case 14:
             Config_det = NTUD_ID_MASK;
 	    break;	
+          case 15:
+            Config_det = OPENPORTD_ID_MASK;
+	    break;	
           case 16:
+            Config_det = RTLD_ID_MASK;
+	    break;	
+          case 17:
+            Config_det = TUFFD_ID_MASK;
+	    break;	
+          case 19:
             Config_det = ALL_ID_MASK;
 	    break;
           default: break;
@@ -4108,7 +4237,7 @@ SAVE_CONFIG(int cmdCode)
 	    screen_printf("Cancelled\n");
 	    return;
 	} else {
-	    screen_printf("Value must be 1-16, not %d.\n", det);
+	    screen_printf("Value must be 1-19, not %d.\n", det);
 	    return;
 	}
     }
@@ -4133,11 +4262,13 @@ SAVE_CONFIG(int cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = (Config_det&0xff);
     Curcmd[4] = 2;
-    Curcmd[5] = ((Config_det&0xf00)>>8); 
+    Curcmd[5] = ((Config_det&0xff00)>>8); 
     Curcmd[6] = 3;
-    Curcmd[7] = (configNum&0xff); 
-    Curcmdlen = 8;
-    set_cmd_log("%d; Current coonfig %d saved as %d.", cmdCode, Config_det,configNum);
+    Curcmd[7] = ((Config_det&0xff0000)>>16); 
+    Curcmd[8] = 4;
+    Curcmd[9] = (configNum&0xff); 
+    Curcmdlen = 10;
+    set_cmd_log("%d; Current config %d saved as %d.", cmdCode, Config_det,configNum);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
 
@@ -7459,6 +7590,621 @@ PLAYBACKD_COMMAND(cmdCode){
     sendcmd(Fd, Curcmd, Curcmdlen);
     return;
 
+}
+
+#define NBITS_FOR_RTL_INDEX 3 
+#define NUM_RTLSDR 6
+
+static void RTLD_COMMAND(cmdCode) 
+{
+  char resp[32]; 
+  char extra_code = 1; 
+  int t; 
+  double real; 
+  unsigned char cmdBytes[2] = {0}; 
+  unsigned char telemEvery = 1; 
+  unsigned short startFrequency = 180; 
+  unsigned short endFrequency = 1300; 
+  unsigned short stepFrequency = 320; 
+  unsigned char gainTarget = 1; 
+  double gain = 20; 
+  short sgain = 200; 
+
+  screen_printf("Enter RTLd command (1-5):  \n\n");  
+  screen_printf("  1.  RTL_SET_TELEM_EVERY      --- set telemetry interval  \n"); 
+  screen_printf("  2.  RTL_SET_START_FREQUENCY  --- set power spectrum start frequency  \n"); 
+  screen_printf("  3.  RTL_SET_END_FREQUENCY    --- set power spectrum end frequency  \n"); 
+  screen_printf("  4.  RTL_SET_FREQUENCY_STEP   --- set power spectrum frequency step \n"); 
+  screen_printf("  5.  RTL_SET_GAIN             --- set RTL-SDR gains \n"); 
+  screen_dialog(resp, 31, "Select command [%d] (-1 to cancel)\n", extra_code);
+
+
+  if (resp[0] != '\0') 
+  {
+    t = atoi(resp); 
+
+    if ( 1 <=t && t <=5) 
+    {
+      extra_code = t; 
+    }
+    else if (t == -1)
+    {
+      screen_printf("Cancelled. Have a nice day!\n"); 
+      return; 
+    }
+    else
+    {
+      screen_printf("Not a valid command.\n"); 
+      return; 
+    }
+
+
+    if (extra_code == RTL_SET_TELEM_EVERY)
+    {
+      screen_printf("[ You have selected RTL_SET_TELEM_EVERY  ]\n"); 
+      screen_printf("   This controls how often RTL-SDR power spectra are telemetered."); 
+      screen_printf("   0 means never, otherwise every Nth spectrum is telemetered (i.e. 1 means every)\n"); 
+      screen_dialog(resp, 31, "Enter telemetry interval (0-255) [%d]  (-1 to cancel)\n", telemEvery); 
+
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+
+        if (0<= t && t <=255)
+        {
+          telemEvery = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf(" Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("Not a valid option\n"); 
+          return; 
+        }
+
+      }
+
+      cmdBytes[0] = telemEvery; 
+    }
+
+    else if (extra_code == RTL_SET_START_FREQUENCY)
+    {
+      screen_printf("[ You have selected RTL_SET_START_FREQUENCY ]\n"); 
+      screen_printf("   This sets the start frequency of the scan, in __MHz__\n"); 
+      screen_printf("   Be aware that the larger the scan, the longer it will take\n"); 
+      screen_dialog(resp, 31, "Enter start frequency in MHz [%d] (50 - 1699) (-1 to cancel)\n", startFrequency); 
+
+      if (resp[0] != '\0')
+      {
+        t = atoi(resp); 
+
+        if  (50 <=t && t <=1699)
+        {
+          startFrequency = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf("Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("%d is outside the range of valid start frequencies (50-1699)\n", t);
+          return; 
+        }
+      }
+
+      cmdBytes[0] = startFrequency & 0xff; 
+      cmdBytes[1] = (startFrequency & 0xff00) >> 8; 
+    }
+
+    else if (extra_code == RTL_SET_END_FREQUENCY)
+    {
+      screen_printf(" [You have selected RTL_SET_END_FREQUENCY] \n"); 
+      screen_printf("   This sets the end frequency of the scan, in __MHz__\n"); 
+      screen_printf("   Be aware that the larger the scan, the longer it will take\n"); 
+      screen_dialog(resp, 31, "Enter end frequency in MHz [%d] (51 - 1700) (-1 to cancel)\n", endFrequency); 
+
+      if (resp[0] != '\0')
+      {
+        t = atoi(resp); 
+
+        if  (51 <=t && t <=1700)
+        {
+          endFrequency = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf("Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("%d is outside the range of valid end frequencies (51-1700)\n", t);
+          return; 
+        }
+      }
+
+      cmdBytes[0] = endFrequency & 0xff; 
+      cmdBytes[1] = (endFrequency & 0xff00) >> 8; 
+    }
+
+    else if (extra_code == RTL_SET_FREQUENCY_STEP)
+    {
+      screen_printf("   You have selected RTL_FREQUENCY_STEP \n"); 
+      screen_printf("   This sets the frequency of the scan, in __kHz__\n"); 
+      screen_printf("   This parameter behaves somewhat unexpectedly due to the intricacies of RTL-SDR bandwidth and powers of two.\n"); 
+      screen_printf("   An unwise setting can result in a frequency spectrum that is truncated or has uneven spacing.\n"); 
+      screen_printf("   It is therefore highly recommended that you enter a multiple of 320 (or maybe 160) kHz. \n"); 
+      screen_printf("   ... Unless you really know what you're doing... (i.e. you have read and understand what RTLd is doing) \n"); 
+      screen_printf("      [ This warning may be removed if the handling code becomes smarter ]  \n"); 
+      screen_dialog(resp, 31, "Enter frequency step in __kHz__ [%d] (1-65535) (-1 to cancel)\n", stepFrequency); 
+
+      if (resp[0] != '\0')
+      {
+        t = atoi(resp); 
+
+        if  (1 <=t && t <=65535)
+        {
+          stepFrequency = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf("Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("%d is outside the range of valid frequency steps (1-65535)\n", t);
+          return; 
+        }
+      }
+
+      cmdBytes[0] = stepFrequency & 0xff; 
+      cmdBytes[1] = (stepFrequency & 0xff00) >> 8; 
+    }
+
+    else if (extra_code == RTL_SET_GAIN)
+    {
+      screen_printf("   You have selected RTL_SET_GAIN. "); 
+      screen_printf("   This program believes that there are %d RTL-SDR's. Hopefully that's true.\n", NUM_RTLSDR); 
+      screen_printf("   This program indexes the RTL-SDR's according to their serials (e.g. RTL1, RTL2, etc.).\n"); 
+      screen_dialog(resp, 32, "Select the RTL-SDR that you want to set the gain for [%d] (1-%d) (-1 to cancel)\n", gainTarget, NUM_RTLSDR); 
+
+      if (resp[0] != '\0')
+      {
+        t = atoi(resp); 
+        if (1 <=t && t <= NUM_RTLSDR) 
+        {
+          gainTarget = t;               
+        }
+        else if (t == -1) 
+        {
+          screen_printf("Cancelled.\n"); 
+          return; 
+        }
+        else 
+        {
+          screen_printf("%d is outside the range of valid frequency steps (1-%d)\n", t, NUM_RTLSDR);
+          return; 
+        }
+      }
+
+      screen_printf("       [[ You are setting the gain for RTL%d  ]] \n\n", gainTarget); 
+      screen_printf("   The RTL-SDR's have various LNA gains available between 0-50 dB.\n");
+      screen_printf("   However, as the input impedance of the units appears to change with gain, we recommend you don't go above 20 dB\n"); 
+      screen_printf("   In fact, this program will limit you to 30 dB unless you modify the source code. \n"); 
+      screen_printf("   The nearest valid gain to the selected gain will be used. \n"); 
+      screen_dialog(resp, 32, "Select the LNA gain you want for RTL%d in dB [%f] (0-30 dB) (-1 to cancel)\n", gainTarget, gain); 
+      if (resp[0] != '\0') 
+      {
+        real = atof(resp); 
+
+        if ( 0<= real <= 30) //soft enforce limit here 
+        {
+          gain = real; 
+        }
+        else if (real == -1)
+        {
+          screen_printf("Cancelled."); 
+          return; 
+        }
+        else 
+        {
+          screen_printf("%f is outside the range (0-30)\n", real); 
+          return; 
+        }
+
+      }
+
+      //convert to short
+      sgain = 0.5 + gain * 10; 
+
+      //shift over so that index can be packed in
+      sgain << NBITS_FOR_RTL_INDEX; 
+      sgain |=  (gainTarget & ( ~(0xffff << NBITS_FOR_RTL_INDEX))); 
+
+      cmdBytes[0] = sgain & 0xff; 
+      cmdBytes[1] = (sgain & 0xff00) >> 8; 
+    }
+
+    //Build and send the command
+    
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = extra_code;
+    int ind=0;
+    for(ind=0;ind<2;ind++)
+    {
+      Curcmd[4+2*ind]=ind+2;
+      Curcmd[5+2*ind]=cmdBytes[ind];
+    }
+
+    Curcmdlen = 8;     
+    set_cmd_log("%d; RTLd command %d (%d %d)", cmdCode,extra_code,cmdBytes[0],cmdBytes[1]); 
+    sendcmd(Fd, Curcmd, Curcmdlen);
+  }
+}
+
+#define NUM_TUFF_NOTCHES 3
+#define NUM_RFCM 4 
+static const unsigned int notch_freqs[NUM_TUFF_NOTCHES] = { 260,360,450 }; 
+static const unsigned char notch_default_start[NUM_TUFF_NOTCHES] = { 0,16,16 }; 
+static const unsigned char notch_default_end[NUM_TUFF_NOTCHES] = { 15,16,16 }; 
+
+static void TUFFD_COMMAND(cmdCode) 
+{
+  char resp[32]; 
+  char extra_code = 1; 
+  char cmdBytes[6]; 
+  unsigned char start[NUM_TUFF_NOTCHES]; 
+  unsigned char end[NUM_TUFF_NOTCHES]; 
+  int inotch; 
+
+  memcpy(start, notch_default_start, sizeof(start)); 
+  memcpy(end, notch_default_end, sizeof(end)); 
+
+  int t; 
+ 
+  screen_printf("Enter Tuffd Command (1-6): \n\n"); 
+  screen_printf(" 1. TUFF_SET_NOTCH              ---  Set notches by phi sector\n"); 
+  screen_printf(" 2. TUFF_SEND_RAW               ---  (ADVANCED) send a raw command\n"); 
+  screen_printf(" 3. TUFF_SET_SLEEP_AMOUNT       ---  Set sleep amount \n"); 
+  screen_printf(" 4. TUFF_READ_TEMPERATURE       ---  Toggle temperature readout \n"); 
+  screen_printf(" 5. TUFF_TELEM_EVERY            ---  Modify telemetry interval \n"); 
+  screen_printf(" 6. TUFF_SET_TELEM_AFTER_CHANGE ---  Toggle post-change telemetry \n"); 
+  screen_dialog(resp,31, "Select command [%d] (-1 to cancel)\n", extra_code); 
+
+
+  if (resp[0]!='\0')
+  {
+    t = atoi(resp); 
+
+    if ( 1 <=t && t <= 6)
+    {
+      extra_code = t; 
+    }
+    else if (t == -1)
+    {
+      screen_printf("Cancelled.\n"); 
+    }
+    else 
+    {
+      screen_printf("Not a valid command.\n"); 
+      return; 
+    }
+
+
+    if (extra_code == TUFF_SET_NOTCH)
+    {
+
+      screen_printf(" [ You have selected TUFF_SET_NOTCH ]\n"); 
+      screen_printf("   This program will now ask you for start and end phi sectors for each notch.\n"); 
+      screen_printf("   If you want to disable the notch for all phi-sectors, type \"disable\" for the start.\n"); 
+      screen_printf("   For the purposes of this program, the phi-sectors are 1-indexed.  "); 
+      screen_printf("   As a reminder, the notches are: \n\n"); 
+      for (inotch = 0; inotch < NUM_TUFF_NOTCHES; inotch++)
+      {
+        screen_printf("      notch %d : ~%d MHz\n", inotch, notch_freqs[inotch]); 
+      }
+      
+      for (inotch = 0; inotch < NUM_TUFF_NOTCHES; inotch++) 
+      {
+        screen_dialog(resp, 31,  "\nEnter start phi sector for notch %d (~%d MHz) [%d] (1-16 or disable) (-1 to cancel)\n",inotch, notch_freqs[inotch], start[inotch]); 
+        
+        if (resp[0]!='\0')
+        {
+          int disabled = strcasestr(resp,  "disable"); 
+          if (disabled) 
+          {
+            start[inotch] = 16; 
+            end[inotch] = 16; 
+            continue; 
+          }
+
+          t = atoi(resp); 
+
+          if ( 1<=t && t<=16)
+          {
+            start[inotch] = t; 
+          }
+          else if (t == -1) 
+          {
+            screen_printf(" Cancelled! \n"); 
+            return;
+          }
+          else 
+          {
+            screen_printf (" Bad input: %s... try again! \n", resp); 
+            inotch--; 
+            continue; 
+          }
+        }
+
+        screen_dialog(resp, 31,  "\nEnter end phi sector for notch %d (~%d MHz) [%d] (1-16) (-1 to cancel)\n",inotch, notch_freqs[inotch], end[inotch]); 
+        if (resp[0]!='\0')
+        {
+          t = atoi(resp); 
+
+          if ( 1<=t && t<=16)
+          {
+            end[inotch] = t; 
+          }
+          else if (t == -1) 
+          {
+            screen_printf(" Cancelled! \n"); 
+            return;
+          }
+          else 
+          {
+            screen_printf (" Bad input: %s... try again! \n", resp); 
+            inotch--; 
+            continue; 
+          }
+        }
+      }
+
+
+      for (inotch = 0; inotch < NUM_TUFF_NOTCHES; inotch++) 
+      {
+        cmdBytes[2*inotch] = start[inotch]; 
+        cmdBytes[2*inotch+1] = end[inotch]; 
+      }
+    }
+
+    else if (extra_code == TUFF_SEND_RAW) 
+    {
+      int irfcm = 0; 
+      int tuff_stack = 0; 
+      short cmd = 0; 
+
+      screen_printf(" [ You have selected TUFF_SEND_RAW ]\n\n"); 
+      screen_printf("   This command is meant for ADVANCED USERS ONLY   \n\n"); 
+      screen_printf("   Please familiarize yourself with the tuff firmware prior to attempting this command. \n");      
+      screen_printf("   It is at https://github.com/barawn/tuff-slave-usi/blob/master/tuff-slave-usi/main.c \n\n"); 
+      screen_printf("   If you don't know how to read that, please find someone who does. \n"); 
+
+      screen_dialog(resp, 31, "Please enter the target RFCM [%d] (0-%d) (-1 to cancel)", irfcm, NUM_RFCM -1 ); 
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+        if (0 <= t && t <=NUM_RFCM)
+        {
+          irfcm =t;                 
+        }
+        else if (t == -1) 
+        {
+          screen_printf(" Cancelled\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("  Bad value: %d\n", t); 
+          return; 
+        }
+      }
+
+
+      screen_dialog(resp, 31, "Please enter the target Tuff Stack [%d] (0-1) (-1 to cancel)", tuff_stack); 
+
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+        if (0 <= t && t <=1)
+        {
+          tuff_stack =t;                 
+        }
+        else if (t == -1) 
+        {
+          screen_printf(" Cancelled\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("  Bad value: %d\n", t); 
+          return; 
+        }
+      }
+
+      screen_dialog(resp,31, "Please enter the raw command. This is will be read in by strtol, so hex (or octal) is fine [0x%x] (0x0000 - 0xFFFF) (-1 to cancel)\n", raw); 
+
+      if (resp[0] != '\0') 
+      {
+        char * endptr; 
+        // set errno to zero 
+        errno = 0; 
+        t = strtol(resp, &endptr, 0); 
+
+        if (t == -1)
+        {
+          screen_printf("Cancelled\n"); 
+          return;
+        }
+        else if (!(*resp != '\0' && *endptr == '\0' ) || errno || t > 0xffff || t < 0 )
+        {
+          screen_printf(" Bad value: %s\n", resp); 
+          return; 
+        }
+        else
+        {
+          cmd = t; 
+        }
+
+        cmdBytes[0] =  (irfcm << 1) | (tuff_stack & 1); 
+        cmdBytes[1] =  cmd & 0xff; 
+        cmdBytes[2] = (cmd & 0xff00) >> 8;
+
+      }
+    }
+    else if (extra_code == TUFF_SET_SLEEP_AMOUNT)
+    {
+      char sleep_amt = 1; 
+      screen_printf("[ You have selected TUFF_SET_SLEEP_AMOUNT  ]\n"); 
+      screen_printf("   This controls the length that Tuffd spends sleeping. \n"); 
+      screen_printf("   Changing other parameters will wake raise signals that stir Tuffd\n"); 
+      screen_printf("   from its slumber, so, modulo rare but theoretically possible race\n"); 
+      screen_printf("   conditions, this mostly affects the rate of temperature reading.\n"); 
+      screen_printf("   Time is in seconds\n"); 
+      screen_dialog(resp, 31, "Enter TUFF sleep amount (0-255) [%d]  (-1 to cancel)\n", sleep_amt); 
+
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+
+        if (0<= t && t <=255)
+        {
+          sleep_amt = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf(" Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("%d not a valid option\n", t); 
+          return; 
+        }
+
+      }
+
+      cmdBytes[0] = sleep_amt; 
+    }
+
+    else if (extra_code == TUFF_SET_READ_TEMPERATURE)
+    {
+      char rdtemp = 1; 
+      screen_printf("[ You have selected TUFF_SET_READ_TEMPERATURE  ]\n"); 
+      screen_printf("   This is used to toggle Tuffd temperature readings. \n"); 
+      screen_printf("   Since it takes some time to communicate to the Tuff, \n"); 
+      screen_printf("   it's possible that you may want to temporarily disable this occassionally. \n"); 
+      screen_dialog(resp, 31, "Enter whether or not the TUFF should read temperatures (0-1) [%d]  (-1 to cancel)\n", rdtemp); 
+
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+
+        if (0<= t && t <=1)
+        {
+          rdtemp = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf(" Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("%d not a valid option\n", t); 
+          return; 
+        }
+
+      }
+
+      cmdBytes[0] = rdtemp; 
+    }
+
+    else if (extra_code == TUFF_SET_TELEM_EVERY)
+    {
+      char telem_every = 1; 
+      screen_printf("[ You have selected TUFF_SET_TELEM_EVERY  ]\n"); 
+      screen_printf("   This is used to set the Tuffd telemetry interval. \n"); 
+      screen_dialog(resp, 31, "Enter Tuffd telemetry interval (0-255) [%d]  (-1 to cancel)\n", telem_every); 
+
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+
+        if (0<= t && t <=255)
+        {
+          telem_every = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf(" Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("%d not a valid option\n", t); 
+          return; 
+        }
+
+      }
+
+      cmdBytes[0] = telem_every; 
+    }
+    else if (extra_code == TUFF_SET_TELEM_AFTER_CHANGE)
+    {
+      char telem_after = 1; 
+      screen_printf("[ You have selected TUFF_SET_TELEM_AFTER_CHANGE  ]\n"); 
+      screen_printf("   This determines if Tuffd will telemeter after every change. \n"); 
+      screen_dialog(resp, 31, "Enter Tuffd telemetry interval (0-1) [%d]  (-1 to cancel)\n", telem_after); 
+
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+
+        if (0<= t && t <=1)
+        {
+          telem_after = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf(" Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("%d not a valid option\n", t); 
+          return; 
+        }
+
+      }
+
+      cmdBytes[0] = telem_after; 
+    }
+
+    Curcmd[0] = 0;
+    Curcmd[1] = cmdCode;
+    Curcmd[2] = 1;
+    Curcmd[3] = extra_code;
+    int ind=0;
+    for(ind=0;ind<8;ind++)
+    {
+      Curcmd[4+2*ind]=ind+2;
+      Curcmd[5+2*ind]=cmdBytes[ind];
+    }
+
+    Curcmdlen = 8;     
+    set_cmd_log("%d; Tuffd command %d (%d %d)", cmdCode,extra_code,cmdBytes[0],cmdBytes[1]); 
+    sendcmd(Fd, Curcmd, Curcmdlen);
+
+  } //check that response was sensical 
 }
 
 
