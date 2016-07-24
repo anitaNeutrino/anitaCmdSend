@@ -905,11 +905,11 @@ show_cmds(void)
     int i,j;
     int val[3];
     
-    int easyCmdArray[32]={1,2,3,11,132,150, 151, 152,153,154,155,
+    int easyCmdArray[33]={1,2,3,11,132,150, 151, 152,153,154,155,
 			  156,157,158,159,160, 161, 162, 163, 171,172,173,
-			  174,175,182,183,210,230,231,235,238,239};
+			  174,175,182,183,210,230,231,235,238,239,255};
 
-    for (j=0; j<31; j++) {
+    for (j=0; j<33; j++) {
 	i=easyCmdArray[j];
 
 	if (Cmdarray[i].f != NULL) {
@@ -5941,10 +5941,12 @@ LOSD_CONTROL_COMMAND(cmdCode){
     static unsigned short value=0;
     screen_printf("1. LOSD_SEND_DATA\n");
     screen_printf("2. LOSD_PRIORITY_BANDWIDTH\n");
+    screen_printf("3. --- \n");
+    screen_printf("4. LOSD_MIN_WAIT_TIME\n");
     screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (1<= t && t <=2) {
+	if ((1<= t && t <=2) || (t == 4)) {
 	    extraCode = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
@@ -6004,6 +6006,40 @@ LOSD_CONTROL_COMMAND(cmdCode){
 	secondByte=value;
     }
   
+    if (extraCode == LOSD_MIN_WAIT_TIME)
+    {
+        char wait_time = 16; 
+        screen_printf(" You have selected LOSD_MIN_WAIT_TIME\n"); 
+        screen_printf(" This is the minimum time that must elapse between LOSd messages\n"); 
+        screen_printf(" Otherwise we miss messages on the ground. \n"); 
+        screen_printf(" Units are in ms. \n\n"); 
+
+        screen_dialog(resp, 31, "Enter minimum wait time( 0-255) (-1 to cancel) [%d]\n", wait_time); 
+
+        if (resp[0] != '\0') 
+        {
+            t = atoi(resp); 
+            if (0 <= t && t <=255) 
+            {
+                wait_time = t; 
+            }
+            else if (t ==-1)
+            {
+                screen_printf(" cancelled. \n"); 
+                return; 
+            }
+            else
+            {
+                screen_printf("bad value: %s\n", resp); 
+                return;
+            }
+
+        }
+
+        firstByte  = wait_time; 
+        secondByte = 0; 
+
+    }
     
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
@@ -7614,8 +7650,8 @@ static void RTLD_COMMAND(cmdCode)
   screen_printf("  1.  RTL_SET_TELEM_EVERY      --- set telemetry interval  \n"); 
   screen_printf("  2.  RTL_SET_START_FREQUENCY  --- set power spectrum start frequency  \n"); 
   screen_printf("  3.  RTL_SET_END_FREQUENCY    --- set power spectrum end frequency  \n"); 
-  screen_printf("  4.  RTL_SET_FREQUENCY_STEP   --- set power spectrum frequency step \n"); 
-  screen_printf("  5.  RTL_SET_GAIN             --- set RTL-SDR gains \n"); 
+  screen_printf("  4.  RTL_SET_GAIN             --- set RTL-SDR gains \n"); 
+  screen_printf("  5.  RTL_SET_FREQUENCY_STEP   --- set power spectrum frequency step \n\n"); 
   screen_dialog(resp, 31, "Select command [%d] (-1 to cancel)\n", extra_code);
 
 
@@ -7642,9 +7678,9 @@ static void RTLD_COMMAND(cmdCode)
     if (extra_code == RTL_SET_TELEM_EVERY)
     {
       screen_printf("[ You have selected RTL_SET_TELEM_EVERY  ]\n"); 
-      screen_printf("   This controls how often RTL-SDR power spectra are telemetered."); 
+      screen_printf("   This controls how often RTL-SDR power spectra are telemetered.\n"); 
       screen_printf("   0 means never, otherwise every Nth spectrum is telemetered (i.e. 1 means every)\n"); 
-      screen_dialog(resp, 31, "Enter telemetry interval (0-255) [%d]  (-1 to cancel)\n", telemEvery); 
+      screen_dialog(resp, 31, "Enter telemetry interval (0-255) [%d]  (-1 to cancel)\n\n", telemEvery); 
 
       if (resp[0] != '\0') 
       {
@@ -7675,7 +7711,7 @@ static void RTLD_COMMAND(cmdCode)
       screen_printf("[ You have selected RTL_SET_START_FREQUENCY ]\n"); 
       screen_printf("   This sets the start frequency of the scan, in __MHz__\n"); 
       screen_printf("   Be aware that the larger the scan, the longer it will take\n"); 
-      screen_dialog(resp, 31, "Enter start frequency in MHz [%d] (50 - 1699) (-1 to cancel)\n", startFrequency); 
+      screen_dialog(resp, 31, "Enter start frequency in MHz [%d] (50 - 1699) (-1 to cancel)\n\n", startFrequency); 
 
       if (resp[0] != '\0')
       {
@@ -7692,7 +7728,7 @@ static void RTLD_COMMAND(cmdCode)
         }
         else
         {
-          screen_printf("%d is outside the range of valid start frequencies (50-1699)\n", t);
+          screen_printf("%d is outside the range of valid start frequencies (50-1699)\n\n", t);
           return; 
         }
       }
@@ -7706,7 +7742,7 @@ static void RTLD_COMMAND(cmdCode)
       screen_printf(" [You have selected RTL_SET_END_FREQUENCY] \n"); 
       screen_printf("   This sets the end frequency of the scan, in __MHz__\n"); 
       screen_printf("   Be aware that the larger the scan, the longer it will take\n"); 
-      screen_dialog(resp, 31, "Enter end frequency in MHz [%d] (51 - 1700) (-1 to cancel)\n", endFrequency); 
+      screen_dialog(resp, 31, "Enter end frequency in MHz [%d] (51 - 1700) (-1 to cancel)\n\n", endFrequency); 
 
       if (resp[0] != '\0')
       {
@@ -7735,12 +7771,13 @@ static void RTLD_COMMAND(cmdCode)
     else if (extra_code == RTL_SET_FREQUENCY_STEP)
     {
       screen_printf("   You have selected RTL_FREQUENCY_STEP \n"); 
-      screen_printf("   This sets the frequency of the scan, in __kHz__\n"); 
-      screen_printf("   This parameter behaves somewhat unexpectedly due to the intricacies of RTL-SDR bandwidth and powers of two.\n"); 
-      screen_printf("   An unwise setting can result in a frequency spectrum that is truncated or has uneven spacing.\n"); 
-      screen_printf("   It is therefore highly recommended that you enter a multiple of 320 (or maybe 160) kHz. \n"); 
-      screen_printf("   ... Unless you really know what you're doing... (i.e. you have read and understand what RTLd is doing) \n"); 
-      screen_printf("      [ This warning may be removed if the handling code becomes smarter ]  \n"); 
+      screen_printf("   This sets the frequency of the scan, in __kHz__\n\n"); 
+      screen_printf("   This parameter behaves somewhat unexpectedly due to the \n"); 
+      screen_printf("   intricacies of RTL-SDR bandwidth and powers of two.\n"); 
+      screen_printf("   An unwise setting can result in a frequency spectrum\n    that is truncated or has uneven spacing.\n"); 
+      screen_printf("   It is therefore highly recommended that you enter a \n    multiple of 320 (or maybe 160) kHz. \n"); 
+      screen_printf("   ... Unless you really know what you're doing...\n     (i.e. you have read and understand what RTLd is doing) \n"); 
+      screen_printf("      [ This warning may be removed if the handling code becomes smarter ]  \n\n"); 
       screen_dialog(resp, 31, "Enter frequency step in __kHz__ [%d] (1-65535) (-1 to cancel)\n", stepFrequency); 
 
       if (resp[0] != '\0')
@@ -7770,8 +7807,8 @@ static void RTLD_COMMAND(cmdCode)
     else if (extra_code == RTL_SET_GAIN)
     {
       screen_printf("   You have selected RTL_SET_GAIN. "); 
-      screen_printf("   This program believes that there are %d RTL-SDR's. Hopefully that's true.\n", NUM_RTLSDR); 
-      screen_printf("   This program indexes the RTL-SDR's according to their serials (e.g. RTL1, RTL2, etc.).\n"); 
+      screen_printf("   This program believes that there are %d RTL-SDR's.\n   Hopefully that's true.\n", NUM_RTLSDR); 
+      screen_printf("   This program indexes the RTL-SDR's according to their serials \n   (e.g. RTL1, RTL2, etc.).\n"); 
       screen_dialog(resp, 32, "Select the RTL-SDR that you want to set the gain for [%d] (1-%d) (-1 to cancel)\n", gainTarget, NUM_RTLSDR); 
 
       if (resp[0] != '\0')
@@ -7795,8 +7832,8 @@ static void RTLD_COMMAND(cmdCode)
 
       screen_printf("       [[ You are setting the gain for RTL%d  ]] \n\n", gainTarget); 
       screen_printf("   The RTL-SDR's have various LNA gains available between 0-50 dB.\n");
-      screen_printf("   However, as the input impedance of the units appears to change with gain, we recommend you don't go above 20 dB\n"); 
-      screen_printf("   In fact, this program will limit you to 30 dB unless you modify the source code. \n"); 
+      screen_printf("   However, as the input impedance of the units appears to change with gain, \n   we recommend you don't go above 20 dB\n"); 
+      screen_printf("   In fact, this program will limit you to 30 dB \n"); 
       screen_printf("   The nearest valid gain to the selected gain will be used. \n"); 
       screen_dialog(resp, 32, "Select the LNA gain you want for RTL%d in dB [%f] (0-30 dB) (-1 to cancel)\n", gainTarget, gain); 
       if (resp[0] != '\0') 
@@ -7891,6 +7928,7 @@ static void TUFFD_COMMAND(cmdCode)
     else if (t == -1)
     {
       screen_printf("Cancelled.\n"); 
+      return; 
     }
     else 
     {
@@ -7904,8 +7942,8 @@ static void TUFFD_COMMAND(cmdCode)
 
       screen_printf(" [ You have selected TUFF_SET_NOTCH ]\n"); 
       screen_printf("   This program will now ask you for start and end phi sectors for each notch.\n"); 
-      screen_printf("   If you want to disable the notch for all phi-sectors, type \"disable\" for the start.\n"); 
-      screen_printf("   For the purposes of this program, the phi-sectors are 1-indexed.  "); 
+      screen_printf("   To disable the notch for all phi-sectors, type \"disable\" for the start.\n"); 
+      screen_printf("   For the purposes of this program, the phi-sectors are 1-indexed. \n"); 
       screen_printf("   As a reminder, the notches are: \n\n"); 
       for (inotch = 0; inotch < NUM_TUFF_NOTCHES; inotch++)
       {
@@ -7914,7 +7952,7 @@ static void TUFFD_COMMAND(cmdCode)
       
       for (inotch = 0; inotch < NUM_TUFF_NOTCHES; inotch++) 
       {
-        screen_dialog(resp, 31,  "\nEnter start phi sector for notch %d (~%d MHz) [%d] (1-16 or disable) (-1 to cancel)\n",inotch, notch_freqs[inotch], start[inotch]); 
+        screen_dialog(resp, 31,  "\nEnter start sector for notch %d (~%d MHz) [%d] (1-16 or disable) (-1 cancels)\n",inotch, notch_freqs[inotch], start[inotch]); 
         
         if (resp[0]!='\0')
         {
@@ -7984,9 +8022,9 @@ static void TUFFD_COMMAND(cmdCode)
 
       screen_printf(" [ You have selected TUFF_SEND_RAW ]\n\n"); 
       screen_printf("   This command is meant for ADVANCED USERS ONLY   \n\n"); 
-      screen_printf("   Please familiarize yourself with the tuff firmware prior to attempting this command. \n");      
-      screen_printf("   It is at https://github.com/barawn/tuff-slave-usi/blob/master/tuff-slave-usi/main.c \n\n"); 
-      screen_printf("   If you don't know how to read that, please find someone who does. \n"); 
+      screen_printf("   Familiarize yourself with the tuff firmware prior to attempting this command. \n");      
+      screen_printf("   It is at https://github.com/barawn/tuff-slave-usi/ \n\n"); 
+      screen_printf("   If you don't know how to read that, find someone who does. \n"); 
 
       screen_dialog(resp, 31, "Please enter the target RFCM [%d] (0-%d) (-1 to cancel)", irfcm, NUM_RFCM -1 ); 
       if (resp[0] != '\0') 
@@ -8030,7 +8068,7 @@ static void TUFFD_COMMAND(cmdCode)
         }
       }
 
-      screen_dialog(resp,31, "Please enter the raw command. This is will be read in by strtol, so hex (or octal) is fine [0x%x] (0x0000 - 0xFFFF) (-1 to cancel)\n", raw); 
+      screen_dialog(resp,31, "Please enter the raw command. [0x%x] (0x0000 - 0xFFFF) (-1 to cancel)\n", cmd); 
 
       if (resp[0] != '\0') 
       {
