@@ -5942,7 +5942,8 @@ LOSD_CONTROL_COMMAND(cmdCode){
     screen_printf("1. LOSD_SEND_DATA\n");
     screen_printf("2. LOSD_PRIORITY_BANDWIDTH\n");
     screen_printf("3. --- \n");
-    screen_printf("4. LOSD_MIN_WAIT_TIME\n");
+    screen_printf("4. LOSD_MIN_WAIT_TIME_B\n");
+    screen_printf("5. LOSD_MIN_WAIT_TIME_M\n");
     screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
     if (resp[0] != '\0') {
 	t = atoi(resp);
@@ -6006,11 +6007,11 @@ LOSD_CONTROL_COMMAND(cmdCode){
 	secondByte=value;
     }
   
-    if (extraCode == LOSD_MIN_WAIT_TIME)
+    if (extraCode == LOSD_MIN_WAIT_TIME_B)
     {
-        char wait_time = 16; 
-        screen_printf(" You have selected LOSD_MIN_WAIT_TIME\n"); 
-        screen_printf(" This is the minimum time that must elapse between LOSd messages\n"); 
+        char wait_time = 5; 
+        screen_printf(" You have selected LOSD_MIN_WAIT_TIME_B\n"); 
+        screen_printf(" This is intercept of the minimum time that must elapse between LOSd messages\n"); 
         screen_printf(" Otherwise we miss messages on the ground. \n"); 
         screen_printf(" Units are in ms. \n\n"); 
 
@@ -6041,6 +6042,40 @@ LOSD_CONTROL_COMMAND(cmdCode){
 
     }
     
+    if (extraCode == LOSD_MIN_WAIT_TIME_M)
+    {
+        char wait_time = 10; 
+        screen_printf(" You have selected LOSD_MIN_WAIT_TIME_M\n"); 
+        screen_printf(" This is slope of the  minimum time that must elapse between LOSd messages\n"); 
+        screen_printf(" Otherwise we miss messages on the ground. \n"); 
+        screen_printf(" Units are in us/byte. \n\n"); 
+
+        screen_dialog(resp, 31, "Enter minimum wait time( 0-255) (-1 to cancel) [%d]\n", wait_time); 
+
+        if (resp[0] != '\0') 
+        {
+            t = atoi(resp); 
+            if (0 <= t && t <=255) 
+            {
+                wait_time = t; 
+            }
+            else if (t ==-1)
+            {
+                screen_printf(" cancelled. \n"); 
+                return; 
+            }
+            else
+            {
+                screen_printf("bad value: %s\n", resp); 
+                return;
+            }
+
+        }
+
+        firstByte  = wait_time; 
+        secondByte = 0; 
+
+    }
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
