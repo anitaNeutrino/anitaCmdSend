@@ -6,14 +6,17 @@
  * 	12/27/06 Check for another 'cmd' running at startup. (MAO)
  */
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>	/* strlen, strerror */
 #include <stdlib.h>	/* malloc */
 #include <curses.h>
 #include <math.h>
+#include <time.h>
 
 #include <signal.h>
+#include <ctype.h>
 
 #include <fcntl.h>
 #include <termios.h>
@@ -1299,7 +1302,7 @@ CMD_DISABLE_DISK(int cmdCode)
     Curcmd[4] = 2;
     Curcmd[5] = (diskBitMask&0xff);
     Curcmd[6] = 3;
-    Curcmd[7] = ((diskBitMask&0xff00)<<8);
+    Curcmd[7] = ((diskBitMask&0xff00)>>8);
     Curcmdlen = 8;
     set_cmd_log("%d; Send event disk bit mask command %d %#x.", cmdCode, diskChoice,
 		diskBitMask);
@@ -2082,7 +2085,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
     Curcmd[4] = 2;
     Curcmd[5] = (diskBitMask&0xff);
     Curcmd[6] = 3;
-    Curcmd[7] = ((diskBitMask&0xff00)<<8);
+    Curcmd[7] = ((diskBitMask&0xff00)>>8);
     Curcmdlen = 8;
     set_cmd_log("%d; Send event disk bit mask command %d %#x.", cmdCode, diskChoice,
 		diskBitMask);
@@ -2185,7 +2188,7 @@ CMD_HK_DISKTYPE(int cmdCode)
     Curcmd[4] = 2;
     Curcmd[5] = (diskBitMask&0xff);
     Curcmd[6] = 3;
-    Curcmd[7] = ((diskBitMask&0xff00)<<8);
+    Curcmd[7] = ((diskBitMask&0xff00)>>8);
     Curcmdlen = 8;
     set_cmd_log("%d; Send hk disk bit mask command %d %#x.", cmdCode, diskChoice,
 		diskBitMask);
@@ -6044,11 +6047,11 @@ LOSD_CONTROL_COMMAND(cmdCode){
     
     if (extraCode == LOSD_MIN_WAIT_TIME_M)
     {
-        char wait_time = 10; 
+        char wait_time = 5; 
         screen_printf(" You have selected LOSD_MIN_WAIT_TIME_M\n"); 
         screen_printf(" This is slope of the  minimum time that must elapse between LOSd messages\n"); 
         screen_printf(" Otherwise we miss messages on the ground. \n"); 
-        screen_printf(" Units are in us/byte. \n\n"); 
+        screen_printf(" Units are in us/kbyte. \n\n"); 
 
         screen_dialog(resp, 31, "Enter minimum wait time( 0-255) (-1 to cancel) [%d]\n", wait_time); 
 
@@ -7680,6 +7683,11 @@ static void RTLD_COMMAND(cmdCode)
   unsigned char gainTarget = 1; 
   double gain = 20; 
   short sgain = 200; 
+  short gracefulTimeout = 60; 
+  short failTimeout = 5; 
+  short failThreshold = 5; 
+  char disable_index = 0; 
+  char disable_value = 0; 
 
   screen_printf("Enter RTLd command (1-5):  \n\n");  
   screen_printf("  1.  RTL_SET_TELEM_EVERY      --- set telemetry interval  \n"); 
@@ -7687,6 +7695,10 @@ static void RTLD_COMMAND(cmdCode)
   screen_printf("  3.  RTL_SET_END_FREQUENCY    --- set power spectrum end frequency  \n"); 
   screen_printf("  4.  RTL_SET_GAIN             --- set RTL-SDR gains \n"); 
   screen_printf("  5.  RTL_SET_FREQUENCY_STEP   --- set power spectrum frequency step \n\n"); 
+  screen_printf("  6.  RTL_SET_GRACEFUL_TIMEOUT --- set scan timeout\n"); 
+  screen_printf("  7.  RTL_SET_FAIL_TIMEOUT     --- set kill -9 timeout (after graceful fails)\n"); 
+  screen_printf("  8.  RTL_SET_MAX_FAILS        --- maximum number of fails until soft disable \n"); 
+  screen_printf("  9.  RTL_SET_DISABLED         --- soft disable devices (or enable) \n"); 
   screen_dialog(resp, 31, "Select command [%d] (-1 to cancel)\n", extra_code);
 
 
@@ -7860,7 +7872,7 @@ static void RTLD_COMMAND(cmdCode)
         }
         else 
         {
-          screen_printf("%d is outside the range of valid frequency steps (1-%d)\n", t, NUM_RTLSDR);
+          screen_printf("%d is outside the range of valid RTL's (1-%d)\n", t, NUM_RTLSDR);
           return; 
         }
       }
@@ -7901,6 +7913,159 @@ static void RTLD_COMMAND(cmdCode)
 
       cmdBytes[0] = sgain & 0xff; 
       cmdBytes[1] = (sgain & 0xff00) >> 8; 
+    }
+    else if (extra_code == RTL_SET_GRACEFUL_TIMEOUT)
+    {
+      screen_printf("[ You have selected RTL_SET_GRACEFUL_TIMEOUT  ]\n"); 
+      screen_printf("   This controls the maximum time RTLd will wait for a scan to complete..\n"); 
+      screen_printf("   After this time, a SIGTERM will  sent which should truncate the scan \n"); 
+      screen_dialog(resp, 31, "Enter graceful timeout  (0-65535) [%d]  (-1 to cancel)\n\n", gracefulTimeout); 
+
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+
+        if (0<= t && t <=65535)
+        {
+          gracefulTimeout = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf(" Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("Not a valid option: %s \n", resp); 
+          return; 
+        }
+
+      }
+
+      cmdBytes[0] = gracefulTimeout & 0xff; 
+      cmdBytes[1] = (gracefulTimeout & 0xff00) >> 8; 
+    }
+    else if (extra_code == RTL_SET_FAIL_TIMEOUT)
+    {
+      screen_printf("[ You have selected RTL_SET_FAILTIMEOUT  ]\n"); 
+      screen_printf("   This controls how long we allow a scan to gracefully terminate .\n"); 
+      screen_printf("   After this time, a SIGKILL will sent which destroy the scan\n"); 
+      screen_dialog(resp, 31, "Enter fail timeout  (0-65535) [%d]  (-1 to cancel)\n\n", failTimeout); 
+
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+
+        if (0<= t && t <=65535)
+        {
+          failTimeout = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf(" Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("Not a valid option: %s \n", resp); 
+          return; 
+        }
+
+      }
+
+      cmdBytes[0] = failTimeout & 0xff; 
+      cmdBytes[1] = (failTimeout & 0xff00) >> 8; 
+    }
+
+    else if (extra_code == RTL_SET_MAX_FAIL)
+    {
+      screen_printf("[ You have selected RTL_SET_MAX_FAIL ]\n"); 
+      screen_printf("   This controls the maximum number times we allow an RTL to fail before giving up"); 
+      screen_printf("   A fail is defined as having to be kill -9ed. This resets each time RTLd starts.\n"); 
+      screen_dialog(resp, 31, "Enter fail timeout  (0-65535) [%d]  (-1 to cancel)\n\n", failThreshold); 
+
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+
+        if (0<= t && t <=65535)
+        {
+          failThreshold = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf(" Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("Not a valid option: %s \n", resp); 
+          return; 
+        }
+
+      }
+
+      cmdBytes[0] = failThreshold & 0xff; 
+      cmdBytes[1] = (failThreshold & 0xff00) >> 8; 
+    }
+
+    else if (extra_code == RTL_SET_DISABLED)
+    {
+      screen_printf("   You have selected RTL_SET_DISABLED. "); 
+      screen_printf("   This program believes that there are %d RTL-SDR's.\n   Hopefully that's true.\n", NUM_RTLSDR); 
+      screen_printf("   This program indexes the RTL-SDR's according to their serials \n   (e.g. RTL1, RTL2, etc.).\n"); 
+      screen_dialog(resp, 32, "Select the RTL-SDR that you want to toggle disable [%d] (1-%d) (-1 to cancel)\n", disable_index, NUM_RTLSDR); 
+
+      if (resp[0] != '\0')
+      {
+        t = atoi(resp); 
+        if (1 <=t && t <= NUM_RTLSDR) 
+        {
+          disable_index = t;               
+        }
+        else if (t == -1) 
+        {
+          screen_printf("Cancelled.\n"); 
+          return; 
+        }
+        else 
+        {
+          screen_printf("%d is outside the range of valid RTL's (1-%d)\n", t, NUM_RTLSDR);
+          return; 
+        }
+      }
+
+      screen_printf("       [[ You are toggling RTL%d  ]] \n\n", disable_index); 
+      screen_printf("   You are setting the disabled state, so 1 disables, 0 enables\n"); 
+      screen_dialog(resp, 32, "Select if you you want to disable RTL%d  [%d]  (-1 to cancel)\n", disable_index, disable_value); 
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+
+        if ( 0<= t <= 1) //soft enforce limit here 
+        {
+          disable_value = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf("Cancelled."); 
+          return; 
+        }
+        else 
+        {
+          screen_printf("%d is outside the range (0-30)\n", t); 
+          return; 
+        }
+
+      }
+
+      //convert to short
+
+      cmdBytes[0] = disable_index; 
+      cmdBytes[1] = disable_value; 
+
+
+
     }
 
     //Build and send the command
@@ -7991,7 +8156,7 @@ static void TUFFD_COMMAND(cmdCode)
         
         if (resp[0]!='\0')
         {
-          int disabled = strcasestr(resp,  "disable"); 
+          char * disabled = strcasestr(resp,  "disable"); 
           if (disabled) 
           {
             start[inotch] = 16; 
