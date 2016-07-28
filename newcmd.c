@@ -7762,7 +7762,7 @@ static void RTLD_COMMAND(cmdCode)
   unsigned char telemEvery = 1; 
   unsigned short startFrequency = 180; 
   unsigned short endFrequency = 1300; 
-  unsigned short stepFrequency = 320; 
+  unsigned short stepFrequency = 300; 
   unsigned char gainTarget = 1; 
   double gain = 20; 
   short sgain = 200; 
@@ -7777,7 +7777,7 @@ static void RTLD_COMMAND(cmdCode)
   screen_printf("  2.  RTL_SET_START_FREQUENCY  --- set power spectrum start frequency  \n"); 
   screen_printf("  3.  RTL_SET_END_FREQUENCY    --- set power spectrum end frequency  \n"); 
   screen_printf("  4.  RTL_SET_GAIN             --- set RTL-SDR gains \n"); 
-  screen_printf("  5.  RTL_SET_FREQUENCY_STEP   --- set power spectrum frequency step \n\n"); 
+  screen_printf("  5.  RTL_SET_FREQUENCY_STEP   --- set power spectrum frequency step \n"); 
   screen_printf("  6.  RTL_SET_GRACEFUL_TIMEOUT --- set scan timeout\n"); 
   screen_printf("  7.  RTL_SET_FAIL_TIMEOUT     --- set kill -9 timeout (after graceful fails)\n"); 
   screen_printf("  8.  RTL_SET_MAX_FAILS        --- maximum number of fails until soft disable \n"); 
@@ -7789,7 +7789,7 @@ static void RTLD_COMMAND(cmdCode)
   {
     t = atoi(resp); 
 
-    if ( 1 <=t && t <=5) 
+    if ( 1 <=t && t <=9) 
     {
       extra_code = t; 
     }
@@ -7946,7 +7946,7 @@ static void RTLD_COMMAND(cmdCode)
         t = atoi(resp); 
         if (1 <=t && t <= NUM_RTLSDR) 
         {
-          gainTarget = t;               
+          gainTarget = t-1;               
         }
         else if (t == -1) 
         {
@@ -7991,7 +7991,7 @@ static void RTLD_COMMAND(cmdCode)
       sgain = 0.5 + gain * 10; 
 
       //shift over so that index can be packed in
-      sgain << NBITS_FOR_RTL_INDEX; 
+      sgain <<= NBITS_FOR_RTL_INDEX; 
       sgain |=  (gainTarget & ( ~(0xffff << NBITS_FOR_RTL_INDEX))); 
 
       cmdBytes[0] = sgain & 0xff; 
@@ -8063,9 +8063,8 @@ static void RTLD_COMMAND(cmdCode)
     else if (extra_code == RTL_SET_MAX_FAIL)
     {
       screen_printf("[ You have selected RTL_SET_MAX_FAIL ]\n"); 
-      screen_printf("   This controls the maximum number times we allow an RTL to fail before giving up"); 
-      screen_printf("   A fail is defined as having to be kill -9ed. This resets each time RTLd starts.\n"); 
-      screen_dialog(resp, 31, "Enter fail timeout  (0-65535) [%d]  (-1 to cancel)\n\n", failThreshold); 
+      screen_printf("   This controls how many times we allow an RTL to fail before giving up"); 
+      screen_dialog(resp, 31, "Enter max fails  (0-65535) [%d]  (-1 to cancel)\n\n", failThreshold); 
 
       if (resp[0] != '\0') 
       {
@@ -8095,7 +8094,7 @@ static void RTLD_COMMAND(cmdCode)
     else if (extra_code == RTL_SET_DISABLED)
     {
       screen_printf("   You have selected RTL_SET_DISABLED. "); 
-      screen_printf("   This program believes that there are %d RTL-SDR's.\n   Hopefully that's true.\n", NUM_RTLSDR); 
+      screen_printf("   This program thinks there are %d RTL-SDR's.\n   Hopefully that's true.\n", NUM_RTLSDR); 
       screen_printf("   This program indexes the RTL-SDR's according to their serials \n   (e.g. RTL1, RTL2, etc.).\n"); 
       screen_dialog(resp, 32, "Select the RTL-SDR that you want to toggle disable [%d] (1-%d) (-1 to cancel)\n", disable_index, NUM_RTLSDR); 
 
@@ -8104,7 +8103,7 @@ static void RTLD_COMMAND(cmdCode)
         t = atoi(resp); 
         if (1 <=t && t <= NUM_RTLSDR) 
         {
-          disable_index = t;               
+          disable_index = t-1;               
         }
         else if (t == -1) 
         {
@@ -8118,9 +8117,9 @@ static void RTLD_COMMAND(cmdCode)
         }
       }
 
-      screen_printf("       [[ You are toggling RTL%d  ]] \n\n", disable_index); 
+      screen_printf("       [[ You are toggling RTL%d  ]] \n\n", disable_index+1); 
       screen_printf("   You are setting the disabled state, so 1 disables, 0 enables\n"); 
-      screen_dialog(resp, 32, "Select if you you want to disable RTL%d  [%d]  (-1 to cancel)\n", disable_index, disable_value); 
+      screen_dialog(resp, 32, "Select if you you want to disable RTL%d  [%d]  (-1 to cancel)\n", disable_index+1, disable_value); 
       if (resp[0] != '\0') 
       {
         t = atoi(resp); 
