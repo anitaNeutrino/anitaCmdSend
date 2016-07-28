@@ -7905,7 +7905,7 @@ static void RTLD_COMMAND(cmdCode)
       screen_printf("   This parameter behaves somewhat unexpectedly due to the \n"); 
       screen_printf("   intricacies of RTL-SDR bandwidth and powers of two.\n"); 
       screen_printf("   An unwise setting can result in a frequency spectrum\n    that is truncated or has uneven spacing.\n"); 
-      screen_printf("   It is therefore highly recommended that you enter a \n    multiple of 320 (or maybe 160) kHz. \n"); 
+      screen_printf("   It is therefore highly recommended that you don't touch\n    this unless you know what you're doing. \n"); 
       screen_printf("   ... Unless you really know what you're doing...\n     (i.e. you have read and understand what RTLd is doing) \n"); 
       screen_printf("      [ This warning may be removed if the handling code becomes smarter ]  \n\n"); 
       screen_dialog(resp, 31, "Enter frequency step in __kHz__ [%d] (1-65535) (-1 to cancel)\n", stepFrequency); 
