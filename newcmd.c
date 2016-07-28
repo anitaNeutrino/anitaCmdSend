@@ -20,7 +20,7 @@
 
 #include <fcntl.h>
 #include <termios.h>
-
+#include <sys/ioctl.h>
 /* select() */
 #include <sys/time.h>
 #include <sys/types.h>
@@ -83,8 +83,8 @@ unsigned char ibuf[IBUFSIZE];
 #define LINK_TDRSS	1
 #define LINK_HF		2
 #define LINK_LOS	0
-//#define PORT		"/dev/ttyUSB0"
-#define PORT		"/dev/ttyXR1"
+#define PORT		"/dev/ttyUSB0"
+//#define PORT		"/dev/ttyXR1"
 //#define PORT		"/dev/ttyS2"
 #define PROMPT		": "
 #define ROUTE_COMM1	0x09
@@ -106,7 +106,7 @@ unsigned char Curlink = LINK_TDRSS;
 unsigned char Curroute = ROUTE_COMM1;
 int Fd;
 struct termios Origopts;
-long Timeout = 10L;
+int Timeout = 10L;
 
 static short numLines=0;
 
@@ -125,11 +125,11 @@ static short cpAttenLoopPeriod =0;
 static short cpSwitchLoopPeriod =0;
 static short cpOffLoopPeriod =0;
 static short calibWritePeriod=0;
-static long ADU5PatPer =0;
-static long ADU5SatPer =0;
-static long ADU5VtgPer =0;
-static long G12PPSPer =0;
-static long G12PosPer =0;
+static int ADU5PatPer =0;
+static int ADU5SatPer =0;
+static int ADU5VtgPer =0;
+static int G12PPSPer =0;
+static int G12PosPer =0;
 static float G12Offset =0;
 static unsigned short HskPer =0;
 static unsigned short HskCalPer =0;
@@ -137,7 +137,7 @@ static short HskTelemEvery=0;
 static short sendWave=1;
 static unsigned short sipThrottle=680;
 static short losSendData=0;
-static long SoftTrigPer =0;
+static int SoftTrigPer =0;
 static short TrigADU5 =0;
 static short TrigG12 =0;
 static short TrigSoft =0;
@@ -651,9 +651,67 @@ screen_beep(void)
     beep();
 }
 
+
+int toggleCRTCTS(char devName[])
+/*! This is needed on the whiteheat ports after a reboot, after a power cycle it comes up in the correct state. 
+*/
+{    
+    int fd,retVal; 
+    struct termios options;
+
+/* open a serial port */
+    fd = open(devName, O_RDWR | O_NOCTTY |O_NONBLOCK ); 
+    if(fd<0)
+    {
+        fprintf(stderr,"open %s: %s\n",devName,strerror(errno)); 
+        return -1;
+    }
+
+/* port settings */
+    retVal=tcgetattr(fd, &options);            /* get current port settings */
+    if(retVal<0) {
+        fprintf(stderr,"tcgetattr on fd %d: %s\n",fd,strerror(errno));
+        return -1;
+    }
+
+    options.c_iflag=1;
+    options.c_oflag=0;
+    options.c_cflag=3261;
+    options.c_lflag=0;
+    strncpy((char*)options.c_cc,"",2);
+    options.c_ispeed=13;
+    options.c_ospeed=13;
+
+    cfsetispeed(&options, B2400);    /* set input speed */
+    cfsetospeed(&options, B2400);    /* set output speed */
+
+    options.c_cflag &= ~PARENB;         /* clear the parity bit  */
+    options.c_cflag &= ~CSTOPB;         /* clear the stop bit  */
+    options.c_cflag &= ~CSIZE;          /* clear the character size  */
+    options.c_cflag |= CS8;  /* set charater size to 8 bits  */
+    options.c_cflag |= CRTSCTS;        /* Toggle on */
+    options.c_lflag &= (ICANON | ECHO | ECHOE | ISIG); /* raw input mode  */
+    options.c_cflag |= (CLOCAL | CREAD); 
+
+    options.c_oflag &= ~(OPOST | ONLCR );
+/*     options.c_oflag |= ( ONLCR | OPOST); */
+ 
+    tcsetattr(fd, TCSANOW, &options);   /* activate the settings  */
+    if(retVal<0) {
+        fprintf(stderr,"tcsetattr on fd %d: %s\n",fd,strerror(errno));
+        return -1;
+    }
+    close(fd);  
+
+    return 0;
+}
+
+
+
 int
 serial_init(void)
 {
+  //  toggleCRTCTS(PORT);
     struct termios newopts;
     Fd = open(PORT, O_RDWR | O_NDELAY);
     if (Fd == -1) {
@@ -685,14 +743,39 @@ serial_init(void)
     newopts.c_cflag &= ~CSTOPB;
     newopts.c_cflag &= ~CSIZE;
     newopts.c_cflag |= CS8;
-
+    newopts.c_cflag &= ~CRTSCTS; 
+    
     newopts.c_iflag &= ~(INLCR | ICRNL);
     newopts.c_iflag &= ~(IXON | IXOFF | IXANY);	/* no XON/XOFF */
 
     newopts.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);	/* raw input */
     newopts.c_oflag &= ~OPOST;	/* raw output */
 
+    tcflush(Fd, TCIFLUSH);
+    
     tcsetattr(Fd, TCSANOW, &newopts);
+
+
+
+    // play with RTS & DTR
+    int iFlags;
+
+    // turn on RTS
+    iFlags = TIOCM_RTS;
+    ioctl(Fd, TIOCMBIS, &iFlags);
+
+    // turn off RTS
+    iFlags = TIOCM_RTS;
+    ioctl(Fd, TIOCMBIC, &iFlags);
+
+    // turn on DTR
+    iFlags = TIOCM_DTR;
+    ioctl(Fd, TIOCMBIS, &iFlags);
+
+    // turn off DTR
+    iFlags = TIOCM_DTR;
+    ioctl(Fd, TIOCMBIC, &iFlags);
+    
     return 0;
 }
 
@@ -815,7 +898,7 @@ wait_for_ack(void)
     t.tv_usec = 0L;
     FD_ZERO(&f);
     FD_SET(Fd, &f);
-    ret = select(1, &f, NULL, NULL, &t);
+    ret = select(Fd+1, &f, NULL, NULL, &t);
     if (ret == -1) {
 	screen_printf("select() error (%s)\n", strerror(errno));
 	log_out("select() error (%s)", strerror(errno));
@@ -6368,8 +6451,8 @@ ACQD_RATE_COMMAND(cmdCode){
 	     	 
      }
      if(extraCode==ACQD_RATE_SET_ANT_TRIG_MASK) {
-	 unsigned long t;
-	 unsigned long test;
+	 unsigned int t;
+	 unsigned int test;
 	 int fred; 
 	 int antAdd=-1;
 	 int allOn=0;
@@ -6455,8 +6538,8 @@ ACQD_RATE_COMMAND(cmdCode){
 	 }
      }
      if(extraCode==ACQD_RATE_SET_PHI_MASK) {
-	 unsigned long t;
-	 unsigned long test;
+	 unsigned int t;
+	 unsigned int test;
 	 int fred; 
 	 int phiAdd=-1;
 	 int allOn=0;
@@ -6544,8 +6627,8 @@ ACQD_RATE_COMMAND(cmdCode){
 
      }
      if(extraCode==ACQD_RATE_SET_PHI_MASK_HPOL) {
-	 unsigned long t;
-	 unsigned long test;
+	 unsigned int t;
+	 unsigned int test;
 	 int fred; 
 	 int phiAdd=-1;
 	 int allOn=0;
@@ -8168,7 +8251,7 @@ static void TUFFD_COMMAND(cmdCode)
 
           if ( 1<=t && t<=16)
           {
-            start[inotch] = t; 
+            start[inotch] = t-1; 
           }
           else if (t == -1) 
           {
@@ -8190,7 +8273,7 @@ static void TUFFD_COMMAND(cmdCode)
 
           if ( 1<=t && t<=16)
           {
-            end[inotch] = t; 
+            end[inotch] = t-1; 
           }
           else if (t == -1) 
           {
@@ -8340,7 +8423,7 @@ static void TUFFD_COMMAND(cmdCode)
       screen_printf("   This is used to toggle Tuffd temperature readings. \n"); 
       screen_printf("   Since it takes some time to communicate to the Tuff, \n"); 
       screen_printf("   it's possible that you may want to temporarily disable this occassionally. \n"); 
-      screen_dialog(resp, 31, "Enter whether or not the TUFF should read temperatures (0-1) [%d]  (-1 to cancel)\n", rdtemp); 
+      screen_dialog(resp, 31, "Enter whether the TUFF should read temperatures (0-1) [%d]  (-1 to cancel)\n", rdtemp); 
 
       if (resp[0] != '\0') 
       {
@@ -8432,14 +8515,14 @@ static void TUFFD_COMMAND(cmdCode)
     Curcmd[2] = 1;
     Curcmd[3] = extra_code;
     int ind=0;
-    for(ind=0;ind<8;ind++)
+    for(ind=0;ind<6;ind++)
     {
       Curcmd[4+2*ind]=ind+2;
       Curcmd[5+2*ind]=cmdBytes[ind];
     }
 
-    Curcmdlen = 8;     
-    set_cmd_log("%d; Tuffd command %d (%d %d)", cmdCode,extra_code,cmdBytes[0],cmdBytes[1]); 
+    Curcmdlen = 16;     
+    set_cmd_log("%d; Tuffd command %d (%d %d %d %d %d %d)", cmdCode,extra_code,cmdBytes[0],cmdBytes[1], cmdBytes[2], cmdBytes[3], cmdBytes[4], cmdBytes[5]); 
     sendcmd(Fd, Curcmd, Curcmdlen);
 
   } //check that response was sensical 
