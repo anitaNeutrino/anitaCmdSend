@@ -2865,14 +2865,14 @@ TELEM_PRI_ENC_TYPE(int cmdCode)
 
 
 static void
-TURN_AMPLITES_ON(int cmdCode)
+TURN_TUFFS_ON(int cmdCode)
 {
-    if (screen_confirm("Really turn on Amplites")) {
+    if (screen_confirm("Really turn on Tuffs")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on Amplites.", cmdCode);
+	set_cmd_log("%d; Turn on Tuffs.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2880,14 +2880,14 @@ TURN_AMPLITES_ON(int cmdCode)
 }
 
 static void
-TURN_AMPLITES_OFF(int cmdCode)
+TURN_TUFFS_OFF(int cmdCode)
 {
-    if (screen_confirm("Really turn off Amplites")) {
+    if (screen_confirm("Really turn off Tuffs")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off Amplites.", cmdCode);
+	set_cmd_log("%d; Turn off Tuffs.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2896,14 +2896,14 @@ TURN_AMPLITES_OFF(int cmdCode)
 
 
 static void
-TURN_BZ_AMPAS_ON(int cmdCode)
+TURN_AMPAS_ON(int cmdCode)
 {
-    if (screen_confirm("Really turn on BZ Ampas")) {
+    if (screen_confirm("Really turn on all Ampas")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on BZ Ampas.", cmdCode);
+	set_cmd_log("%d; Turn on all Ampas", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -2911,14 +2911,14 @@ TURN_BZ_AMPAS_ON(int cmdCode)
 }
 
 static void
-TURN_BZ_AMPAS_OFF(int cmdCode)
+TURN_AMPAS_OFF(int cmdCode)
 {
-    if (screen_confirm("Really turn off BZ Ampas")) {
+    if (screen_confirm("Really turn off all Ampas")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off BZ Ampas.", cmdCode);
+	set_cmd_log("%d; Turn off all Ampas.", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -3051,12 +3051,12 @@ TURN_NTU_SSD_12V_OFF(int cmdCode)
 static void
 TURN_ALL_ON(int cmdCode)
 {
-    if (screen_confirm("Really turn on Amplites, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V")) {
+    if (screen_confirm("Really turn on Tuffs, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn on Amplites, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V", cmdCode);
+	set_cmd_log("%d; Turn on Tuffs, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -3067,12 +3067,12 @@ TURN_ALL_ON(int cmdCode)
 static void
 TURN_ALL_OFF(int cmdCode)
 {
-    if (screen_confirm("Really turn off Amplites, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V")) {
+    if (screen_confirm("Really turn off Tuffs, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V")) {
 	Curcmd[0] = 0;
 	Curcmd[1] = cmdCode;
 	Curcmdlen = 2;
 	screen_printf("\n");
-	set_cmd_log("%d; Turn off Amplites, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V", cmdCode);
+	set_cmd_log("%d; Turn off Tuffs, BZ Ampas, NTU Ampas, Shorts, NTU SSD 5V and NTU SSD 12V", cmdCode);
 	sendcmd(Fd, Curcmd, Curcmdlen);
     } else {
 	screen_printf("\nCancelled\n");
@@ -3344,7 +3344,7 @@ ADU5_CAL_12(int cmdCode)
 	v12[2]=atof(resp);
     }
     for(t=0;t<3;t++) {
-      det[t]=((short)(v12[t]*1000.));
+      det[t]=((short)((v12[t]*1000.)+0.5));
     }
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
@@ -3401,7 +3401,7 @@ ADU5_CAL_13(int cmdCode)
 	v13[2]=atof(resp);
     }
     for(t=0;t<3;t++) {
-      det[t]=((short)(v13[t]*1000.));
+      det[t]=((short)((v13[t]*1000.)+0.5));
     }
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
@@ -3460,7 +3460,7 @@ ADU5_CAL_14(int cmdCode)
 	v14[2]=atof(resp);
     }
     for(t=0;t<3;t++) {
-      det[t]=((short)(v14[t]*1000.));
+      det[t]=((short)((v14[t]*1000.)+0.5));
     }
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
@@ -8063,7 +8063,7 @@ static void RTLD_COMMAND(cmdCode)
     else if (extra_code == RTL_SET_MAX_FAIL)
     {
       screen_printf("[ You have selected RTL_SET_MAX_FAIL ]\n"); 
-      screen_printf("   This controls how many times we allow an RTL to fail before giving up"); 
+      screen_printf("   This controls how many times we allow an RTL to fail before giving up \n"); 
       screen_dialog(resp, 31, "Enter max fails  (0-65535) [%d]  (-1 to cancel)\n\n", failThreshold); 
 
       if (resp[0] != '\0') 
