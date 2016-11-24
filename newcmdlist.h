@@ -20,7 +20,7 @@
 #define CMD_KILL_PROGS  131
 #define CMD_RESPAWN_PROGS 132
 #define CMD_START_PROGS  133
-#define CMD_MOUNT_ARGH 134
+/* #define CMD_MOUNT_ARGH 134 */
 #define CMD_DISABLE_DISK 135
 //#define CMD_MOUNT_NEXT_USB  136
 //#define CMD_MOUNT_NEXT_SATA  137 //Switch for blade v mini
