@@ -5337,6 +5337,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   screen_printf("14. PRI_ANT_Z_POS\n");
   screen_printf("15. PRI_POS_SATUATION\n");
   screen_printf("16. PRI_NEG_SATUATION\n");
+  screen_printf("17. PRI_BLAST_RATIO\n");
 
   /* switch(command) { */
   /* case PRI_PANIC_QUEUE_LENGTH: */
@@ -5800,6 +5801,30 @@ PRIORITIZERD_COMMAND(cmdCode){
     cmdBytes[2]= convertedVal & 0xff;
     cmdBytes[3]=(convertedVal & 0xff00)>>8;
   }
+
+
+  float priBlastRatio; 
+
+  if (extraCode==PRI_BLAST_RATIO) 
+  {
+    screen_dialog(resp,31,"Enter maximum ratio between max vpp of bottom and max bpp of top (-1 to cancel)  [%hu]\n",priBlastRatio);
+
+    if (resp[0] != '\0') {
+      ft = atof(resp);
+      if (0>= ft) {
+        priBlastRatio = ft; 
+      } else if (ft == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+
+    memcpy( cmdBytes, &priBlastRatio, sizeof(float)); 
+  }
+
 
 
   Curcmd[0] = 0;
