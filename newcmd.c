@@ -42,7 +42,7 @@ void screen_beep(void);
 void write_cmd_json_file(char *fmt, ...);
 void get_next_cmd_count();
 
-int diskBitMasks[DISK_TYPES]={HELIUM1_DISK_MASK,HELIUM2_DISK_MASK,USB_DISK_MASK,NTU_DISK_MASK,PMC_DISK_MASK};
+int diskBitMasks[DISK_TYPES]={HELIUM1_DISK_MASK,HELIUM2_DISK_MASK,USB_DISK_MASK,NTU_DISK_MASK};
 
 #define GETKEY wgetch(Wuser)
 
@@ -1321,18 +1321,17 @@ CMD_DISABLE_DISK(int cmdCode)
     if(diskChoice==0 || diskChoice==1) {
 	screen_printf("0: Helium1            1: Helium2\n");
 	screen_printf(" 3: Ntu\n");
-	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
 	if(resp[0] != '\0') {
 	    v = atoi(resp);	
-	    if (0 <= v && v <= 4) {
+	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
 		screen_printf("Cancelled.\n");
 		return;
 	    } else {
-		screen_printf("Value must be 0-4, not %d.\n", v);
+		screen_printf("Value must be 0-3, not %d.\n", v);
 		return;
 	    }       
 	} else return;
@@ -1340,17 +1339,16 @@ CMD_DISABLE_DISK(int cmdCode)
     else {
 	screen_printf("0: Helium1            1: Helium2\n");
 	screen_printf("3: Ntu\n");
-	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
 	    v = atoi(resp);	
-	    if (0 <= v && v <= 4) {
+	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
 		screen_printf("Cancelled.\n");
 		return;
 	    } else {
-		screen_printf("Value must be 0-4, not %d.\n", v);
+		screen_printf("Value must be 0-3, not %d.\n", v);
 		return;
 	    }       
 	} else return;
@@ -1358,11 +1356,10 @@ CMD_DISABLE_DISK(int cmdCode)
 	while(1) {
 	    screen_printf("0: Helium1            1: Helium2\n");
 	    screen_printf("3: Ntu\n");
-	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
 		v = atoi(resp);	
-		if (0 <= v && v <= 4) {
+		if (0 <= v && v <= 3) {
 		    diskBitMask |= diskBitMasks[v];
 		} else if (v == -1) {
 		    screen_printf("Cancelled.\n");
@@ -2104,18 +2101,17 @@ CMD_EVENT_DISKTYPE(int cmdCode)
     if(diskChoice==0 || diskChoice==1) {
 	screen_printf("0: Helium1            1: Helium2\n");
 	screen_printf("3: Ntu\n");
-	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
 	if(resp[0] != '\0') {
 	    v = atoi(resp);	
-	    if (0 <= v && v <= 4) {
+	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
 		screen_printf("Cancelled.\n");
 		return;
 	    } else {
-		screen_printf("Value must be 0-4, not %d.\n", v);
+		screen_printf("Value must be 0-3, not %d.\n", v);
 		return;
 	    }       
 	} else return;
@@ -2123,17 +2119,16 @@ CMD_EVENT_DISKTYPE(int cmdCode)
     else {
 	screen_printf("0: Helium1            1: Helium2\n");
 	screen_printf("3: Ntu\n");
-	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
 	    v = atoi(resp);	
-	    if (0 <= v && v <= 4) {
+	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
 		screen_printf("Cancelled.\n");
 		return;
 	    } else {
-		screen_printf("Value must be 0-4, not %d.\n", v);
+		screen_printf("Value must be 0-3, not %d.\n", v);
 		return;
 	    }       
 	} else return;
@@ -2141,11 +2136,10 @@ CMD_EVENT_DISKTYPE(int cmdCode)
 	while(1) {
 	    screen_printf("0: Helium1            1: Helium2\n");
 	    screen_printf("3: Ntu\n");
-	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
 		v = atoi(resp);	
-		if (0 <= v && v <= 4) {
+		if (0 <= v && v <= 3) {
 		    diskBitMask |= diskBitMasks[v];
 		} else if (v == -1) {
 		    screen_printf("Cancelled.\n");
@@ -2207,18 +2201,17 @@ CMD_HK_DISKTYPE(int cmdCode)
     if(diskChoice==0 || diskChoice==1) {
 	screen_printf("0: Helium1       1: Helium2\n");
 	screen_printf("3: Ntu\n");
-	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
     
 	if(resp[0] != '\0') {
 	    v = atoi(resp);	
-	    if (0 <= v && v <= 4) {
+	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
 		screen_printf("Cancelled.\n");
 		return;
 	    } else {
-		screen_printf("Value must be 0-4, not %d.\n", v);
+		screen_printf("Value must be 0-3, not %d.\n", v);
 		return;
 	    }       
 	} else return;
@@ -2226,17 +2219,16 @@ CMD_HK_DISKTYPE(int cmdCode)
     else {
 	screen_printf("0: Helium1       1: Helium2\n");
 	screen_printf("3: Ntu\n");
-	screen_printf("4: PMC Drive\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
 	    v = atoi(resp);	
-	    if (0 <= v && v <= 4) {
+	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
 		screen_printf("Cancelled.\n");
 		return;
 	    } else {
-		screen_printf("Value must be 0-4, not %d.\n", v);
+		screen_printf("Value must be 0-3, not %d.\n", v);
 		return;
 	    }       
 	} else return;
@@ -2244,11 +2236,10 @@ CMD_HK_DISKTYPE(int cmdCode)
 	while(1) {
 	    screen_printf("0: Helium1    1: Helium2\n");
 	    screen_printf("3: Ntu\n");
-	    screen_printf("4: PMC Drive\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
 		v = atoi(resp);	
-		if (0 <= v && v <= 4) {
+		if (0 <= v && v <= 3) {
 		    diskBitMask |= diskBitMasks[v];
 		} else if (v == -1) {
 		    screen_printf("Cancelled.\n");
