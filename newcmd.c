@@ -8214,13 +8214,18 @@ static void TUFFD_COMMAND(cmdCode)
 
   int t; 
  
-  screen_printf("Enter Tuffd Command (1-6): \n\n"); 
-  screen_printf(" 1. TUFF_SET_NOTCH              ---  Set notches by phi sector\n"); 
-  screen_printf(" 2. TUFF_SEND_RAW               ---  (ADVANCED) send a raw command\n"); 
-  screen_printf(" 3. TUFF_SET_SLEEP_AMOUNT       ---  Set sleep amount \n"); 
-  screen_printf(" 4. TUFF_READ_TEMPERATURE       ---  Toggle temperature readout \n"); 
-  screen_printf(" 5. TUFF_TELEM_EVERY            ---  Modify telemetry interval \n"); 
-  screen_printf(" 6. TUFF_SET_TELEM_AFTER_CHANGE ---  Toggle post-change telemetry \n"); 
+  screen_printf("Enter Tuffd Command (1-11): \n\n"); 
+  screen_printf(" 1. TUFF_SET_NOTCH                            ---  Set notches by phi sector\n"); 
+  screen_printf(" 2. TUFF_SEND_RAW                             ---  (ADVANCED) send a raw command\n"); 
+  screen_printf(" 3. TUFF_SET_SLEEP_AMOUNT                     ---  Set sleep amount \n"); 
+  screen_printf(" 4. TUFF_READ_TEMPERATURE                     ---  Toggle temperature readout \n"); 
+  screen_printf(" 5. TUFF_TELEM_EVERY                          ---  Modify telemetry interval \n"); 
+  screen_printf(" 6. TUFF_SET_TELEM_AFTER_CHANGE               ---  Toggle post-change telemetry \n"); 
+  screen_printf(" 7. TUFF_ADJUST_ACCORDING_TO_HEADING          ---  (EXPERIMENTAL) enable heading servo\n"); 
+  screen_printf(" 8. TUFF_DEGREES_FROM_NORTH_TO_NOTCH          ---  (EXPERIMENTAL) heading servo width\n"); 
+  screen_printf(" 9. TUFF_SLOPE_THRESHOLD_TO_NOTCH_NEXT_SECTOR ---  (EXPERIMENTAL++)\n"); 
+  screen_printf(" 10. TUFF_PHI_SECTOR_OFFSET_FROM_NORTH        ---  (EXPERIMENTAL) phi sector offset from north \n"); 
+  screen_printf(" 11. TUFF_MAX_HEADING_AGE                     ---  (EXPERIMENTAL) oldest allowed heading for servo\n"); 
   screen_dialog(resp,31, "Select command [%d] (-1 to cancel)\n", extra_code); 
 
 
@@ -8228,7 +8233,7 @@ static void TUFFD_COMMAND(cmdCode)
   {
     t = atoi(resp); 
 
-    if ( 1 <=t && t <= 6)
+    if ( 1 <=t && t <= 11)
     {
       extra_code = t; 
     }
@@ -8534,6 +8539,197 @@ static void TUFFD_COMMAND(cmdCode)
       cmdBytes[0] = telem_after; 
     }
 
+
+    else if (extra_code == TUFF_ADJUST_ACCORDING_TO_HEADING)
+    {
+      char adjust[3]; 
+      memset(adjust,0,sizeof(adjust));
+
+      screen_printf("[ You have selected TUFF_ADJUST_ACCORDING_TO_HEADING  ]\n"); 
+      screen_printf("   This option is marked EXPERIMENTAL.  \n"); 
+      screen_printf("   That means you probably should't use it.   \n"); 
+      screen_printf("   It might set your house on fire. Who knows? It's experimental.   \n\n"); 
+      screen_printf("   This command enables servo of which notches are enabled based on heading.\n"); 
+      screen_printf("   It has only been lightly tested and could result in strange notch behavior.\n"); 
+      screen_printf("   Especially if the GPS's are becoming erratic.\n"); 
+
+
+      for (inotch = 0; inotch < NUM_TUFF_NOTCHES; inotch++)
+      {
+        screen_dialog(resp, 31, "Should the notch %d be servoed? (0-1) [%d]  (-1 to cancel)\n", inotch, adjust[inotch]); 
+        if (resp[0] !=0)
+        {
+          t = atoi(resp); 
+          if (0 <= t && t <=1) 
+          {
+            adjust[inotch] = t; 
+          }
+
+          else if (t == -1) 
+          {
+            screen_printf("Cancelled\n"); 
+            return; 
+          }
+          else 
+          {
+            screen_printf("%d not a valid option\n"); 
+            inotch--; 
+          }
+        }
+
+        memcpy(cmdBytes, adjust, sizeof(adjust)); 
+      }
+    }
+    else if (extra_code == TUFF_DEGREES_FROM_NORTH_TO_NOTCH)
+    {
+      char adjust[3]; 
+
+      screen_printf("[ You have selected TUFF_DEGREES_FROM_NORTH_TO_NOTCH  ]\n"); 
+      screen_printf("   This option is marked EXPERIMENTAL.  \n"); 
+      screen_printf("   That means you probably should't use it.   \n"); 
+      screen_printf("   It might set your chair on fire. Who knows? It's experimental.   \n\n"); 
+      screen_printf("   This command sets how many degrees from north phi sectors have this notch applied\n"); 
+      screen_printf("   It has only been lightly tested and could result in strange notch behavior.\n"); 
+      screen_printf("   Especially if the GPS's are becoming erratic.\n"); 
+
+      for (inotch = 0; inotch < NUM_TUFF_NOTCHES; inotch++)
+      {
+        adjust[inotch] = 90; 
+        screen_dialog(resp, 31, "How many degrees for notch %d? (0-255) [%d]  (-1 to cancel)\n", inotch, adjust[inotch]); 
+        if (resp[0] !=0)
+        {
+          t = atoi(resp); 
+          if (0 <= t && t <=255) 
+          {
+            adjust[inotch] = t; 
+          }
+
+          else if (t == -1) 
+          {
+            screen_printf("Cancelled\n"); 
+            return; 
+          }
+          else 
+          {
+            screen_printf("%d not a valid option\n"); 
+            inotch--; 
+          }
+        }
+        memcpy(cmdBytes, adjust, sizeof(adjust)); 
+      }
+    }
+
+    else if (extra_code == TUFF_SLOPE_THRESHOLD_TO_NOTCH_NEXT_SECTOR)
+    {
+      char adjust[3]; 
+
+      screen_printf("[ You have selected TUFF_SLOPE_THRESHOLD_TO_NOTCH_NEXT_SECTOR  ]\n"); 
+      screen_printf("   This option is marked EXPERIMENTAL++.  \n"); 
+      screen_printf("   That means you probably definitely should't use it.   \n"); 
+      screen_printf("   It might set your hair on fire. Who knows? It's experimental.   \n\n"); 
+      screen_printf("   This command sets the slope threshold to notch the next phi sector in rotation direction..\n"); 
+      screen_printf("   It's probably not that stable. Also, because heading is analyzed after each sleep, it's optimal value depends on sleepAmount.\n"); 
+      screen_printf("   It has only been lightly tested and could result in strange notch behavior.\n"); 
+      screen_printf("   Especially if the GPS's are becoming erratic.\n"); 
+      
+      for (inotch = 0; inotch < NUM_TUFF_NOTCHES; inotch++)
+      {
+        adjust[inotch] = 20; 
+        screen_dialog(resp, 31, "Slope threshold in deg /s for notch %d? (0-255) [%d]  (-1 to cancel)\n", inotch, adjust[inotch]); 
+        if (resp[0] !=0)
+        {
+          t = atoi(resp); 
+          if (0 <= t && t <=255) 
+          {
+            adjust[inotch] = t; 
+          }
+
+          else if (t == -1) 
+          {
+            screen_printf("Cancelled\n"); 
+            return; 
+          }
+          else 
+          {
+            screen_printf("%d not a valid option\n"); 
+            inotch--; 
+          }
+        }
+        memcpy(cmdBytes, adjust, sizeof(adjust)); 
+      }
+    }
+
+    else if (extra_code == TUFF_PHI_SECTOR_OFFSET_FROM_NORTH)
+    {
+      char adjust[3]; 
+
+      screen_printf("[ You have selected TUFF_TUFF_PHI_SECTOR_OFFSET_FROM_NORTH  ]\n"); 
+      screen_printf("   This option is marked EXPERIMENTAL  \n"); 
+      screen_printf("   That means you probably should't use it.   \n"); 
+      screen_printf("   It might set your pants on fire. Who knows? It's experimental.   \n\n"); 
+      screen_printf("   This command sets the offset of the GPS heading from North\n"); 
+      screen_printf("   This might be useful if you want to mask out a specific satellite slightly off north."); 
+      screen_printf("   It has only been lightly tested and could result in strange notch behavior.\n"); 
+      screen_printf("   Especially if the GPS's are becoming erratic.\n"); 
+      for (inotch = 0; inotch < NUM_TUFF_NOTCHES; inotch++)
+      {
+        adjust[inotch] = 45; 
+        screen_dialog(resp, 31, "Offset from north in deg for notch %d? (0-255) [%d]  (-1 to cancel)\n", inotch, adjust[inotch]); 
+        if (resp[0] !=0)
+        {
+          t = atoi(resp); 
+          if (0 <= t && t <=45) 
+          {
+            adjust[inotch] = t; 
+          }
+
+          else if (t == -1) 
+          {
+            screen_printf("Cancelled\n"); 
+            return; 
+          }
+          else 
+          {
+            screen_printf("%d not a valid option\n"); 
+            inotch--; 
+          }
+        }
+        memcpy(cmdBytes, adjust, sizeof(adjust)); 
+      }
+    }
+    else if (extra_code == TUFF_MAX_HEADING_AGE)
+    {
+      char max_age = 120; 
+      screen_printf("   This option is marked EXPERIMENTAL  \n"); 
+      screen_printf("   That means you probably should't use it.   \n"); 
+      screen_printf("   It might set your cat on fire. Who knows? It's experimental.   \n\n"); 
+      screen_printf("   This command sets the maximum age of a GPS heading that can be used. 0 means no max age.\n"); 
+ 
+      screen_dialog(resp, 31, "Enter max heading age (0-255) [%d]  (-1 to cancel)\n", max_age); 
+
+      if (resp[0] != '\0') 
+      {
+        t = atoi(resp); 
+
+        if (0<= t && t <=255)
+        {
+          max_age = t; 
+        }
+        else if (t == -1)
+        {
+          screen_printf(" Cancelled.\n"); 
+          return; 
+        }
+        else
+        {
+          screen_printf("%d not a valid option\n", t); 
+          return; 
+        }
+
+      }
+
+      cmdBytes[0] = max_age; 
+    }
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
