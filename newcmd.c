@@ -223,7 +223,7 @@ main(int argc, char *argv[])
 		}
 		break;
 	    case 'g':
-      snprintf(logname, LOGSTRSIZE, optarg);
+	      snprintf(logname, LOGSTRSIZE, "%s", optarg);
 		break;
 	    default:
 	    case '?':
@@ -6744,7 +6744,7 @@ ACQD_RATE_COMMAND(cmdCode){
     static float fvalue=0;
     static unsigned short usvalue=0;
     static unsigned int uivalue=0;
-    static unsigned int antTrigMask=0;
+    static unsigned int l2TrigMask=0;
     static unsigned short phiTrigMask=0;
     static unsigned short surfTrigMask=0;
     static unsigned short eventRate=0;
@@ -6772,7 +6772,7 @@ ACQD_RATE_COMMAND(cmdCode){
      screen_printf("19. SET_PID_DGAIN\n");
      screen_printf("20. SET_PID_IMAX\n");
      screen_printf("21. SET_PID_IMIN\n");
-     screen_printf("22. SET_PID_AVERAGE\n");
+     /* screen_printf("22. SET_PID_AVERAGE\n"); */
      /* screen_printf("23. SET_PHI_MASK_HPOL\n"); */
      screen_printf("25. SET_DYNAMIC_L2_MASK_OVER_WINDOW\n");
      screen_printf("26. SET_DYNAMIC_L2_MASK_UNDER_WINDOW\n");
@@ -6863,26 +6863,26 @@ ACQD_RATE_COMMAND(cmdCode){
 	 unsigned int t;
 	 unsigned int test;
 	 int fred;
-	 int antAdd=-1;
+	 int phiAdd=-1;
 	 int allOn=0;
-	 antTrigMask=0;
+	 l2TrigMask=0;
 
-	 screen_dialog(resp, 31,"Add First antenna to mask  (0 for all on)( -1 to cancel) [%d] ", antAdd);
+	 screen_dialog(resp, 31,"Add First phi sector to mask  (0 for all on)( -1 to cancel) [%d] ", phiAdd);
 
 	 if (resp[0] != '\0') {
-	     antAdd=atoi(resp);
-	     if(antAdd==0){
+	     phiAdd=atoi(resp);
+	     if(phiAdd==0){
 		 allOn=1;
 	     }
-	     else if(antAdd>=1 && antAdd<=32) {
+	     else if(phiAdd>=1 && phiAdd<=16) {
 	     }
 
-	     else if(antAdd==-1) {
+	     else if(phiAdd==-1) {
 		 screen_printf("Cancelled.\n");
 		 return;
 	     }
 	     else {
-		 screen_printf("Not a valid antenna number");
+		 screen_printf("Not a valid phi sector number");
 		 return;
 	     }
 	 }
@@ -6891,33 +6891,30 @@ ACQD_RATE_COMMAND(cmdCode){
 	     return;
 	 }
 
-	 int bit=(antAdd%4);
-	 if(bit) bit=4-bit;
-	 int nibble=7-(antAdd-1)/4;
 
-	 int bitShift=bit+4*nibble;
+	 int bitShift=phiAdd-1;
 	 test=(1<<bitShift);
 	 if(allOn==1){
 	     test=0;
 	 }
-	 antTrigMask|=test;
+	 l2TrigMask|=test;
 
 	 while(1) {
-	     antAdd=-1;
+	     phiAdd=-1;
 	     screen_dialog(resp, 31,
-			   "Add next antenna to mask  ( -1 to cancel, 0 to finish) [%d]",antAdd);
+			   "Add next phi sector to mask  ( -1 to cancel, 0 to finish) [%d]",phiAdd);
 
 	     if (resp[0] != '\0') {
-		 antAdd=atoi(resp);
-		 if(antAdd==0) break;
-		 if(antAdd>=1 && antAdd<=32) {
+		 phiAdd=atoi(resp);
+		 if(phiAdd==0) break;
+		 if(phiAdd>=1 && phiAdd<=16) {
 
 		 }
 		 else {
-		     screen_printf("Not a valid antenna number");
+		     screen_printf("Not a valid phi sector number");
 		   continue;
 		 }
-		 if(antAdd==-1) {
+		 if(phiAdd==-1) {
 		   screen_printf("Cancelled.\n");
 		   return;
 		 }
@@ -6926,21 +6923,17 @@ ACQD_RATE_COMMAND(cmdCode){
 		 screen_printf("Cancelled.\n");
 		 return;
 	     }
-	     bit=(antAdd%4);
-	     if(bit) bit=4-bit;
-	     nibble=7-(antAdd-1)/4;
-
-	     bitShift=bit+4*nibble;
+	     bitShift=phiAdd-1;
 	     test=(1<<bitShift);
-	     antTrigMask|=test;
+	     l2TrigMask|=test;
 	 }
 
 
-	 if (screen_confirm("Really Set antTrigMask to: %#010x",antTrigMask)) {
-	     cmdBytes[0]=(antTrigMask&0xff);
-	     cmdBytes[1]=((antTrigMask&0xff00)>>8);
-	     cmdBytes[2]=((antTrigMask&0xff0000)>>16);
-	     cmdBytes[3]=((antTrigMask&0xff000000)>>24);
+	 if (screen_confirm("Really Set l2TrigMask to: %#06x",l2TrigMask)) {
+	     cmdBytes[0]=(l2TrigMask&0xff);
+	     cmdBytes[1]=((l2TrigMask&0xff00)>>8);
+	     /* cmdBytes[2]=((l2TrigMask&0xff0000)>>16); */
+	     /* cmdBytes[3]=((l2TrigMask&0xff000000)>>24); */
 	 } else {
 	     screen_printf("\nCancelled\n");
 	     return;
@@ -7171,32 +7164,32 @@ ACQD_RATE_COMMAND(cmdCode){
 	 screen_printf("Use this command to change the scale factor for a single trigger band\n");
 	 screen_printf("Obviously use with caution\n");
 	 screen_dialog(resp, 31,
-		       "Which SURF, 1-10, to change (-1 to cancel) [%d] ",
+		       "Which SURF, 3-10, to change (-1 to cancel) [%d] ",
 		       surfNumber);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (1 <= t && t <= 10) {
+	     if (3 <= t && t <= 10) {
 		 surfNumber = t-1;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
 		 return;
 	     } else {
-		 screen_printf("Value must be 1-10, not %d.\n", t);
+		 screen_printf("Value must be 3-10, not %d.\n", t);
 		 return;
 	     }
 	 }
 	 screen_dialog(resp, 31,
-		       "Which DAC, 1-16, to change (-1 to cancel) [%d] ",
+		       "Which DAC, 1-12, to change (-1 to cancel) [%d] ",
 		       dacNumber+1);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (1 <= t && t <= 16) {
+	     if (1 <= t && t <= 12) {
 		 dacNumber = t-1;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
 		 return;
 	     } else {
-		 screen_printf("Value must be 1-16, not %d.\n", t);
+		 screen_printf("Value must be 1-12, not %d.\n", t);
 		 return;
 	     }
 	 }
@@ -7382,7 +7375,7 @@ ACQD_RATE_COMMAND(cmdCode){
 		 screen_printf("Cancelled.\n");
 		 return;
 	     } else {
-		 screen_printf("Not a valid time window\n");
+		 screen_printf("Not a valid phi sector\n");
 		 return;
 	     }
 	 }
@@ -7420,7 +7413,7 @@ ACQD_RATE_COMMAND(cmdCode){
 		 screen_printf("Cancelled.\n");
 		 return;
 	     } else {
-		 screen_printf("Not a valid time window\n");
+		 screen_printf("Not a valid phi sector\n");
 		 return;
 	     }
 	 }
@@ -7429,7 +7422,7 @@ ACQD_RATE_COMMAND(cmdCode){
      }
      if(extraCode==ACQD_RATE_SET_DYNAMIC_L2_MASK_UNDER_WINDOW) {
 
-	 uivalue=100000;
+	 usvalue=60;
 	 screen_dialog(resp,31,"Set L2 threshold window (1-60) (-1 to cancel) [%d]\n",usvalue);
 	 if (resp[0] != '\0') {
 	   t = atoi(resp);
@@ -7444,16 +7437,13 @@ ACQD_RATE_COMMAND(cmdCode){
 	   }
 	 }
 
-	 cmdBytes[0]=(uivalue&0xff);
-	 cmdBytes[1]=(uivalue&0xff00)>>8;
-	 cmdBytes[2]=(uivalue&0xff0000)>>16;
-	 cmdBytes[3]=(uivalue&0xff000000)>>24;
+	 cmdBytes[0]=(usvalue);
 
      }
 
      if(extraCode==ACQD_RATE_SET_DYNAMIC_L2_MASK_OVER_WINDOW) {
 
-	 uivalue=100000;
+	 usvalue=60;
 	 screen_dialog(resp,31,"Set L2 threshold over window (1-60) (-1 to cancel) [%d]\n",usvalue);
 	 if (resp[0] != '\0') {
 	   t = atoi(resp);
@@ -7468,17 +7458,14 @@ ACQD_RATE_COMMAND(cmdCode){
 	   }
 	 }
 
-	 cmdBytes[0]=(uivalue&0xff);
-	 cmdBytes[1]=(uivalue&0xff00)>>8;
-	 cmdBytes[2]=(uivalue&0xff0000)>>16;
-	 cmdBytes[3]=(uivalue&0xff000000)>>24;
+	 cmdBytes[0]=usvalue;
 
      }
 
 
      if(extraCode==ACQD_RATE_SET_GLOBAL_THRESHOLD) {
 	 usvalue=0;
-	 screen_dialog(resp,31,"Enter global threshold (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter global threshold (0 to disable, -1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (0<= t && t <=4095) {
@@ -7560,10 +7547,10 @@ ACQD_RATE_COMMAND(cmdCode){
      }
      if(extraCode==ACQD_SET_PID_PGAIN) {
 	 usvalue=0;
-	 screen_dialog(resp,31,"Enter band 0-low, 1-mid, 2-high, 3-full (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter ring: 0-Top, 1-Middle, 2-Bottom (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (0<= t && t <=3) {
+	     if (1<= t && t <=2) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
@@ -7593,10 +7580,10 @@ ACQD_RATE_COMMAND(cmdCode){
      }
      if(extraCode==ACQD_SET_PID_IGAIN) {
 	 usvalue=0;
-	 screen_dialog(resp,31,"Enter band 0-low, 1-mid, 2-high, 3-full (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter ring 0-Top, 1-Middle, 2-Bottom (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (0<= t && t <=3) {
+	     if (0<= t && t <=2) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
@@ -7626,10 +7613,10 @@ ACQD_RATE_COMMAND(cmdCode){
      }
      if(extraCode==ACQD_SET_PID_DGAIN) {
 	 usvalue=0;
-	 screen_dialog(resp,31,"Enter band 0-low, 1-mid, 2-high, 3-full (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter ring 0-Top, 1-Middle, 2-Bottom (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (0<= t && t <=3) {
+	     if (0<= t && t <=2) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
@@ -7659,10 +7646,10 @@ ACQD_RATE_COMMAND(cmdCode){
      }
      if(extraCode==ACQD_SET_PID_IMAX) {
 	 usvalue=0;
-	 screen_dialog(resp,31,"Enter band 0-low, 1-mid, 2-high, 3-full (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter ring 0-Top, 1-Middle, 2-Bottom (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (0<= t && t <=3) {
+	     if (0<= t && t <=2) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
@@ -7682,7 +7669,7 @@ ACQD_RATE_COMMAND(cmdCode){
 		 return;
 	     }
 	 }
-	 uivalue=fvalue*10000;
+	 uivalue=fvalue;
 	 cmdBytes[1]=uivalue&0xff;
 	 cmdBytes[2]=(uivalue&0xff00)>>8;
 	 cmdBytes[3]=(uivalue&0xff0000)>>16;
@@ -7692,10 +7679,10 @@ ACQD_RATE_COMMAND(cmdCode){
      }
      if(extraCode==ACQD_SET_PID_IMIN) {
 	 usvalue=0;
-	 screen_dialog(resp,31,"Enter band 0-low, 1-mid, 2-high, 3-full (-1 to cancel)\n",usvalue);
+	 screen_dialog(resp,31,"Enter ring 0-Top, 1-Middle, 2-Bottom (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (0<= t && t <=3) {
+	     if (0<= t && t <=2) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
@@ -7715,7 +7702,7 @@ ACQD_RATE_COMMAND(cmdCode){
 		 return;
 	     }
 	 }
-	 uivalue=fvalue*10000;
+	 uivalue=fvalue;
 	 cmdBytes[1]=uivalue&0xff;
 	 cmdBytes[2]=(uivalue&0xff00)>>8;
 	 cmdBytes[3]=(uivalue&0xff0000)>>16;
@@ -7728,7 +7715,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 screen_dialog(resp,31,"PID Surf Hk Average (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (0<= t && t <=3) {
+	     if (0<= t) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
