@@ -3999,7 +3999,7 @@ DEFAULT_CONFIG(int cmdCode)
     Curcmd[5] = ((Config_det&0xff00)>>8); 
     Curcmd[6] = 3;
     Curcmd[7] = ((Config_det&0xff0000)>>16); 
-    Curcmdlen = 6;
+    Curcmdlen = 8;
     set_cmd_log("%d; Config  %d set to default.", cmdCode, Config_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
 }
