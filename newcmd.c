@@ -6754,17 +6754,17 @@ ACQD_RATE_COMMAND(cmdCode){
 
      screen_printf("1. ENABLE_CHAN_SERVO\n");
      screen_printf("2. SET_PID_GOALS\n");
-     screen_printf("3. SET_ANT_TRIG_MASK\n");
-     screen_printf("4. SET_PHI_MASK_VPOL\n");
-     screen_printf("5. SET_SURF_BAND_TRIG_MASK\n");
+     screen_printf("3. SET_L2_TRIG_MASK\n");  
+     screen_printf("4. SET_PHI_MASK\n");
+     /* screen_printf("5. SET_SURF_BAND_TRIG_MASK\n"); */
      screen_printf("6. SET_CHAN_PID_GOAL_SCALE\n");
      //     screen_printf("7. SET_RATE_SERVO\n");
      screen_printf("8. ENABLE_DYNAMIC_PHI_MASK\n");
-     screen_printf("9. ENABLE_DYNAMIC_ANT_MASK\n");
+     screen_printf("9. ENABLE_DYNAMIC_L2_MASK\n"); 
      screen_printf("10. SET_DYNAMIC_PHI_MASK_OVER\n");
      screen_printf("11. SET_DYNAMIC_PHI_MASK_UNDER\n");
-     screen_printf("12. SET_DYNAMIC_ANT_MASK_OVER\n");
-     screen_printf("13. SET_DYNAMIC_ANT_MASK_UNDER\n");
+     screen_printf("12. SET_DYNAMIC_L2_MASK_OVER\n");
+     screen_printf("13. SET_DYNAMIC_L2_MASK_UNDER\n");
      screen_printf("14. SET_GLOBAL_THRESHOLD\n");
      //     screen_printf("16. SET_NADIR_PID_GOALS\n");
      screen_printf("17. SET_PID_PGAIN\n");
@@ -6773,12 +6773,14 @@ ACQD_RATE_COMMAND(cmdCode){
      screen_printf("20. SET_PID_IMAX\n");
      screen_printf("21. SET_PID_IMIN\n");
      screen_printf("22. SET_PID_AVERAGE\n");
-     screen_printf("23. SET_PHI_MASK_HPOL\n");
-
+     /* screen_printf("23. SET_PHI_MASK_HPOL\n"); */
+     screen_printf("25. SET_DYNAMIC_L2_MASK_OVER_WINDOW\n");
+     screen_printf("26. SET_DYNAMIC_L2_MASK_UNDER_WINDOW\n");
+     
      screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
      if (resp[0] != '\0') {
 	 t = atoi(resp);
-	if (1<= t && t <=23) {
+	if (1<= t && t <=26) {
 	    extraCode = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
@@ -6857,7 +6859,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 cmdBytes[7]=(usvalue&0xff00)>>8;
 
      }
-     if(extraCode==ACQD_RATE_SET_ANT_TRIG_MASK) {
+     if(extraCode==ACQD_RATE_SET_L2_TRIG_MASK) {
 	 unsigned int t;
 	 unsigned int test;
 	 int fred;
@@ -7033,95 +7035,94 @@ ACQD_RATE_COMMAND(cmdCode){
 
 
      }
-     if(extraCode==ACQD_RATE_SET_PHI_MASK_HPOL) {
-	 unsigned int t;
-	 unsigned int test;
-	 int fred;
-	 int phiAdd=-1;
-	 int allOn=0;
-	 phiTrigMask=0;
+     /* if(extraCode==ACQD_RATE_SET_PHI_MASK_HPOL) { */
+     /* 	 unsigned int t; */
+     /* 	 unsigned int test; */
+     /* 	 int fred; */
+     /* 	 int phiAdd=-1; */
+     /* 	 int allOn=0; */
+     /* 	 phiTrigMask=0; */
 
-	 screen_dialog(resp, 31,"Add First Phi Sector to mask  (0 for all on)( -1 to cancel) [%d] ", phiAdd);
+     /* 	 screen_dialog(resp, 31,"Add First Phi Sector to mask  (0 for all on)( -1 to cancel) [%d] ", phiAdd); */
 
-	 if (resp[0] != '\0') {
-	     phiAdd=atoi(resp);
-	     if(phiAdd==0){
-	       screen_dialog(resp, 31, "1 for enable all, 0 for disable all (-1 to cancel) [%d]", allOn);
-	       allOn = atoi(resp);
-	       if(allOn == 0 || allOn == 1){
-	       }
-	       else if(allOn==-1){
-		 screen_printf("Cancelled.\n");
-		 return;
-	       }
-	       else{
-		 screen_printf("Not a valid option, must be 0 or 1");
-		 return;
-	       }
-	     }
-	     else if(phiAdd>=1 && phiAdd<=16) {
-	     }
-	     else if(phiAdd==-1) {
-		 screen_printf("Cancelled.\n");
-		 return;
-	     }
-	     else {
-		 screen_printf("Not a valid phi sector");
-		 return;
-	     }
-	 }
-	 else {
-	     screen_printf("Cancelled.\n");
-	     return;
-	 }
+     /* 	 if (resp[0] != '\0') { */
+     /* 	     phiAdd=atoi(resp); */
+     /* 	     if(phiAdd==0){ */
+     /* 	       screen_dialog(resp, 31, "1 for enable all, 0 for disable all (-1 to cancel) [%d]", allOn); */
+     /* 	       allOn = atoi(resp); */
+     /* 	       if(allOn == 0 || allOn == 1){ */
+     /* 	       } */
+     /* 	       else if(allOn==-1){ */
+     /* 		 screen_printf("Cancelled.\n"); */
+     /* 		 return; */
+     /* 	       } */
+     /* 	       else{ */
+     /* 		 screen_printf("Not a valid option, must be 0 or 1"); */
+     /* 		 return; */
+     /* 	       } */
+     /* 	     } */
+     /* 	     else if(phiAdd>=1 && phiAdd<=16) { */
+     /* 	     } */
+     /* 	     else if(phiAdd==-1) { */
+     /* 		 screen_printf("Cancelled.\n"); */
+     /* 		 return; */
+     /* 	     } */
+     /* 	     else { */
+     /* 		 screen_printf("Not a valid phi sector"); */
+     /* 		 return; */
+     /* 	     } */
+     /* 	 } */
+     /* 	 else { */
+     /* 	     screen_printf("Cancelled.\n"); */
+     /* 	     return; */
+     /* 	 } */
 
-	 test=(1<<(phiAdd-1));
-	 if(allOn==1){
-	     test=0xffff;
-	 }
-	 phiTrigMask|=test;
+     /* 	 test=(1<<(phiAdd-1)); */
+     /* 	 if(allOn==1){ */
+     /* 	     test=0xffff; */
+     /* 	 } */
+     /* 	 phiTrigMask|=test; */
 
-	 while(1) {
-	     phiAdd=-1;
-	     screen_dialog(resp, 31,
-			   "Add next phi sector to mask  ( -1 to cancel, 0 to finish) [%d]",phiAdd);
+     /* 	 while(1) { */
+     /* 	     phiAdd=-1; */
+     /* 	     screen_dialog(resp, 31, */
+     /* 			   "Add next phi sector to mask  ( -1 to cancel, 0 to finish) [%d]",phiAdd); */
 
-	     if (resp[0] != '\0') {
-		 phiAdd=atoi(resp);
-		 if(phiAdd==0) break;
-		 if(phiAdd>=1 && phiAdd<=16) {
+     /* 	     if (resp[0] != '\0') { */
+     /* 		 phiAdd=atoi(resp); */
+     /* 		 if(phiAdd==0) break; */
+     /* 		 if(phiAdd>=1 && phiAdd<=16) { */
 
-		 }
-		 else {
-		     screen_printf("Not a valid phi sector");
-		   continue;
-		 }
-		 if(phiAdd==-1) {
-		   screen_printf("Cancelled.\n");
-		   return;
-		 }
-	     }
-	     else {
-		 screen_printf("Cancelled.\n");
-		 return;
-	     }
-	     test=(1<<(phiAdd-1));
-	     phiTrigMask|=test;
-	 }
-
-
-
-	 if (screen_confirm("Really Set phiTrigMaskH to: %#010x",phiTrigMask)) {
-	     cmdBytes[0]=(phiTrigMask&0xff);
-	     cmdBytes[1]=((phiTrigMask&0xff00)>>8);
-
-	 } else {
-	     screen_printf("\nCancelled\n");
-	     return;
-	 }
+     /* 		 } */
+     /* 		 else { */
+     /* 		     screen_printf("Not a valid phi sector"); */
+     /* 		   continue; */
+     /* 		 } */
+     /* 		 if(phiAdd==-1) { */
+     /* 		   screen_printf("Cancelled.\n"); */
+     /* 		   return; */
+     /* 		 } */
+     /* 	     } */
+     /* 	     else { */
+     /* 		 screen_printf("Cancelled.\n"); */
+     /* 		 return; */
+     /* 	     } */
+     /* 	     test=(1<<(phiAdd-1)); */
+     /* 	     phiTrigMask|=test; */
+     /* 	 } */
 
 
-     }
+
+     /* 	 if (screen_confirm("Really Set phiTrigMaskH to: %#010x",phiTrigMask)) { */
+     /* 	     cmdBytes[0]=(phiTrigMask&0xff); */
+     /* 	     cmdBytes[1]=((phiTrigMask&0xff00)>>8); */
+
+     /* 	 } else { */
+     /* 	     screen_printf("\nCancelled\n"); */
+     /* 	     return; */
+     /* 	 } */
+     /* } */
+     
      if(extraCode==ACQD_RATE_SET_SURF_BAND_TRIG_MASK) {
 
 	 screen_dialog(resp, 31,
@@ -7265,7 +7266,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 }
 
      }
-     if(extraCode==ACQD_RATE_ENABLE_DYNAMIC_ANT_MASK) {
+     if(extraCode==ACQD_RATE_ENABLE_DYNAMIC_L2_MASK) {
 	 screen_dialog(resp,31,"1 for enable, 0 for disable %d (-1 to cancel)\n",enableOrDisable);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
@@ -7350,9 +7351,9 @@ ACQD_RATE_COMMAND(cmdCode){
 	 cmdBytes[1]=usvalue;
 
      }
-     if(extraCode==ACQD_RATE_SET_DYNAMIC_ANT_MASK_OVER) {
+     if(extraCode==ACQD_RATE_SET_DYNAMIC_L2_MASK_OVER) {
 	 uivalue=100000;
-	 screen_dialog(resp,31,"Set L1 ant over threshold rate (Hz) (-1 to cancel) [%d]\n",usvalue);
+	 screen_dialog(resp,31,"Set L2 over threshold rate (Hz) (-1 to cancel) [%d]\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (1<= t ) {
@@ -7371,10 +7372,11 @@ ACQD_RATE_COMMAND(cmdCode){
 	 cmdBytes[3]=(uivalue&0xff000000)>>24;
 
 	 usvalue=40;
-	 screen_dialog(resp,31,"Set L1 ant threshold window (1-60) (-1 to cancel) [%d]\n",usvalue);
+	 screen_dialog(resp,31,"Set L2 phi sector (1-16) (-1 to cancel) [%d]\n",usvalue);
+	 
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (1<= t && t <=60) {
+	     if (1<= t && t <=16) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
@@ -7384,13 +7386,13 @@ ACQD_RATE_COMMAND(cmdCode){
 		 return;
 	     }
 	 }
-	 cmdBytes[4]=usvalue;
+	 cmdBytes[4]=usvalue-1;
 
      }
-     if(extraCode==ACQD_RATE_SET_DYNAMIC_ANT_MASK_UNDER) {
+     if(extraCode==ACQD_RATE_SET_DYNAMIC_L2_MASK_UNDER) {
 
 	 uivalue=100000;
-	 screen_dialog(resp,31,"Set L1 ant under threshold rate (Hz) (-1 to cancel) [%d]\n",usvalue);
+	 screen_dialog(resp,31,"Set L2 under threshold rate (Hz) (-1 to cancel) [%d]\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (1<= t ) {
@@ -7409,10 +7411,10 @@ ACQD_RATE_COMMAND(cmdCode){
 	 cmdBytes[3]=(uivalue&0xff000000)>>24;
 
 	 usvalue=40;
-	 screen_dialog(resp,31,"Set L1 ant threshold window (1-60) (-1 to cancel) [%d]\n",usvalue);
+	 screen_dialog(resp,31,"Set L2 phi sector (1-16) (-1 to cancel) [%d]\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (1<= t && t <=60) {
+	     if (1<= t && t <=16) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
@@ -7422,9 +7424,58 @@ ACQD_RATE_COMMAND(cmdCode){
 		 return;
 	     }
 	 }
-	 cmdBytes[4]=usvalue;
+	 cmdBytes[4]=usvalue-1;
 
      }
+     if(extraCode==ACQD_RATE_SET_DYNAMIC_L2_MASK_UNDER_WINDOW) {
+
+	 uivalue=100000;
+	 screen_dialog(resp,31,"Set L2 threshold window (1-60) (-1 to cancel) [%d]\n",usvalue);
+	 if (resp[0] != '\0') {
+	   t = atoi(resp);
+	   if (1<= t && t <=60) {
+	     usvalue = t;
+	   } else if (t == -1) {
+	     screen_printf("Cancelled.\n");
+	     return;
+	   } else {
+	     screen_printf("Not a valid time window\n");
+	     return;
+	   }
+	 }
+
+	 cmdBytes[0]=(uivalue&0xff);
+	 cmdBytes[1]=(uivalue&0xff00)>>8;
+	 cmdBytes[2]=(uivalue&0xff0000)>>16;
+	 cmdBytes[3]=(uivalue&0xff000000)>>24;
+
+     }
+
+     if(extraCode==ACQD_RATE_SET_DYNAMIC_L2_MASK_OVER_WINDOW) {
+
+	 uivalue=100000;
+	 screen_dialog(resp,31,"Set L2 threshold over window (1-60) (-1 to cancel) [%d]\n",usvalue);
+	 if (resp[0] != '\0') {
+	   t = atoi(resp);
+	   if (1<= t && t <=60) {
+	     usvalue = t;
+	   } else if (t == -1) {
+	     screen_printf("Cancelled.\n");
+	     return;
+	   } else {
+	     screen_printf("Not a valid time window\n");
+	     return;
+	   }
+	 }
+
+	 cmdBytes[0]=(uivalue&0xff);
+	 cmdBytes[1]=(uivalue&0xff00)>>8;
+	 cmdBytes[2]=(uivalue&0xff0000)>>16;
+	 cmdBytes[3]=(uivalue&0xff000000)>>24;
+
+     }
+
+
      if(extraCode==ACQD_RATE_SET_GLOBAL_THRESHOLD) {
 	 usvalue=0;
 	 screen_dialog(resp,31,"Enter global threshold (-1 to cancel)\n",usvalue);
