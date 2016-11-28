@@ -5326,8 +5326,8 @@ PRIORITIZERD_COMMAND(cmdCode){
   screen_printf("3. PRI_PARAMS_HIGH_BIN_EDGE\n");
   screen_printf("4. PRI_SLOPE_IMAGE_HILBERT\n");
   screen_printf("5. PRI_INTERCEPT_IMAGE_HILBERT\n");
-  screen_printf("6. PRI_BIN_TO_BIN_THRESH\n");
-  screen_printf("7. PRI_ABS_MAG_THRESH\n");
+  /* screen_printf("6. PRI_BIN_TO_BIN_THRESH\n"); */
+  /* screen_printf("7. PRI_ABS_MAG_THRESH\n"); */
   screen_printf("8. PRI_THETA_ANGLE_DEMOTION_LOW\n");
   screen_printf("9. PRI_THETA_ANGLE_DEMOTION_HIGH\n");
   screen_printf("10. PRI_THETA_ANGLE_DEMOTION_PRIORITY\n");
@@ -5335,8 +5335,6 @@ PRIORITIZERD_COMMAND(cmdCode){
   screen_printf("12. PRI_ANT_PHI_POS\n");
   screen_printf("13. PRI_ANT_R_POS\n");
   screen_printf("14. PRI_ANT_Z_POS\n");
-  screen_printf("15. PRI_POS_SATUATION\n");
-  screen_printf("16. PRI_NEG_SATUATION\n");
   screen_printf("15. PRI_POS_SATUATION\n");
   screen_printf("16. PRI_NEG_SATUATION\n");
   screen_printf("17. PRI_ASYM_SATURATION\n");
@@ -5362,7 +5360,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
   if (resp[0] != '\0') {
     t = atoi(resp);
-    if (1<= t && t <=16) {
+    if (1<= t && t <=34) {
       extraCode = t;
     } else if (t == -1) {
       screen_printf("Cancelled.\n");
@@ -5501,6 +5499,9 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
 
   if(extraCode==PRI_BIN_TO_BIN_THRESH){
+    screen_printf("Option %d is currently disabled for ANITA-IV.\n", extraCode);
+    return;
+
     float priBinToBinThresh = 10;
     screen_dialog(resp,31,"Enter Prioritizerd bin-to-bin threshold for CW cut (-1 to cancel) [%f]\n", priBinToBinThresh);
     if (resp[0] != '\0') {
@@ -5521,6 +5522,9 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
 
   if(extraCode==PRI_ABS_MAG_THRESH){
+    screen_printf("Option %d is disabled for ANITA-IV.\n", extraCode);
+    return;
+
     float priAbsMagThresh = 6553;
     screen_dialog(resp,31,"Enter Prioritizerd absolute threshold (dBm) for CW cut (-1 to cancel) [%f]\n", priAbsMagThresh);
     if (resp[0] != '\0') {
