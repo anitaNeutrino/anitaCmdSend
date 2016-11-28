@@ -252,7 +252,7 @@ typedef enum
 #define NTU_DISK_MASK 0x8
 #define PMC_DISK_MASK 0x10
 
-#define DISK_TYPES 5
+#define DISK_TYPES 4
 
 char *journalOptionName(JournalctlOptionCommand_t opt);
 char *logRequestName(LogRequestCommand_t req);
