@@ -1324,7 +1324,7 @@ CMD_DISABLE_DISK(int cmdCode)
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
 
 	if(resp[0] != '\0') {
-	    v = atoi(resp);	
+	    v = atoi(resp);
 	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
@@ -1341,7 +1341,7 @@ CMD_DISABLE_DISK(int cmdCode)
 	screen_printf("3: Ntu\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
-	    v = atoi(resp);	
+	    v = atoi(resp);
 	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
@@ -1358,7 +1358,7 @@ CMD_DISABLE_DISK(int cmdCode)
 	    screen_printf("3: Ntu\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
-		v = atoi(resp);	
+		v = atoi(resp);
 		if (0 <= v && v <= 3) {
 		    diskBitMask |= diskBitMasks[v];
 		} else if (v == -1) {
@@ -2104,7 +2104,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
 
 	if(resp[0] != '\0') {
-	    v = atoi(resp);	
+	    v = atoi(resp);
 	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
@@ -2121,7 +2121,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
 	screen_printf("3: Ntu\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
-	    v = atoi(resp);	
+	    v = atoi(resp);
 	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
@@ -2138,7 +2138,7 @@ CMD_EVENT_DISKTYPE(int cmdCode)
 	    screen_printf("3: Ntu\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
-		v = atoi(resp);	
+		v = atoi(resp);
 		if (0 <= v && v <= 3) {
 		    diskBitMask |= diskBitMasks[v];
 		} else if (v == -1) {
@@ -2204,7 +2204,7 @@ CMD_HK_DISKTYPE(int cmdCode)
 	screen_dialog(resp,31,"Which disk (-1, to cancel)\n");
 
 	if(resp[0] != '\0') {
-	    v = atoi(resp);	
+	    v = atoi(resp);
 	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
@@ -2221,7 +2221,7 @@ CMD_HK_DISKTYPE(int cmdCode)
 	screen_printf("3: Ntu\n");
 	screen_dialog(resp,31,"Which disk to add to mask (-1, to cancel) [mask: %#x]",diskBitMask);
 	if(resp[0] != '\0') {
-	    v = atoi(resp);	
+	    v = atoi(resp);
 	    if (0 <= v && v <= 3) {
 		diskBitMask = diskBitMasks[v];
 	    } else if (v == -1) {
@@ -2238,7 +2238,7 @@ CMD_HK_DISKTYPE(int cmdCode)
 	    screen_printf("3: Ntu\n");
 	    screen_dialog(resp,31,"Which disk to add? (5 to send, -1 to cancel) [mask: %#x]",diskBitMask);
 	    if(resp[0] != '\0') {
-		v = atoi(resp);	
+		v = atoi(resp);
 		if (0 <= v && v <= 3) {
 		    diskBitMask |= diskBitMasks[v];
 		} else if (v == -1) {
@@ -3998,7 +3998,7 @@ DEFAULT_CONFIG(int cmdCode)
     Curcmd[4] = 2;
     Curcmd[5] = ((Config_det&0xff00)>>8);
     Curcmd[6] = 3;
-    Curcmd[7] = ((Config_det&0xff0000)>>16); 
+    Curcmd[7] = ((Config_det&0xff0000)>>16);
     Curcmdlen = 8;
     set_cmd_log("%d; Config  %d set to default.", cmdCode, Config_det);
     sendcmd(Fd, Curcmd, Curcmdlen);
@@ -5786,7 +5786,8 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp,31,"Enter mV asymmetry for saturation, goes in priority 9 (0 - 2000) (-1 to cancel) [%hu]\n", priAsymSaturation);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0>= t && t <=2000) {
+      screen_printf("I got %hu\n", t);
+      if (0<= t && t <=2000) {
 	priAsymSaturation = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5806,7 +5807,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Enter sleep time in the Prioritizerd before killing X if it fails to connect. Don't set this too high. (0 - 60) (-1 to cancel) [%hu]\n", priSleepTimeKillX);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0>= t && t <=60) {
+      if (0<= t && t <=60) {
 	priSleepTimeKillX = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5825,7 +5826,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Enter flag to disable GPU. 0 is GPU on. 1 is GPU off. (0 - 1) (-1 to cancel) [%hu]\n", priDisableGpu);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0>= t && t <=1) {
+      if (0<= t && t <=1) {
 	priDisableGpu = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5844,7 +5845,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Enter version of the ANITA calibration to use. 3 is ANITA-III. 4 is ANITA-IV. (3 - 4) (-1 to cancel) [%hu]\n", priCalibVersion);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (3>= t && t <=4) {
+      if (3<= t && t <=4) {
 	priCalibVersion = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5864,7 +5865,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Adds a factor of -1 in front of the top ring antennas if enabled.. 1 is on (ANITA-III). 0 is off (ANITA-IV). (0 - 1) (-1 to cancel) [%hu]\n", priInvertTopRingSoftware);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0>= t && t <=1) {
+      if (0<= t && t <=1) {
         priInvertTopRingSoftware = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5883,7 +5884,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Switch on debug mode. Make sure this is off (0) during flight. 1 is on. 0 is off. (0 - 1) (-1 to cancel) [%hu]\n", priDebugMode);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0>= t && t <=1) {
+      if (0<= t && t <=1) {
 	priDebugMode = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5922,7 +5923,7 @@ PRIORITIZERD_COMMAND(cmdCode){
 		  priSkipBlastRatioHPol);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (t >= 0 && t <= 1) {
+      if (t <= 0 && t <= 1) {
 	priSkipBlastRatioHPol = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5962,7 +5963,7 @@ PRIORITIZERD_COMMAND(cmdCode){
 		  priSkipBlastRatioVPol);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (t >= 0 && t <= 1) {
+      if (t <= 0 && t <= 1) {
 	priSkipBlastRatioVPol = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5984,7 +5985,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Ratio of peak-to-peaks in bottom ring divided by top ring, above which we assign event as a self triggered blast. (1 - 10) (-1 to cancel) [%hu]\n", priMaxRatioBlast);
     if (resp[0] != '\0') {
       ft = atof(resp);
-      if (0>= ft && ft <=10) {
+      if (0<= ft && ft <=10) {
         priMaxRatioBlast = ft;
       } else if (ft == -1) {
 	screen_printf("Cancelled.\n");
@@ -6003,7 +6004,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Ratio of peak-to-peaks in bottom ring divided by top ring, below  which we assign event as a \"self triggered blast\". (0 - 10) (-1 to cancel) [%hu]\n", priMinRatioBlast);
     if (resp[0] != '\0') {
       ft = atof(resp);
-      if (0>= ft && ft <=10) {
+      if (0<= ft && ft <=10) {
         priMinRatioBlast = ft;
       } else if (ft == -1) {
 	screen_printf("Cancelled.\n");
@@ -6022,7 +6023,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Gradient that defines a line in rotated cross-correlation parameter space, above which we assign event as a self triggered blast. Set to zero to switch this off. (0-65535) (-1 to cancel) [%hu]\n", priBlastGradient);
     if (resp[0] != '\0') {
       ft = atof(resp);
-      if (0>= ft && ft <=65535) {
+      if (0<= ft && ft <=65535) {
         priBlastGradient = ft;
       } else if (ft == -1) {
 	screen_printf("Cancelled.\n");
@@ -6121,7 +6122,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Use dynamic filtering. 1 is on. 0 is off. (0 - 1) (-1 to cancel) [%hu]\n", useLongDynamicFiltering);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0>= t && t <=1) {
+      if (0<= t && t <=1) {
 	useLongDynamicFiltering = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -6139,7 +6140,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Use dynamic filtering. 1 is on. 0 is off. (0 - 1) (-1 to cancel) [%hu]\n", startDynamicFilteringFrequency);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0>= t && t <=1) {
+      if (0<= t && t <=1) {
 	startDynamicFilteringFrequency = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -6157,7 +6158,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Use dynamic filtering. 1 is on. 0 is off. (0 - 1) (-1 to cancel) [%hu]\n", stopDynamicFilteringFrequency);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0>= t && t <=1) {
+      if (0<= t && t <=1) {
 	stopDynamicFilteringFrequency = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -6175,7 +6176,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Set all priorities to 6 until the first GPU power spectrum has been made for filtering. 1 is on. 0 is off. (0 - 1) (-1 to cancel) [%hu]\n", conservativeStart);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0>= t && t <=1) {
+      if (0<= t && t <=1) {
 	conservativeStart = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -6194,7 +6195,7 @@ PRIORITIZERD_COMMAND(cmdCode){
     screen_dialog(resp, 31, "Threshold spike size for dynamic filtering (0-655)  (-1 to cancel) [%hu]\n", priThresh_dB);
     if (resp[0] != '\0') {
       ft = atof(resp);
-      if (0>= ft && ft <=655) {
+      if (0<= ft && ft <=655) {
 	priThresh_dB = ft;
       } else if (ft == -1) {
 	screen_printf("Cancelled.\n");
@@ -6224,8 +6225,6 @@ PRIORITIZERD_COMMAND(cmdCode){
   sendcmd(Fd, Curcmd, Curcmdlen);
 
   return;
-
-
 }
 
 
