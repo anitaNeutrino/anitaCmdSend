@@ -5904,26 +5904,26 @@ PRIORITIZERD_COMMAND(cmdCode){
     unsigned char ant = 0;
 
     screen_dialog(resp, 31,
-		  "Select antenna index to modify (0-47) (-1 to cancel) [%hhu] ",
+		  "Select phi-sector index to modify (0-15) (-1 to cancel) [%hhu] ",
 		  ant);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0 <= t && t <= 47) {
+      if (t >= 0 && t <= 15) {
 	ant = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
 	return;
       } else {
-	screen_printf("Value must be 0-47, not %hu\n", t);
+	screen_printf("Value must be 0-15, not %hu\n", t);
 	return;
       }
     }
     screen_dialog(resp, 31,
-		  "Enter switch value for ratio skip. 1 is skip. 0 is don't skip. (-1 to cancel) [%f] ",
+		  "Enter switch value for ratio skip. 1 is skip. 0 is don't skip. (-1 to cancel) [%hhu] ",
 		  priSkipBlastRatioHPol);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (t <= 0 && t <= 1) {
+      if (t >= 0 && t <= 1) {
 	priSkipBlastRatioHPol = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5944,11 +5944,11 @@ PRIORITIZERD_COMMAND(cmdCode){
     unsigned char priSkipBlastRatioVPol = 0;
     unsigned char ant = 0;
     screen_dialog(resp, 31,
-		  "Select antenna index to modify (0-47) (-1 to cancel) [%hhu] ",
+		  "Select phi-sector index to modify (0-15) (-1 to cancel) [%hhu] ",
 		  ant);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0 <= t && t <= 47) {
+      if (t >= 0 && t <= 15) {
 	ant = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5959,11 +5959,11 @@ PRIORITIZERD_COMMAND(cmdCode){
       }
     }
     screen_dialog(resp, 31,
-		  "Enter switch value for ratio skip. 1 is skip. 0 is don't skip. (-1 to cancel) [%f] ",
+		  "Enter switch value for ratio skip. 1 is skip. 0 is don't skip. (-1 to cancel) [%hhu] ",
 		  priSkipBlastRatioVPol);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (t <= 0 && t <= 1) {
+      if (t >= 0 && t <= 1) {
 	priSkipBlastRatioVPol = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -5982,7 +5982,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
   if(extraCode==PRI_BLAST_RATIO_MAX){
     float priMaxRatioBlast = 2.7;
-    screen_dialog(resp, 31, "Ratio of peak-to-peaks in bottom ring divided by top ring, above which we assign event as a self triggered blast. (1 - 10) (-1 to cancel) [%hu]\n", priMaxRatioBlast);
+    screen_dialog(resp, 31, "Ratio of peak-to-peaks in bottom ring divided by top ring, above which we assign event as a self triggered blast. (1 - 10) (-1 to cancel) [%.1f]\n", priMaxRatioBlast);
     if (resp[0] != '\0') {
       ft = atof(resp);
       if (0<= ft && ft <=10) {
@@ -6001,7 +6001,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
   if(extraCode==PRI_BLAST_RATIO_MIN){
     float priMinRatioBlast = 1;
-    screen_dialog(resp, 31, "Ratio of peak-to-peaks in bottom ring divided by top ring, below  which we assign event as a \"self triggered blast\". (0 - 10) (-1 to cancel) [%hu]\n", priMinRatioBlast);
+    screen_dialog(resp, 31, "Ratio of peak-to-peaks in bottom ring divided by top ring, below  which we assign event as a \"self triggered blast\". (0 - 10) (-1 to cancel) [%.1f]\n", priMinRatioBlast);
     if (resp[0] != '\0') {
       ft = atof(resp);
       if (0<= ft && ft <=10) {
@@ -6020,7 +6020,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
   if(extraCode==PRI_BLAST_GRADIENT){
     float priBlastGradient = 2500;
-    screen_dialog(resp, 31, "Gradient that defines a line in rotated cross-correlation parameter space, above which we assign event as a self triggered blast. Set to zero to switch this off. (0-65535) (-1 to cancel) [%hu]\n", priBlastGradient);
+    screen_dialog(resp, 31, "Gradient that defines a line in rotated cross-correlation parameter space, above which we assign event as a self triggered blast. Set to zero to switch this off. (0-65535) (-1 to cancel) [%.1f]\n", priBlastGradient);
     if (resp[0] != '\0') {
       ft = atof(resp);
       if (0<= ft && ft <=65535) {
@@ -6097,7 +6097,7 @@ PRIORITIZERD_COMMAND(cmdCode){
       }
     }
     screen_dialog(resp, 31,
-		  "Enter the frequency (MHz) to put the low edge of the notch (0-1300) (-1 to cancel) [%hu].",
+		  "Enter the frequency (MHz) to put the high edge of the notch (0-1300) (-1 to cancel) [%hu].",
 		  notchHighFreq);
     if (resp[0] != '\0') {
       t = atoi(resp);
@@ -6137,10 +6137,10 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
   if(extraCode==PRI_START_DYNAMIC_FREQUENCY){
     unsigned short startDynamicFilteringFrequency = 0;
-    screen_dialog(resp, 31, "Use dynamic filtering. 1 is on. 0 is off. (0 - 1) (-1 to cancel) [%hu]\n", startDynamicFilteringFrequency);
+    screen_dialog(resp, 31, "Select frequency above which to use dynamic filtering (0 - 1300) (-1 to cancel) [%hu]\n", startDynamicFilteringFrequency);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0<= t && t <=1) {
+      if (0<= t && t <=1300) {
 	startDynamicFilteringFrequency = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -6154,11 +6154,11 @@ PRIORITIZERD_COMMAND(cmdCode){
     cmdBytes[1] = (startDynamicFilteringFrequency & 0xff00) >> 8;
   }
   if(extraCode==PRI_STOP_DYNAMIC_FREQUENCY){
-    unsigned short stopDynamicFilteringFrequency = 0;
-    screen_dialog(resp, 31, "Use dynamic filtering. 1 is on. 0 is off. (0 - 1) (-1 to cancel) [%hu]\n", stopDynamicFilteringFrequency);
+    unsigned short stopDynamicFilteringFrequency = 1300;
+    screen_dialog(resp, 31, "Select frequency at which dynamic filtering is stopped (0 - 1300) (-1 to cancel) [%hu]\n", stopDynamicFilteringFrequency);
     if (resp[0] != '\0') {
       t = atoi(resp);
-      if (0<= t && t <=1) {
+      if (0<= t && t <=1300) {
 	stopDynamicFilteringFrequency = t;
       } else if (t == -1) {
 	screen_printf("Cancelled.\n");
@@ -6173,7 +6173,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
   if(extraCode==PRI_CONSERVATIVE_START){
     unsigned short conservativeStart = 0;
-    screen_dialog(resp, 31, "Set all priorities to 6 until the first GPU power spectrum has been made for filtering. 1 is on. 0 is off. (0 - 1) (-1 to cancel) [%hu]\n", conservativeStart);
+    screen_dialog(resp, 31, "Set all priorities to 6 until the first GPU power spectrum has been made for dynamic filtering. 1 is on. 0 is off. (0 - 1) (-1 to cancel) [%hu]\n", conservativeStart);
     if (resp[0] != '\0') {
       t = atoi(resp);
       if (0<= t && t <=1) {
@@ -6192,7 +6192,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   }
   if(extraCode==PRI_THRESH_DB){
     float priThresh_dB = 0;
-    screen_dialog(resp, 31, "Threshold spike size for dynamic filtering (0-655)  (-1 to cancel) [%hu]\n", priThresh_dB);
+    screen_dialog(resp, 31, "Threshold spike size for dynamic filtering (0-655)  (-1 to cancel) [%.2f]\n", priThresh_dB);
     if (resp[0] != '\0') {
       ft = atof(resp);
       if (0<= ft && ft <=655) {
@@ -6754,13 +6754,13 @@ ACQD_RATE_COMMAND(cmdCode){
 
      screen_printf("1. ENABLE_CHAN_SERVO\n");
      screen_printf("2. SET_PID_GOALS\n");
-     screen_printf("3. SET_L2_TRIG_MASK\n");  
+     screen_printf("3. SET_L2_TRIG_MASK\n");
      screen_printf("4. SET_PHI_MASK\n");
      /* screen_printf("5. SET_SURF_BAND_TRIG_MASK\n"); */
      screen_printf("6. SET_CHAN_PID_GOAL_SCALE\n");
      //     screen_printf("7. SET_RATE_SERVO\n");
      screen_printf("8. ENABLE_DYNAMIC_PHI_MASK\n");
-     screen_printf("9. ENABLE_DYNAMIC_L2_MASK\n"); 
+     screen_printf("9. ENABLE_DYNAMIC_L2_MASK\n");
      screen_printf("10. SET_DYNAMIC_PHI_MASK_OVER\n");
      screen_printf("11. SET_DYNAMIC_PHI_MASK_UNDER\n");
      screen_printf("12. SET_DYNAMIC_L2_MASK_OVER\n");
@@ -6776,7 +6776,7 @@ ACQD_RATE_COMMAND(cmdCode){
      /* screen_printf("23. SET_PHI_MASK_HPOL\n"); */
      screen_printf("25. SET_DYNAMIC_L2_MASK_OVER_WINDOW\n");
      screen_printf("26. SET_DYNAMIC_L2_MASK_UNDER_WINDOW\n");
-     
+
      screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
      if (resp[0] != '\0') {
 	 t = atoi(resp);
@@ -7115,7 +7115,7 @@ ACQD_RATE_COMMAND(cmdCode){
      /* 	     return; */
      /* 	 } */
      /* } */
-     
+
      if(extraCode==ACQD_RATE_SET_SURF_BAND_TRIG_MASK) {
 
 	 screen_dialog(resp, 31,
@@ -7366,7 +7366,7 @@ ACQD_RATE_COMMAND(cmdCode){
 
 	 usvalue=40;
 	 screen_dialog(resp,31,"Set L2 phi sector (1-16) (-1 to cancel) [%d]\n",usvalue);
-	 
+
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
 	     if (1<= t && t <=16) {
