@@ -8674,7 +8674,7 @@ static void TUFFD_COMMAND(cmdCode)
   {
     t = atoi(resp);
 
-    if ( 1 <=t && t <= 11)
+    if ( 1 <=t && t <= 13)
     {
       extra_code = t;
     }
