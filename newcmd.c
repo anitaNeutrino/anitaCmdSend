@@ -8646,6 +8646,8 @@ static void TUFFD_COMMAND(cmdCode)
   screen_printf(" 9. TUFF_SLOPE_THRESHOLD_TO_NOTCH_NEXT_SECTOR ---  (EXPERIMENTAL++)\n");
   screen_printf(" 10. TUFF_PHI_SECTOR_OFFSET_FROM_NORTH        ---  (EXPERIMENTAL) phi sector offset from north \n");
   screen_printf(" 11. TUFF_MAX_HEADING_AGE                     ---  (EXPERIMENTAL) oldest allowed heading for servo\n");
+  screen_printf(" 12. TUFF_SET_CAPS_ON_STARTUP                 ---  (EXPERIMENTAL) Enable changing of TUFF caps\n");
+  screen_printf(" 13. TUFF_SET_CAP_VALUE                       ---  (EXPERIMENTAL) Change TUFF cap values\n");
   screen_dialog(resp,31, "Select command [%d] (-1 to cancel)\n", extra_code);
 
 
@@ -9150,6 +9152,162 @@ static void TUFFD_COMMAND(cmdCode)
 
       cmdBytes[0] = max_age;
     }
+    else if (extra_code == TUFF_SET_CAPS_ON_STARTUP)
+    {
+      char adjust[3];
+      memset(adjust,0,sizeof(adjust));
+
+      screen_printf("[ You have selected TUFF_SET_CAPS_ON_STARTUP ]\n");
+      screen_printf("   This option is marked EXPERIMENTAL.  \n");
+      screen_printf("   That means you probably should't use it.   \n");
+      screen_printf("   It might set your beard on fire. Even if you don't have a beard. Who knows? It's experimental.   \n\n");
+      screen_printf("   This command enables setting of TUFF cap values on Tuffd Startup from the config array.\n");
+      screen_printf("   It has only been lightly tested.\n");
+      screen_printf("   This won't take effect until the next Tuffd restart.\n");
+
+
+      for (inotch = 0; inotch < NUM_TUFF_NOTCHES; inotch++)
+      {
+        screen_dialog(resp, 31, "Should the caps for notch %d be read from config (0-1) [%d]  (-1 to cancel)\n", inotch, adjust[inotch]);
+        if (resp[0] !=0)
+        {
+          t = atoi(resp);
+          if (0 <= t && t <=1)
+          {
+            adjust[inotch] = t;
+          }
+
+          else if (t == -1)
+          {
+            screen_printf("Cancelled\n");
+            return;
+          }
+          else
+          {
+            screen_printf("%d not a valid option\n");
+            inotch--;
+          }
+        }
+
+        memcpy(cmdBytes, adjust, sizeof(adjust));
+      }
+    }
+    else if (extra_code == TUFF_SET_CAP_VALUE)
+    {
+      char notch, rfcm, chan, cap; 
+      notch = 2; 
+      rfcm = -2; 
+      chan = -2; 
+      cap = 16; 
+      screen_printf("[ You have selected TUFF_SET_CAP_VALUE ]\n");
+      screen_printf("   This option is marked EXPERIMENTAL.  \n");
+      screen_printf("   That means you probably should't use it.   \n");
+      screen_printf("   It might set your shoes on fire. Who knows? It's experimental.   \n\n");
+      screen_printf("   This command sets the TUFF cap config arrays that Tuffd will read on startup\n");
+      screen_printf("   These are only used if TUFF_SET_CAPS_ON_STARTUP is enabled for a notch\n");
+      screen_printf("   and only take effect on the next Tuffd restart\n");
+
+      screen_dialog(resp, 31, "Which notch would you like to modify [%d] (0-2) (-1 to cancel, -2 for all)\n", notch);
+      if (resp[0] !=0)
+      {
+        t = atoi(resp);
+        if (0 <= t && t <=2)
+        {
+          notch = t; 
+        }
+
+        else if (t == -1)
+        {
+          screen_printf("Cancelled\n");
+          return;
+        }
+        else if (t == -2)
+        {
+          notch = -1; 
+        }
+        else
+        {
+          screen_printf("%d not a valid option. Aborting.\n"); 
+          return; 
+        }
+      }
+      screen_dialog(resp, 31, "Which rfcm would you like to modify [%d] (0-3) (-1 to cancel, -2 for all)\n", rfcm);
+      if (resp[0] !=0)
+      {
+        t = atoi(resp);
+        if (0 <= t && t <=3)
+        {
+          rfcm = t;
+        }
+
+        else if (t == -1)
+        {
+          screen_printf("Cancelled\n");
+          return;
+        }
+        else if (t == -2)
+        {
+          rfcm = -1; 
+        }
+        else
+        {
+          screen_printf("%d not a valid option. Aborting.\n"); 
+          return; 
+        }
+      }
+      screen_dialog(resp, 31, "Which chan would you like to modify [%d] (0-3) (-1 to cancel, -2 for all)\n", chan);
+      if (resp[0] !=0)
+      {
+        t = atoi(resp);
+        if (0 <= t && t <=23)
+        {
+         chan = t;
+        }
+
+        else if (t == -1)
+        {
+          screen_printf("Cancelled\n");
+          return;
+        }
+        else if (t == -2)
+        {
+          chan = -1; 
+        }
+        else
+        {
+          screen_printf("%d not a valid option. Aborting.\n"); 
+          return; 
+        }
+      }
+      screen_dialog(resp, 31, "Which should the capacitor value be? [%d] (0-31) (-1 to cancel)\n", cap );
+      if (resp[0] !=0)
+      {
+        t = atoi(resp);
+        if (0 <= t && t <=31)
+        {
+         cap = t;
+        }
+
+        else if (t == -1)
+        {
+          screen_printf("Cancelled\n");
+          return;
+        }
+        else
+        {
+          screen_printf("%d not a valid option. Aborting.\n"); 
+          return; 
+        }
+      }
+
+
+      cmdBytes[0] = notch; 
+      cmdBytes[1] = rfcm; 
+      cmdBytes[2] = chan; 
+      cmdBytes[3] = cap; 
+
+    }
+
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
     Curcmd[2] = 1;
