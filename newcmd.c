@@ -5346,6 +5346,7 @@ PRIORITIZERD_COMMAND(cmdCode){
   screen_printf("32. PRI_STOP_DYNAMIC_FREQUENCY\n");
   screen_printf("33. PRI_CONSERVATIVE_START\n");
   screen_printf("34. PRI_THRESH_DB\n");
+  screen_printf("35. PRI_DELTA_PHI_TRIG\n");
 
 
   screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
@@ -6208,6 +6209,24 @@ PRIORITIZERD_COMMAND(cmdCode){
     unsigned short convertedVal = (unsigned short)(nearbyint(100*priThresh_dB));
     cmdBytes[0] = (convertedVal & 0xff);
     cmdBytes[1] = (convertedVal & 0xff00)>>8;
+  }
+  if(extraCode==PRI_DELTA_PHI_TRIG){
+    unsigned short deltaPhiSectTrig = 1;
+    screen_dialog(resp, 31, "Number of phi-sectors adjacent to L3 trigger to include in map (0-15)  (-1 to cancel) [%hu]\n", deltaPhiSectTrig);
+    if (resp[0] != '\0') {
+      t = atoi(resp);
+      if (0<= t && t <=15) {
+	 deltaPhiSectTrig = t;
+      } else if (ft == -1) {
+	screen_printf("Cancelled.\n");
+	return;
+      } else {
+	screen_printf("Not a valid option\n");
+	return;
+      }
+    }
+    cmdBytes[0] = (deltaPhiSectTrig & 0xff);
+    cmdBytes[1] = (deltaPhiSectTrig & 0xff00)>>8;
   }
 
 
