@@ -7569,7 +7569,7 @@ ACQD_RATE_COMMAND(cmdCode){
 	 screen_dialog(resp,31,"Enter ring: 0-Top, 1-Middle, 2-Bottom (-1 to cancel)\n",usvalue);
 	 if (resp[0] != '\0') {
 	     t = atoi(resp);
-	     if (1<= t && t <=2) {
+	     if (0<= t && t <=2) {
 		 usvalue = t;
 	     } else if (t == -1) {
 		 screen_printf("Cancelled.\n");
