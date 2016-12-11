@@ -8059,7 +8059,7 @@ PLAYBACKD_COMMAND(cmdCode){
     screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
     if (resp[0] != '\0') {
 	t = atoi(resp);
-	if (1<= t && t <=8) {
+	if (1<= t && t <=10) {
 	    extraCode = t;
 	} else if (t == -1) {
 	    screen_printf("Cancelled.\n");
