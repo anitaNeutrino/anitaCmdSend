@@ -8053,6 +8053,8 @@ PLAYBACKD_COMMAND(cmdCode){
     screen_printf("6. PLAY_START_PLAYBACK\n");
     screen_printf("7. PLAY_STOP_PLAYBACK\n");
     screen_printf("8. PLAY_SLEEP_PERIOD\n");
+    screen_printf("9. PLAY_MODE\n");
+    screen_printf("10. PLAY_STARTING_RUN\n");
 
     screen_dialog(resp,31,"Select extra code %d (-1 to cancel)\n",extraCode);
     if (resp[0] != '\0') {
