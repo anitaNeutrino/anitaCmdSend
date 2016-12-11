@@ -8196,6 +8196,52 @@ PLAYBACKD_COMMAND(cmdCode){
 	cmdBytes[4]=0;
     }
 
+    if (extraCode==PLAY_MODE)
+    {
+      usvalue = 1; 
+      screen_dialog(resp,31,"Enter playback mode (0-1) [%d] (-1 to cancel)\n", usvalue); 
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0<= t && t<=1) {
+	      usvalue = t;
+	    } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	    } else {
+	      screen_printf("Not a valid mode\n");
+	      return;
+	    }
+	}
+	cmdBytes[0]=(usvalue&0xff);
+	cmdBytes[1]=0;
+	cmdBytes[2]=0;
+	cmdBytes[3]=0;
+	cmdBytes[4]=0; 
+    }
+
+
+    if (extraCode==PLAY_STARTING_RUN)
+    {
+      usvalue = 1; 
+      screen_dialog(resp,31,"Enter starting run (0-65535) [%d] (-1 to cancel)\n", usvalue); 
+	if (resp[0] != '\0') {
+	    t = atoi(resp);
+	    if (0<= t && t<=65535) {
+	      usvalue = t;
+	    } else if (t == -1) {
+	      screen_printf("Cancelled.\n");
+	      return;
+	    } else {
+	      screen_printf("Not a valid run\n");
+	      return;
+	    }
+	}
+	cmdBytes[0]=(usvalue&0xff);
+	cmdBytes[1]=(usvalue & 0xff00) >> 8;
+	cmdBytes[2]=0;
+	cmdBytes[3]=0;
+	cmdBytes[4]=0; 
+    }
 
     Curcmd[0] = 0;
     Curcmd[1] = cmdCode;
